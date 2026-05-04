@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
     root: projectRoot,
   },
   outputFileTracingRoot: projectRoot,
+  // Native sqlite bindings can't be bundled by Turbopack/webpack.
+  serverExternalPackages: ["better-sqlite3", "sqlite-vec"],
 };
 
 export default nextConfig;

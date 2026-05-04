@@ -41,3 +41,9 @@ next-env.d.ts
 # Generated artifacts (not committed; produced on demand)
 /tmp/
 /public/generated/
+
+# SQLite — kiln.db itself IS committed for demo determinism;
+# only the transient journal/WAL/shm sidecars are ignored.
+kiln.db-journal
+kiln.db-wal
+kiln.db-shm
