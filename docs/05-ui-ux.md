@@ -16,28 +16,36 @@ Each tier is a complete experience on its own. We design tiers, not pages.
 
 ## Tier 1: The first 60 seconds
 
-### Landing page = `/pipeline`
+### Landing page = `/` (dashboard)
 
-There is **no marketing landing page**. The root URL `/` redirects to `/pipeline`. The visitor arrives at the working pipeline immediately.
+There is **no marketing landing page**. The root URL `/` is a Clay-shaped dashboard with a "Welcome to Kiln" heading, a row of entry-point cards (each card = one thing the visitor can do right now), and a Clay-style table list of available surfaces. The dashboard's primary entry-point card opens the recommended hero scenario; a secondary card opens the full pipeline.
+
+The dashboard cards intentionally use **hard navigation** (`<a href>`) to deal pages — they take the visitor to the standalone deal review page, not the slide-over. That signals "this is the real surface, not a preview."
+
+Cards/links **only** point to pages that exist today (per CLAUDE.md anti-pattern: no stub links). Each new phase that ships a new surface adds a card here.
 
 ### What they see (mobile-first)
 
-Top of viewport:
-- A sparse header: "Kiln" logo (left), "How it works" + "GitHub" links (right). No nav menu.
-- A single sentence under the header: *"A multi-agent deal desk co-pilot, built for Clay's Deal Strategy & Ops team."*
+Persistent app chrome (every page):
+- **Left sidebar** (~200px wide on desktop, drawer behind hamburger on mobile): wordmark "Kiln · where clay gets fired into final form", icon+text nav (Home, Pipeline, GitHub external), active item gets a subtle `bg-surface-hover` highlight (no border accent).
+- **Top-right workspace badge**: ambient identity chip ("Demo Mode · Kiln Workspace" with a small pulsing brand-blue dot). Non-interactive.
 
-Below the fold:
-- A pipeline table styled like a Clay table — monospace numbers, two-tone palette, alternating row backgrounds at 1% opacity.
-- 5 hero scenarios at the top, each with a colored difficulty badge, the customer name, the deal headline, and an "AI review" status indicator.
-- One scenario has a subtle pulsing dot + "Start here" tag in the top-left corner.
-- Below the 5 hero scenarios: "Past deals (closed)" — 8 historical deals shown in a slightly muted style, demonstrating "the system has institutional memory."
+The pipeline page (`/pipeline`) below the chrome:
+- A single tagline sentence at the top: *"A multi-agent deal desk co-pilot, built for Clay's Deal Strategy & Ops team."*
+- A **toolbar above the table** mimicking Clay's table-view chrome: "Default View · 40 Deals · 11 Columns" on the left; ghost buttons "Stage: All ▾" and "Sort: Display order ▾" on the right. Filter / Sort can be visual-only this phase ("shallow but present"); they get wired up in later phases.
+- A **Clay-style table grid** with a row-number gutter on the left (small, monospace, muted gray), column headers carrying lucide-react type icons (Building2 for customer, FileText for deal name, DollarSign for ACV, Calendar for term, Tag for stage), and rows that collapse to a flex layout on mobile (no horizontal overflow at 390px).
+- 5 hero scenarios at the top, each with a colored difficulty badge (medium → muted, high → amber, expert → brand-blue), the customer name, the deal headline, and a stage badge on the right.
+- One scenario has a subtle pulsing dot + "Start here" tag in **brand-blue** at the top-left of the row.
+- Below the 5 hero scenarios: "Past deals (closed-won)" — 8 historical deals in a slightly muted style with a **brand-blue ✓ Won** badge (not green) — Clay's accent.
 
 ### What happens on click
 
-- The visitor taps the highlighted scenario.
-- Page navigates to `/deals/<id>`.
-- The deal detail view loads with a static header (deal metadata) and an empty "Review" section showing a vertical timeline of 6 placeholder rows.
-- Within 200ms, the SSE stream connects and the orchestrator begins emitting events.
+- The visitor taps a pipeline row.
+- Next.js intercepts the navigation and opens `/deals/<id>` as a **right-side slide-over panel** (≈90% of viewport width on desktop, full-screen on mobile). The pipeline stays mounted underneath through a 10–15% dimmed scrim on the left. The URL updates to `/deals/<id>` so deep-linking works.
+- The slide-over closes via the X button in its top bar, the ESC key, a click on the dimmed scrim, or the browser back button — all routed through `router.back()`.
+- A **direct URL hit** to `/deals/<id>` (paste, refresh, link in dashboard) renders the deal as a full standalone page with the sidebar still visible — no slide-over.
+- Inside the panel: a static deal header (sticky at the top), the customer/pricing/owners metadata cards, the customer-request panel with the verbatim AE quote + non-standard clause pills + competitive context, and an empty "Review" section showing a vertical timeline of 6 placeholder rows.
+- Within 200ms (Phase 3+), the SSE stream connects and the orchestrator begins emitting events.
 - Each placeholder row fills in **as the agent's output becomes available**, not all at once.
 - The visitor watches structured outputs — bullet points, severity badges, dollar amounts — appear progressively. NOT raw model text streaming character-by-character.
 
@@ -128,23 +136,46 @@ The one freeform field is `customer_request`. That's where the agent reasoning h
 
 ### Visual language
 
-Aesthetic target: **Linear / Stripe / Mercury**.
+Aesthetic target: **Clay's actual product UI**.
 
-- **Whitespace-heavy.** Default vertical rhythm: 24px between sections, 16px between items.
-- **Two-tone palette.**
-  - Background: `#FAFAF9` (off-white, warm)
+The reference is the live Clay app: a left sidebar with the workspace identity at the top, a persistent top-right user-identity slot, white content surfaces with very subtle borders (no shadows / no glass), Clay-style table views with row numbers and small lucide-style type icons in column headers, friendly-but-restrained geometric icons on dashboard cards, and the brand blue (#3B82F6) used sparingly on filled CTAs, links, and "active" highlights. Body density is tight (Clay tables sit comfortably at ~36–40px row heights, ~13px text) — much denser than a Linear/Stripe-style marketing surface.
+
+We do **not** mimic Clay's actual logo, illustrations, or color gradient. Our wordmark is text-only ("Kiln · where clay gets fired into final form"); our dashboard icons are simple geometric primitives in their own palette.
+
+- **Density.** Body baseline 13.5px / 1.45 line-height. Section spacing ~16–24px (down ~25% from a marketing-style rhythm). Table rows ~36–40px tall.
+- **Palette.**
+  - Background (content surfaces): `#FFFFFF` (pure white)
+  - Background (sidebar / secondary surfaces): `#FAFAFA`
+  - Background (hover state): `#F5F5F5`
   - Foreground: `#0A0A0A` (near-black)
-  - Accent: `#C2410C` (clay terracotta — on-brand-but-subtle)
-  - Muted: `#737373` (neutral gray)
-  - Success: `#15803D` (green-700)
+  - Accent / brand: `#3B82F6` (Clay blue — sampled from the reference UI). Used for filled primary CTAs, links, the "Start here" pulsing dot, the closed-won ✓ Won badge, active sidebar highlights.
+  - Muted text: `#737373`
+  - Border: `#E5E5E5` (very subtle, used everywhere a divider is needed)
+  - Success: `#15803D` (green-700) — kept for non-deal contexts; closed-won uses brand-blue
   - Warning: `#A16207` (amber-700)
   - Danger: `#B91C1C` (red-700)
 - **Typography**:
-  - Headings: Inter, weight 600, tight letter-spacing
-  - Body: Inter, weight 400
-  - Numbers (anywhere): JetBrains Mono or Berkeley Mono — monospace tabular figures
-- **Borders**: 1px, gray-200. No drop shadows, no glows, no glassmorphism.
-- **Radii**: 6px on cards, 4px on buttons, 9999px on pills.
+  - **Inter** for everything (UI, body, headings). Weight 600 for headings, 500 for medium emphasis, 400 for body.
+  - **JetBrains Mono only for numbers** (ACV, TCV, term, row numbers, audit-log timestamps). Tabular figures everywhere — numbers should never reflow.
+- **Borders**: 1px, `#E5E5E5`. No drop shadows, no glows, no glassmorphism on content surfaces. The slide-over panel is the one place we allow `shadow-2xl` because it sits over the dimmed scrim and needs to read as floating.
+- **Radii**: 6px on cards and inputs, 4px on toolbar/ghost buttons, 9999px on pills/badges.
+
+### Buttons
+
+- **Primary**: filled `#3B82F6` background, white text. Used for the "Run review" CTA and submit-deal flows. Not for navigation.
+- **Ghost / toolbar**: no background, muted text, subtle border + bg-surface-hover on hover. Used for Filter/Sort/View toolbar items.
+- **Icon buttons** (X, hamburger): square 28–36px target, no border at rest, bg-surface-hover on hover.
+
+### Layout primitives
+
+These are the four chrome elements that define every surface. They were locked in during the Phase 2 visual restyle.
+
+| Primitive | Where | Purpose |
+|---|---|---|
+| **Persistent left sidebar** (`components/sidebar.tsx`) | Mounted by `components/app-shell.tsx` on every route | Brand wordmark + main nav (Home, Pipeline, GitHub). ~200px wide on desktop; collapses behind a hamburger toggle on mobile and slides in as a backdrop-dimmed drawer. Active item = `bg-surface-hover`, no border accent. |
+| **Workspace badge** (`components/workspace-badge.tsx`) | Top-right of the persistent top bar | Ambient identity slot — "Demo Mode · Kiln Workspace" with a small pulsing brand-blue dot. Non-interactive. |
+| **Dashboard at `/`** (`app/page.tsx`) | Root URL | Welcome heading + warm sub-copy in Clay's "What will you build today?" register, a row of entry cards with colored geometric icons, then a sparse "Workspaces & views" table list. Cards link only to pages that already exist; new surfaces add cards in later phases. Dashboard links to `/deals/*` use **hard navigation** (`<a href>`) so they open the full deal page, not the slide-over. |
+| **Slide-over for deal detail** (`app/@modal/(.)deals/[id]/page.tsx` + `components/slide-over-shell.tsx`) | Triggered by client-side navigation to `/deals/<id>` from `/pipeline` | Right-side panel covering ~90% of the viewport width on desktop with a 10% dimmed scrim on the left; full-screen on mobile (no scrim). Closes on X / ESC / scrim-click / browser back. URL updates to `/deals/<id>` for deep-linking. Direct URL access (or any `<a href>` hard nav) renders the full standalone page instead — the same `<DealDetail>` component is shared between both surfaces. |
 
 ### Components (shadcn/ui base, customized)
 
@@ -161,21 +192,32 @@ Use these shadcn components, lightly themed to match the palette:
 
 ### Custom components to build
 
-| Component | Purpose |
-|---|---|
-| `<ReasoningStream>` | The vertical timeline that updates as SSE events arrive |
-| `<DealHeader>` | Sticky top bar with deal metadata + reset |
-| `<AgentOutputCard>` | Wrapper for each sub-agent's structured output, with collapsible reasoning |
-| `<GuardrailBadge>` | Severity-colored pill showing pricing guardrail status |
-| `<SimilarDealCard>` | Inline card for vector-search results |
-| `<CustomerSignalsPanel>` | Exa results presented as a feed |
-| `<PricingModeler>` | Interactive sliders for what-if analysis |
-| `<ApprovalMatrixEditor>` | The Tier 2 power-user feature |
-| `<CPQComparisonPanel>` | The "what would Salesforce CPQ have done" view |
-| `<AuditLogView>` | Chronological agent decisions, JSON-inspectable |
-| `<SlackEmbed>` | The live demo Slack post embed |
-| `<ArtifactsPanel>` | The 5 download buttons grid (MSA, order form, email, one-pager, .xlsx workbook) |
-| `<OpenInSheetsButton>` | Phase 8 only — triggers Google Sheets API copy + populate, opens result in new tab |
+| Component | Purpose | Status |
+|---|---|---|
+| `<Sidebar>` | Persistent left rail with brand + nav + active highlight | ✅ Phase 2 |
+| `<WorkspaceBadge>` | Top-right ambient identity slot | ✅ Phase 2 |
+| `<AppShell>` | Composes sidebar + top bar + main slot | ✅ Phase 2 |
+| `<EntryCard>` + `<GeometricIcon>` | Dashboard entry-point cards with colored geometric icons | ✅ Phase 2 |
+| `<SurfacesTable>` | Sparse Clay-style "available surfaces" table on the dashboard | ✅ Phase 2 |
+| `<PipelineToolbar>` | Default View · N Deals · N Columns · Filter · Sort | ✅ Phase 2 |
+| `<PipelineSection>` | Clay-style table grid with row-number gutter and type-iconed headers | ✅ Phase 2 |
+| `<StartHereTag>` | Brand-blue pulsing-dot pill on the recommended hero row | ✅ Phase 2 |
+| `<StageBadge>` / `<DifficultyBadge>` | Severity-colored pills incl. ✓ Won variant for closed-won | ✅ Phase 2 |
+| `<DealHeader>` / `<DealMetadata>` / `<DealDetail>` | Sticky deal header + 3-card metadata grid + customer-request panel | ✅ Phase 2 |
+| `<TimelinePlaceholder>` | Empty 6-step orchestrator timeline skeleton | ✅ Phase 2 |
+| `<SlideOverShell>` | Right-side slide-over with X / ESC / scrim / back-button close | ✅ Phase 2 |
+| `<ReasoningStream>` | The vertical timeline that updates as SSE events arrive | Phase 3 |
+| `<AgentOutputCard>` | Wrapper for each sub-agent's structured output, with collapsible reasoning | Phase 3 |
+| `<GuardrailBadge>` | Severity-colored pill showing pricing guardrail status | Phase 3 |
+| `<SimilarDealCard>` | Inline card for vector-search results | Phase 5 |
+| `<CustomerSignalsPanel>` | Exa results presented as a feed | Phase 5 |
+| `<PricingModeler>` | Interactive sliders for what-if analysis | Phase 8 |
+| `<ApprovalMatrixEditor>` | The Tier 2 power-user feature | Phase 8 |
+| `<CPQComparisonPanel>` | The "what would Salesforce CPQ have done" view | Phase 8 |
+| `<AuditLogView>` | Chronological agent decisions, JSON-inspectable | Phase 8 |
+| `<SlackEmbed>` | The live demo Slack post embed | Phase 6 |
+| `<ArtifactsPanel>` | The 5 download buttons grid (MSA, order form, email, one-pager, .xlsx workbook) | Phase 7 |
+| `<OpenInSheetsButton>` | Phase 8 only — triggers Google Sheets API copy + populate, opens result in new tab | Phase 8 |
 
 ### Streaming UX details
 
@@ -226,6 +268,7 @@ This pacing is critical. Too fast and it feels chaotic. Too slow and the visitor
 - ❌ Marketing-style hero sections with giant headlines
 - ❌ "Powered by AI" badges or branding
 - ❌ Dark mode for v1 (light mode only — half the audience views in bright daylight on phone)
+- ❌ Mimicking Clay's actual logo, illustrations, color gradient, or copy. The wordmark is text-only ("Kiln · where clay gets fired into final form"); dashboard icons are our own geometric primitives. We're matching the *layout register* of Clay's product UI, not impersonating the brand.
 - ❌ Carousel/slider components anywhere
 - ❌ Modal popups that aren't user-initiated
 - ❌ Cookie banners (no cookies needed)
