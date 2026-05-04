@@ -1,13 +1,19 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { query } from "@anthropic-ai/claude-agent-sdk";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { PricingOutputSchema, type PricingOutput } from "./schemas";
 import { getDealContext } from "../tools/crm";
+import { CRM_TOOL_NAMES, crmMcpServer } from "../mcp-servers/crm-server";
 
-// Model + sampling per docs/03-agents.md §Model selection / §Determinism for the demo.
+// Pricing Agent — driven through @anthropic-ai/claude-agent-sdk's query().
+//
+// The SDK is the framework even though Phase 3's Pricing Agent is a leaf-node
+// reasoning task: data is fed inline via the user message and the agent
+// returns a single JSON object. Registering the `crm` MCP server keeps the
+// architecture honest — Phase 4's orchestrator will exercise these same
+// tools to gather context before fanning out to sub-agents.
+
 const MODEL = "claude-sonnet-4-6";
-const TEMPERATURE = 0.2;
-const MAX_TOKENS = 4096;
 
 const PROMPT_PATH = join(
   process.cwd(),
@@ -27,6 +33,7 @@ export interface RunPricingResult {
   durationMs: number;
   inputTokens: number | null;
   outputTokens: number | null;
+  costUsd: number | null;
 }
 
 export async function runPricingAgent(
@@ -45,6 +52,7 @@ export async function runPricingAgent(
       durationMs: Date.now() - start,
       inputTokens: null,
       outputTokens: null,
+      costUsd: null,
     };
   }
 
@@ -55,29 +63,67 @@ export async function runPricingAgent(
   }
 
   const ctx = getDealContext(dealId);
-  const template = readFileSync(PROMPT_PATH, "utf-8");
-  const prompt = template
-    .replace("{{DEAL_JSON}}", JSON.stringify(ctx.deal, null, 2))
-    .replace("{{GUARDRAILS_JSON}}", JSON.stringify(ctx.guardrails, null, 2))
-    .replace(
-      "{{SIMILAR_DEALS_JSON}}",
-      JSON.stringify(ctx.similarDeals, null, 2),
-    );
+  const systemPrompt = readFileSync(PROMPT_PATH, "utf-8");
+  const userMessage = buildUserMessage(ctx);
 
-  const client = new Anthropic();
-  const resp = await client.messages.create({
-    model: MODEL,
-    max_tokens: MAX_TOKENS,
-    temperature: TEMPERATURE,
-    messages: [{ role: "user", content: prompt }],
+  // Drive the agent through the SDK. settingSources: [] keeps the run
+  // hermetic (no ~/.claude or .claude/settings.json bleed). tools: [] disables
+  // built-in Claude Code tools (Bash/Read/Write/Edit/etc.) so the only
+  // surface available is the MCP server we register.
+  const session = query({
+    prompt: userMessage,
+    options: {
+      model: MODEL,
+      systemPrompt,
+      tools: [],
+      mcpServers: { crm: crmMcpServer },
+      allowedTools: [...CRM_TOOL_NAMES],
+      settingSources: [],
+      permissionMode: "bypassPermissions",
+      allowDangerouslySkipPermissions: true,
+      // The Pricing Agent is bounded reasoning over a fixed payload. Skip the
+      // adaptive-thinking warmup Sonnet 4.6 does by default — it doubles
+      // latency and tokens without changing the structured output.
+      thinking: { type: "disabled" },
+      effort: "low",
+      // Phase 3 doesn't need an agent loop — the deal payload is already in
+      // the user message. maxTurns=2 leaves headroom for one tool call if
+      // the model decides it wants to verify a value, but caps the loop.
+      maxTurns: 2,
+    },
   });
 
-  const text = resp.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("");
+  let assistantText = "";
+  let inputTokens: number | null = null;
+  let outputTokens: number | null = null;
+  let costUsd: number | null = null;
+  let resultErrored = false;
+  let resultErrorMessage: string | null = null;
 
-  const json = extractJsonObject(text);
+  for await (const msg of session) {
+    if (msg.type === "result") {
+      if (msg.subtype === "success") {
+        assistantText = msg.result;
+        inputTokens = msg.usage?.input_tokens ?? null;
+        outputTokens = msg.usage?.output_tokens ?? null;
+        costUsd = msg.total_cost_usd ?? null;
+      } else {
+        resultErrored = true;
+        resultErrorMessage =
+          (msg as { subtype?: string }).subtype ?? "unknown agent error";
+      }
+    }
+  }
+
+  if (resultErrored || !assistantText) {
+    throw new Error(
+      `Pricing Agent did not produce a final assistant message${
+        resultErrorMessage ? `: ${resultErrorMessage}` : ""
+      }`,
+    );
+  }
+
+  const json = extractJsonObject(assistantText);
   const output = PricingOutputSchema.parse(json);
 
   // Cache successful hero-scenario outputs for demo determinism.
@@ -89,16 +135,44 @@ export async function runPricingAgent(
     output,
     fromCache: false,
     durationMs: Date.now() - start,
-    inputTokens: resp.usage.input_tokens ?? null,
-    outputTokens: resp.usage.output_tokens ?? null,
+    inputTokens,
+    outputTokens,
+    costUsd,
   };
+}
+
+function buildUserMessage(ctx: ReturnType<typeof getDealContext>): string {
+  return [
+    "Review the following deal and return a `PricingOutput` JSON object as specified in your system prompt. Do not call any tools — every input you need is below.",
+    "",
+    "## Active deal under review",
+    "```json",
+    JSON.stringify(ctx.deal, null, 2),
+    "```",
+    "",
+    "## Active pricing guardrails (scoped to deal segment + universal)",
+    "```json",
+    JSON.stringify(ctx.guardrails, null, 2),
+    "```",
+    "",
+    "## Top similar past deals (precedent context)",
+    "```json",
+    JSON.stringify(ctx.similarDeals, null, 2),
+    "```",
+    "",
+    "Return one JSON object now. No preamble. No code fences. JSON only.",
+  ].join("\n");
 }
 
 function extractJsonObject(text: string): unknown {
   // Models occasionally wrap JSON in ```json ... ``` despite instructions, or
   // emit a stray newline before the opening brace. Find the first balanced
   // top-level object and parse it.
-  const stripped = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```$/i, "").trim();
+  const stripped = text
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```$/i, "")
+    .trim();
   const firstBrace = stripped.indexOf("{");
   const lastBrace = stripped.lastIndexOf("}");
   if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {

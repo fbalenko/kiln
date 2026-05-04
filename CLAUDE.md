@@ -73,6 +73,44 @@ When you start a task, consult the relevant doc(s) **before writing code**.
 
 Do **not** introduce: Postgres, Redis, Docker, microservices, GraphQL, tRPC, custom auth, payment processors. This is a single Next.js app with a SQLite file. Keep it that way.
 
+### 3a. Agent SDK usage pattern (Phase 3+)
+
+Every sub-agent and the orchestrator are driven through `@anthropic-ai/claude-agent-sdk`'s `query()` — never `@anthropic-ai/sdk` directly. The SDK is the framework even when an individual agent is a leaf-node reasoning task with no tool loop (Pricing in Phase 3 is exactly that shape).
+
+Canonical agent shape (`lib/agents/<name>.ts`):
+
+```ts
+import { query } from "@anthropic-ai/claude-agent-sdk";
+import { crmMcpServer, CRM_TOOL_NAMES } from "@/lib/mcp-servers/crm-server";
+
+const session = query({
+  prompt: userMessage,                 // structured deal payload as JSON in markdown
+  options: {
+    model: "claude-sonnet-4-6",        // or claude-opus-4-7 / claude-haiku-4-5-20251001
+    systemPrompt: readFileSync(promptPath, "utf-8"),
+    tools: [],                         // disable built-in Claude Code tools
+    mcpServers: { crm: crmMcpServer }, // wire MCP servers even if not exercised yet
+    allowedTools: [...CRM_TOOL_NAMES], // pre-approve so no permission prompts
+    settingSources: [],                // hermetic — no ~/.claude or .claude/settings bleed
+    permissionMode: "bypassPermissions",
+    allowDangerouslySkipPermissions: true,
+    thinking: { type: "disabled" },    // skip adaptive thinking warmup (5x faster on Sonnet 4.6)
+    effort: "low",                     // bounded reasoning — these are leaf agents, not autonomous
+    maxTurns: 2,                       // headroom for one tool call, then must answer
+  },
+});
+
+for await (const msg of session) {
+  if (msg.type === "result" && msg.subtype === "success") {
+    return parseSchema(msg.result);    // Zod parse → typed PricingOutput / Asc606Output / etc.
+  }
+}
+```
+
+MCP servers live in `lib/mcp-servers/<name>-server.ts` and are built with `createSdkMcpServer({ tools: [tool(...)] })`. Tool handlers wrap the queries layer (`lib/db/queries.ts`). Even when the Phase 3 Pricing Agent feeds data inline via the user message, the `crm` server is registered so Phase 4's orchestrator can call `mcp__crm__get_deal` / `mcp__crm__get_pricing_guardrails` to gather context. Tool names are namespaced as `mcp__<server-name>__<tool-name>` — pass them in `allowedTools` to skip permission prompts.
+
+Note on temperature: the Agent SDK does not expose `temperature` directly. Determinism for the demo comes from file-based caching in `db/seed/cached_outputs/<deal_id>-<agent>.json` (per `docs/03-agents.md §Determinism`), not from sampling control. Set `thinking: disabled` + `effort: low` on bounded reasoning agents to keep latency and tokens predictable.
+
 ---
 
 ## 4. Repo conventions
