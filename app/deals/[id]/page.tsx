@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { getDealById } from "@/lib/db/queries";
-import { SiteHeader } from "@/components/site-header";
 import { DealHeader } from "@/components/deal/deal-header";
 import { DealMetadata } from "@/components/deal/deal-metadata";
 import { TimelinePlaceholder } from "@/components/deal/timeline-placeholder";
@@ -28,9 +27,8 @@ export default async function DealPage({ params }: Props) {
 
   return (
     <>
-      <SiteHeader />
       <DealHeader deal={deal} />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-5 sm:px-6 sm:pt-6">
+      <div className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-5 sm:px-6 sm:pt-6">
         <DealMetadata deal={deal} />
 
         <section className="mt-8">
@@ -48,7 +46,7 @@ export default async function DealPage({ params }: Props) {
             <TimelinePlaceholder />
           </div>
         </section>
-      </main>
+      </div>
     </>
   );
 }

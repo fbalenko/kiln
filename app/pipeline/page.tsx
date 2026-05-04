@@ -1,5 +1,4 @@
 import { listDeals } from "@/lib/db/queries";
-import { SiteHeader } from "@/components/site-header";
 import { PipelineSection } from "@/components/pipeline/pipeline-section";
 
 export const dynamic = "force-dynamic";
@@ -23,31 +22,28 @@ export default function PipelinePage() {
     .slice(0, 8);
 
   return (
-    <>
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-6xl flex-1 pb-16 pt-6 sm:pt-8">
-        <div className="px-4 sm:px-6">
-          <h1 className="text-base font-semibold text-foreground">
-            Deal pipeline
-          </h1>
-          <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-            A multi-agent deal desk co-pilot, built for Clay&rsquo;s Deal
-            Strategy &amp; Ops team. Pick a scenario to watch the agents
-            review it.
-          </p>
-        </div>
-        <PipelineSection
-          title="Hero scenarios"
-          subtitle={`${heroes.length} ready for review`}
-          deals={heroes}
-        />
-        <PipelineSection
-          title="Past deals (closed-won)"
-          subtitle={`${closedWon.length} historical · institutional memory`}
-          deals={closedWon}
-          muted
-        />
-      </main>
-    </>
+    <div className="mx-auto w-full max-w-6xl flex-1 pb-16 pt-6 sm:pt-8">
+      <div className="px-4 sm:px-6">
+        <h1 className="text-base font-semibold text-foreground">
+          Deal pipeline
+        </h1>
+        <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+          A multi-agent deal desk co-pilot, built for Clay&rsquo;s Deal
+          Strategy &amp; Ops team. Pick a scenario to watch the agents
+          review it.
+        </p>
+      </div>
+      <PipelineSection
+        title="Hero scenarios"
+        subtitle={`${heroes.length} ready for review`}
+        deals={heroes}
+      />
+      <PipelineSection
+        title="Past deals (closed-won)"
+        subtitle={`${closedWon.length} historical · institutional memory`}
+        deals={closedWon}
+        muted
+      />
+    </div>
   );
 }
