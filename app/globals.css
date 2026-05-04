@@ -46,6 +46,11 @@
 
   --color-clay: var(--clay);
   --color-clay-foreground: var(--clay-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-surface: var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-hover: var(--surface-hover);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
@@ -60,8 +65,8 @@
 }
 
 :root {
-  /* Kiln palette — see docs/05-ui-ux.md */
-  --background: #fafaf9;
+  /* Kiln palette — modeled on Clay's product UI. See docs/05-ui-ux.md. */
+  --background: #ffffff;
   --foreground: #0a0a0a;
 
   --card: #ffffff;
@@ -70,32 +75,41 @@
   --popover: #ffffff;
   --popover-foreground: #0a0a0a;
 
-  --primary: #0a0a0a;
-  --primary-foreground: #fafaf9;
+  /* Primary CTA = Clay-blue filled button */
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
 
-  --secondary: #f5f5f4;
+  --secondary: #fafafa;
   --secondary-foreground: #0a0a0a;
 
-  --muted: #f5f5f4;
+  --muted: #fafafa;
   --muted-foreground: #737373;
 
-  --accent: #f5f5f4;
+  --accent: #f5f5f5;
   --accent-foreground: #0a0a0a;
 
   --destructive: #b91c1c;
 
   --border: #e5e5e5;
   --input: #e5e5e5;
-  --ring: #a3a3a3;
+  --ring: #3b82f6;
 
-  /* Kiln semantic tokens */
-  --clay: #c2410c;
-  --clay-foreground: #fafaf9;
+  /* Kiln brand + surface tokens. `clay` is kept as an alias for the
+     accent so historical class names continue to work; both resolve
+     to Clay-blue. */
+  --brand: #3b82f6;
+  --brand-foreground: #ffffff;
+  --clay: #3b82f6;
+  --clay-foreground: #ffffff;
+  --surface: #ffffff;
+  --surface-secondary: #fafafa;
+  --surface-hover: #f5f5f5;
+
   --success: #15803d;
   --warning: #a16207;
   --danger: #b91c1c;
 
-  --chart-1: #c2410c;
+  --chart-1: #3b82f6;
   --chart-2: #15803d;
   --chart-3: #a16207;
   --chart-4: #737373;
@@ -103,14 +117,14 @@
 
   --radius: 0.375rem;
 
-  --sidebar: #fafaf9;
+  --sidebar: #fafafa;
   --sidebar-foreground: #0a0a0a;
-  --sidebar-primary: #0a0a0a;
-  --sidebar-primary-foreground: #fafaf9;
-  --sidebar-accent: #f5f5f4;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5f5f5;
   --sidebar-accent-foreground: #0a0a0a;
   --sidebar-border: #e5e5e5;
-  --sidebar-ring: #a3a3a3;
+  --sidebar-ring: #3b82f6;
 }
 
 .dark {
@@ -170,6 +184,10 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "cv11", "ss01";
+    /* Body baseline ~13.5px to match Clay's tighter density (down from
+       Tailwind's default 16px). Per-component classes can override. */
+    font-size: 13.5px;
+    line-height: 1.45;
   }
   html {
     @apply font-sans;
