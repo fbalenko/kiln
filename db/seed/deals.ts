@@ -387,18 +387,22 @@ const proposal: DealSeed[] = [
     proposed_price: 310_000,
     discount_pct: 8.8,
     discount_reason:
-      "Multi-department unification (RevOps + Sales Engineering) on a single contract.",
+      "Cross-department unification (RevOps + Sales Engineering) on one contract. Modest discount anchors a 50/50 internal chargeback; defends against the Q3 vendor-consolidation review.",
     payment_terms: "annual_upfront",
     payment_terms_notes: null,
     pricing_model: "subscription",
     usage_commit_units: null,
     overage_rate: null,
-    non_standard_clauses: JSON.stringify(["multi_dept_pricing_unified"]),
+    non_standard_clauses: JSON.stringify([
+      "multi_dept_pricing_unified",
+      "department_chargeback_split_50_50",
+    ]),
     ae_owner: "Maya Chen",
     ae_manager: "Sarah Goldstein",
-    competitive_context: "No active competitor; expansion within an existing footprint.",
+    competitive_context:
+      "Verkada's CIO is sponsoring a Q3 vendor-consolidation initiative — they're trimming 18 SaaS contracts down to 12. Risk is being grouped with a smaller-spend vendor and rolled into one of those cuts.",
     customer_request:
-      "Verkada's RevOps and Sales Engineering both want Clay access. Initial proposal sent Friday with unified pricing across both departments at $310K/yr. Awaiting their security team's review — typical 2-week turn for them.",
+      "Verkada's RevOps (Tess Liu) and Sales Engineering (Vikram Patel) both want Clay access — historically RevOps has had a $180K seat license and SE was about to spin up their own contract. Initial proposal sent Friday: $310K/yr unified across both departments with a 50/50 chargeback split internally so each cost-center owner is whole. Awaiting their security team's review (typical 2-week turn). AE flagged that Procurement asked whether we'd accept the unified $310K being conditional on a 24-month commit — she punted to RevOps for the answer.",
     close_date: "2026-07-20",
     is_scenario: 0,
   },
@@ -416,21 +420,24 @@ const proposal: DealSeed[] = [
     proposed_price: 480_000,
     discount_pct: 14.3,
     discount_reason:
-      "Multi-subsidiary consolidation. 3-year commit anchors a strategic logistics logo win.",
+      "4-subsidiary consolidation under one holding-co invoice. 3-year commit anchors a strategic enterprise logistics logo against an internal-rebuild alternative.",
     payment_terms: "annual_upfront",
     payment_terms_notes:
-      "Single consolidated invoice across 4 subsidiaries (Tideline Express, Freight, Last-Mile, Hub).",
+      "Single consolidated invoice across 4 subsidiaries (Tideline Express, Freight, Last-Mile, Hub) paid by the holding co.",
     pricing_model: "subscription",
     usage_commit_units: null,
     overage_rate: null,
     non_standard_clauses: JSON.stringify([
       "multi_subsidiary_consolidated_invoice",
+      "subsidiary_data_segregation",
+      "shared_admin_for_holding_co",
     ]),
     ae_owner: "Priya Shankar",
     ae_manager: "Marcus Reilly",
-    competitive_context: "Greenfield — no competing vendor in the eval.",
+    competitive_context:
+      "No vendor in the eval — internal alternative is a custom-built tool a 6-person Tideline team has been maintaining since 2022. Their CTO publicly said in Q1 earnings he wants to retire 'home-grown software whose maintainers leave.'",
     customer_request:
-      "Tideline's CRO requested a structure covering all 4 subsidiaries (Tideline Express, Tideline Freight, Tideline Last-Mile, Tideline Hub) on a single consolidated invoice. Initial proposal sent at $480K/yr; expecting pushback on the multi-year commit.",
+      "Tideline's CRO (Andre Beaumont) wants a structure covering all 4 subsidiaries — Tideline Express, Freight, Last-Mile, and Hub — on a single consolidated invoice paid by the holding co. They've also asked that data from each subsidiary stay segregated (their freight ops can't see last-mile pipeline) and that one shared admin user at the holding-co level can see across them. Initial proposal sent at $480K/yr ($1.44M TCV across 36mo). AE expects pushback on the multi-year — Procurement has historically refused anything over 24 months until last year.",
     close_date: "2026-08-25",
     is_scenario: 0,
   },
@@ -448,18 +455,23 @@ const proposal: DealSeed[] = [
     proposed_price: 390_000,
     discount_pct: 11.4,
     discount_reason:
-      "Healthtech enterprise; PHI handling adds compliance cost — modest discount to anchor logo.",
+      "Healthtech enterprise. PHI handling + quarterly subprocessor audit add compliance overhead; 11.4% off list anchors the logo and the differentiation vs. ZoomInfo's BAA template.",
     payment_terms: "annual_upfront",
     payment_terms_notes: null,
     pricing_model: "subscription",
     usage_commit_units: null,
     overage_rate: null,
-    non_standard_clauses: JSON.stringify(["baa_required", "phi_handling_addendum"]),
+    non_standard_clauses: JSON.stringify([
+      "baa_required",
+      "phi_handling_addendum",
+      "subprocessor_phi_audit_quarterly",
+    ]),
     ae_owner: "Devon Wright",
     ae_manager: "Sarah Goldstein",
-    competitive_context: "Comparing against ZoomInfo Health-vertical bundle.",
+    competitive_context:
+      "Bake-off vs. ZoomInfo's healthcare-vertical bundle. ZoomInfo is cheaper (~$310K) but their CISO has flagged compliance gaps in ZoomInfo's BAA template — she sent us a 12-line redline of theirs as 'an example of what we don't want.'",
     customer_request:
-      "Helix needs a BAA executed before kickoff and PHI handling language in the MSA. Initial proposal sent at $390K. Their CISO has flagged a few subprocessor questions; preparing responses.",
+      "Helix needs a BAA executed before kickoff (their template, not ours), PHI handling language inserted into MSA section 8, and a quarterly audit obligation on any subprocessor we route PHI through. Initial proposal sent at $390K/yr ($780K TCV); their CISO (Dr. Ramona Kim) responded inside 48 hours with 4 pages of subprocessor questions and a specific concern about data egress in the EU/UK enrichment paths. Drafting responses with our InfoSec lead this week. AE thinks legal turn could be 4–6 weeks even after she signs off.",
     close_date: "2026-08-10",
     is_scenario: 0,
   },
@@ -476,7 +488,8 @@ const proposal: DealSeed[] = [
     list_price: 165_000,
     proposed_price: 145_000,
     discount_pct: 12.1,
-    discount_reason: "3-year commit in regulated insurtech vertical.",
+    discount_reason:
+      "3-year commit in regulated insurtech. Discount unlocks a board-mandated 3-vendor consolidation and absorbs the cost of quarterly credit rollover.",
     payment_terms: "annual_upfront",
     payment_terms_notes: null,
     pricing_model: "subscription",
@@ -484,12 +497,14 @@ const proposal: DealSeed[] = [
     overage_rate: null,
     non_standard_clauses: JSON.stringify([
       "unused_credit_rollover_quarterly",
+      "vendor_consolidation_commitment_3vendors",
     ]),
     ae_owner: "Maya Chen",
     ae_manager: "Sarah Goldstein",
-    competitive_context: "No active competitor — replacing in-house spreadsheets.",
+    competitive_context:
+      "No active head-to-head competitor, but Glacial's CFO has a board mandate to consolidate 3 vendor contracts (currently using Apollo + a regional data broker + a custom LinkedIn scraper) into one. Our case rests on whether we can credibly absorb all three workflows.",
     customer_request:
-      "Glacial proposed at $145K/yr for 3 years. They've asked about quarterly rollover of any unused enrichment credits — pending response from us. Decision pace: their normal 6-week procurement cycle.",
+      "Glacial proposed at $145K/yr for 3 years ($435K TCV). They've asked about quarterly rollover of any unused enrichment credits — pending response from us, but probable yes given their lumpy claims-cycle usage. They also want a contract clause noting the deal explicitly retires their three current vendors (Apollo + a regional broker + a custom scraper) so their CFO can show the consolidation in board materials. Their normal procurement cycle is 6 weeks; they're at week 3.",
     close_date: "2026-08-05",
     is_scenario: 0,
   },
@@ -506,18 +521,23 @@ const proposal: DealSeed[] = [
     list_price: 58_000,
     proposed_price: 52_000,
     discount_pct: 10.3,
-    discount_reason: "Standard PLG-to-mid-market upgrade discount.",
+    discount_reason:
+      "PLG-to-mid-market upgrade. Discount earned via 24-month commit, absorption of 3 separate workspace tenancies into one enterprise tenant, and a grandfathered founder seat.",
     payment_terms: "annual_upfront",
     payment_terms_notes: null,
     pricing_model: "subscription",
     usage_commit_units: null,
     overage_rate: null,
-    non_standard_clauses: null,
+    non_standard_clauses: JSON.stringify([
+      "multi_workspace_consolidation",
+      "founder_seat_grandfathered",
+    ]),
     ae_owner: "Devon Wright",
     ae_manager: "Sarah Goldstein",
-    competitive_context: "No active competitor.",
+    competitive_context:
+      "No active competitor — Slate is product-led all the way through. Their VP Sales (Jordan Ellis) trialed Apollo six months ago, found it 'redundant with what we already had in Clay self-serve,' and walked away.",
     customer_request:
-      "Slate is upgrading from 8 self-serve seats to a 22-seat mid-market plan. Standard structure proposed; awaiting their VP Sales sign-off.",
+      "Slate is upgrading from 8 self-serve seats (across 3 separate workspaces — they kept spinning new ones because their PLG tier didn't support enough seats per workspace) to a 22-seat mid-market plan, $52K/yr on 24 months. They're asking that we consolidate the 3 existing workspaces into the enterprise tenant without losing any of their list/table data, and that their founder's existing $90/mo individual seat be grandfathered in the new contract at no cost. AE is awaiting VP Sales (Jordan Ellis) sign-off; she's been the champion since their first $20/mo workspace.",
     close_date: "2026-06-30",
     is_scenario: 0,
   },
@@ -534,18 +554,23 @@ const proposal: DealSeed[] = [
     list_price: 46_000,
     proposed_price: 42_000,
     discount_pct: 8.7,
-    discount_reason: "Small mid-market expansion with founder as decision-maker.",
+    discount_reason:
+      "Founder-led mid-market expansion (6 → 14 seats). Single-decision-maker velocity is the unlock; standard envelope discount.",
     payment_terms: "annual_upfront",
     payment_terms_notes: null,
     pricing_model: "subscription",
     usage_commit_units: null,
     overage_rate: null,
-    non_standard_clauses: null,
+    non_standard_clauses: JSON.stringify([
+      "founder_managed_invoice_email",
+      "annual_pause_2_weeks_design_studio_closure",
+    ]),
     ae_owner: "Devon Wright",
     ae_manager: "Sarah Goldstein",
-    competitive_context: null,
+    competitive_context:
+      "No vendor competitor. Filament's founder previously built an Apollo Enterprise integration as a contractor for a former employer; he likes Clay's table model better and is voluntary on the choice.",
     customer_request:
-      "Filament expanding from 6 seats to 14. Initial proposal sent; their founder is the decision-maker so cycle should be quick.",
+      "Filament expanding from 6 seats to 14 ($42K/yr on 24mo). Their founder (Marcus Cole) is the decision-maker, the buyer, and the AP contact — he asked that the invoice be sent only to his personal Filament email so it doesn't bounce around their finance contractor. They also want a 2-week annual pause clause to cover their summer studio closure (week of July 4, week of Christmas — they shut the entire studio down). AE expects sign-off this week; founder said 'send paper Tuesday I sign Wednesday.'",
     close_date: "2026-06-15",
     is_scenario: 0,
   },
@@ -563,18 +588,22 @@ const proposal: DealSeed[] = [
     proposed_price: 130_000,
     discount_pct: 10.3,
     discount_reason:
-      "Proptech mid-market. US-only data processing constraint adds cost; modest anchoring discount.",
+      "Proptech mid-market with regulatory US-only data processing requirement. Modest anchoring discount; MLS indemnity carve-out negotiated separately.",
     payment_terms: "annual_upfront",
     payment_terms_notes: null,
     pricing_model: "subscription",
     usage_commit_units: null,
     overage_rate: null,
-    non_standard_clauses: JSON.stringify(["us_only_data_processing"]),
+    non_standard_clauses: JSON.stringify([
+      "us_only_data_processing",
+      "mls_listing_data_indemnity_carveout",
+    ]),
     ae_owner: "Maya Chen",
     ae_manager: "Sarah Goldstein",
-    competitive_context: "Bake-off against an in-region proptech-vertical vendor.",
+    competitive_context:
+      "Bake-off against Reonomy (incumbent in proptech-vertical data) and a regional vendor called HouseGraph that's cheaper but has thinner enrichment. Reonomy's CRO is reportedly offering aggressive renewal terms to defend.",
     customer_request:
-      "Olmstead requires US-only data processing for compliance. Initial proposal sent; their security team is reviewing the regional commitment language.",
+      "Olmstead requires US-only data processing for compliance with their state-level real estate data licensing terms — no EU/Canada subprocessors at all. They've also asked we accept an indemnity carve-out for any MLS listing data their team uploads (the MLS data has its own license terms separate from ours). Proposal sent at $130K/yr; their security team is reviewing the regional commitment language. AE flagged that Olmstead's CFO has been asking about Reonomy's renewal terms — we need to hold pricing firm but offer the regional clause as the unlock.",
     close_date: "2026-07-25",
     is_scenario: 0,
   },
@@ -591,18 +620,23 @@ const proposal: DealSeed[] = [
     list_price: 100_000,
     proposed_price: 88_000,
     discount_pct: 12.0,
-    discount_reason: "Small insurtech logo. Standard discount for 2-year commit.",
+    discount_reason:
+      "Insurtech logo with regulator-facing SOC 2 attestation commitment. 12% off list anchors the 24mo term and the multi-state attestation obligation.",
     payment_terms: "annual_upfront",
     payment_terms_notes: null,
     pricing_model: "subscription",
     usage_commit_units: null,
     overage_rate: null,
-    non_standard_clauses: JSON.stringify(["soc2_type2_addendum"]),
+    non_standard_clauses: JSON.stringify([
+      "soc2_type2_addendum",
+      "annual_attestation_letter_to_state_regulators",
+    ]),
     ae_owner: "Devon Wright",
     ae_manager: "Sarah Goldstein",
-    competitive_context: null,
+    competitive_context:
+      "Comparing against ZoomInfo Insurance vertical and a smaller insurtech-native vendor called Verisk Connect. Stillwater's CIO has been vocal that 'compliance posture' will outweigh price in the eval.",
     customer_request:
-      "Stillwater is asking for SOC 2 Type 2 attestation language baked into the MSA. Standard pricing proposal at $88K; awaiting their CTO review.",
+      "Stillwater is asking for SOC 2 Type 2 attestation language baked into the MSA, plus an annual obligation that we provide an attestation letter their compliance team can hand directly to state insurance regulators (they're regulated in 14 states). Standard pricing proposal at $88K/yr on 24mo. Their CTO (Andie Park) is reviewing; she previously rejected a Clearbit proposal for not having SOC 2 in writing. AE thinks the attestation letter is the unlock — it's something competitors haven't offered.",
     close_date: "2026-07-15",
     is_scenario: 0,
   },
@@ -687,9 +721,10 @@ const discovery: DealSeed[] = [
     non_standard_clauses: null,
     ae_owner: "Devon Wright",
     ae_manager: "Sarah Goldstein",
-    competitive_context: null,
+    competitive_context:
+      "Currently using a Hunter.io + Sheets workflow; no paid enrichment tool yet.",
     customer_request:
-      "Inbound from Sunfish's marketing lead via the website. Small team (~12 power users). Standard discovery process.",
+      "Inbound from Sunfish's marketing lead (Hana Mori) via the website pricing form on Friday. ~12 power users on the marketing/CS team, currently running a Hunter.io + Sheets workflow that breaks any time someone exports more than 1K rows. She's asking for a 30-min discovery call to scope whether the Mid-Market plan or self-serve makes sense; budget hint was '$3–5K/mo, no procurement red tape because we own MarTech directly.'",
     close_date: "2026-08-30",
     is_scenario: 0,
   },
@@ -783,9 +818,9 @@ const closedWon: DealSeed[] = [
     ae_owner: "Maya Chen",
     ae_manager: "Sarah Goldstein",
     competitive_context:
-      "Defended against Apollo; won on integration depth into their custom MES.",
+      "Defended against Apollo (close on price, ~$465K) and a smaller robotics-vertical vendor; won on integration depth into Polymath's custom MES that Apollo couldn't match without 8+ weeks of services work.",
     customer_request:
-      "Polymath's CRO signed in January. Standard enterprise structure with 18-month expansion seat lock.",
+      "Polymath's CRO (Ben Lind) signed January 22 after a 4-month eval. $510K/yr ($1.53M TCV across 36mo) at 12.1% off list, anchored on the 18-month expansion seat lock that lets them grow from 22 to 60 seats without re-pricing. Apollo was the alt — within ~$45K on price but couldn't match our integration into Polymath's custom MES. Implementation kicked off January 29; first 22 seats provisioned the same week.",
     close_date: "2026-01-22",
     is_scenario: 0,
   },
@@ -863,7 +898,8 @@ const closedWon: DealSeed[] = [
     list_price: 105_000,
     proposed_price: 95_000,
     discount_pct: 9.5,
-    discount_reason: "Standard mid-market edtech.",
+    discount_reason:
+      "Mid-market edtech displacing an Airtable + LinkedIn-scraper homegrown setup. Standard 9.5% envelope discount for 24mo commit.",
     payment_terms: "annual_upfront",
     payment_terms_notes: null,
     pricing_model: "subscription",
@@ -872,9 +908,10 @@ const closedWon: DealSeed[] = [
     non_standard_clauses: null,
     ae_owner: "Devon Wright",
     ae_manager: "Sarah Goldstein",
-    competitive_context: null,
+    competitive_context:
+      "No vendor competitor; replaced an internal Airtable + LinkedIn-scraping setup that broke twice in Q4 and lost their RevOps lead a weekend rebuilding it.",
     customer_request:
-      "Quill closed standard mid-market structure. Ed-tech, light compliance footprint.",
+      "Quill closed at $95K/yr on 24mo (9.5% off list). Their VP Marketing (Eli Vasquez) signed; the eval was straightforward — they were already running a homegrown Airtable + LinkedIn-scraping setup that broke twice in Q4. Light compliance footprint (FERPA-adjacent, no PII at scale). Onboarding started week of Jan 13; full deployment to their 18-person GTM team by Feb 5.",
     close_date: "2026-01-08",
     is_scenario: 0,
   },
@@ -891,7 +928,8 @@ const closedWon: DealSeed[] = [
     list_price: 36_000,
     proposed_price: 32_000,
     discount_pct: 11.1,
-    discount_reason: "Seed-stage startup; founder negotiated.",
+    discount_reason:
+      "Seed-stage AI founder upgrading from a personal Apollo plan post-Series A. 11.1% off list traded for a public customer-story commitment we can use in seed-stage marketing.",
     payment_terms: "annual_upfront",
     payment_terms_notes: null,
     pricing_model: "subscription",
@@ -900,9 +938,10 @@ const closedWon: DealSeed[] = [
     non_standard_clauses: null,
     ae_owner: "Jamal Okafor",
     ae_manager: "Marcus Reilly",
-    competitive_context: null,
+    competitive_context:
+      "No vendor competitor; founder was using a personal Apollo plan ($99/mo) for outbound before their Series A.",
     customer_request:
-      "Seed-stage AI startup. Standard plg-to-mid contract; founder negotiated discount.",
+      "Beanstalk's founder (Mira Ortega) signed at $32K/yr (11.1% off list) on a 12-month annual; she negotiated the discount in exchange for committing publicly to a customer story we can use in seed-stage AI marketing. Her previous tooling was a personal Apollo plan; she upgraded after their Series A close in February. Standard plg-to-mid contract; no legal back-and-forth, just an electronically-signed order form.",
     close_date: "2026-03-04",
     is_scenario: 0,
   },
@@ -919,7 +958,8 @@ const closedWon: DealSeed[] = [
     list_price: 30_000,
     proposed_price: 28_000,
     discount_pct: 6.7,
-    discount_reason: "Standard small-team annual.",
+    discount_reason:
+      "PLG self-serve graduation post-Series A. 6.7% off list reflects existing usage and willingness to commit annually ahead of an SDR hiring sprint.",
     payment_terms: "annual_upfront",
     payment_terms_notes: null,
     pricing_model: "subscription",
@@ -928,9 +968,10 @@ const closedWon: DealSeed[] = [
     non_standard_clauses: null,
     ae_owner: "Devon Wright",
     ae_manager: "Sarah Goldstein",
-    competitive_context: null,
+    competitive_context:
+      "No competitor; pure self-serve graduation driven by team-shared list semantics they couldn't get on the per-seat PLG tier.",
     customer_request:
-      "Hightide upgraded from 4 self-serve seats. Standard small-team plan.",
+      "Hightide upgraded from 4 self-serve seats ($60/seat/mo) to a 14-seat small-team annual at $28K/yr (6.7% off list). Their CTO (Sebastian Jung) drove the move after their Series A in early February; he wanted predictable pricing and team-shared lists ahead of a 6-rep SDR hiring sprint. Standard small-team plan; closed in 9 days, no legal review.",
     close_date: "2026-02-28",
     is_scenario: 0,
   },
@@ -956,9 +997,10 @@ const closedWon: DealSeed[] = [
     non_standard_clauses: null,
     ae_owner: "Jamal Okafor",
     ae_manager: "Marcus Reilly",
-    competitive_context: null,
+    competitive_context:
+      "No vendor competitor; first paid enrichment tool for the team after 6 weeks of stretched trial extensions.",
     customer_request:
-      "Standard small-team annual; no negotiation. Closed off the website self-serve flow with assistance.",
+      "Sparrow's eng lead (Aria Ramos) closed off the website self-serve flow with light AE assistance — she'd been running 14-day trial extensions for 6 weeks and finally needed real seat licensing. $24K/yr at list (no negotiation). Standard small-team annual; she signed via Stripe checkout on April 12 and the contract was issued retroactively.",
     close_date: "2026-04-12",
     is_scenario: 0,
   },
