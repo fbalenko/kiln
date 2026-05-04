@@ -1,5 +1,6 @@
 import { listDeals } from "@/lib/db/queries";
 import { PipelineSection } from "@/components/pipeline/pipeline-section";
+import { PipelineToolbar } from "@/components/pipeline/pipeline-toolbar";
 
 export const dynamic = "force-dynamic";
 
@@ -33,15 +34,20 @@ export default function PipelinePage() {
           review it.
         </p>
       </div>
+      <div className="mt-5">
+        <PipelineToolbar totalDeals={deals.length} totalColumns={11} />
+      </div>
       <PipelineSection
         title="Hero scenarios"
         subtitle={`${heroes.length} ready for review`}
         deals={heroes}
+        startIndex={1}
       />
       <PipelineSection
         title="Past deals (closed-won)"
         subtitle={`${closedWon.length} historical · institutional memory`}
         deals={closedWon}
+        startIndex={heroes.length + 1}
         muted
       />
     </div>
