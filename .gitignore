@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Next.js build output
+.next/
+out/
+
+# Environment variables — NEVER commit
+.env
+.env.local
+.env.*.local
+.env.production
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Vercel
+.vercel/
+
+# Misc
+*.tsbuildinfo
+next-env.d.ts
+
+# Generated artifacts (not committed; produced on demand)
+/tmp/
+/public/generated/
