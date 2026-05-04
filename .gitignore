@@ -42,8 +42,8 @@ next-env.d.ts
 /tmp/
 /public/generated/
 
-# SQLite — kiln.db itself IS committed for demo determinism;
+# SQLite — db/kiln.db itself IS committed for demo determinism;
 # only the transient journal/WAL/shm sidecars are ignored.
-kiln.db-journal
-kiln.db-wal
-kiln.db-shm
+*.db-journal
+*.db-wal
+*.db-shm

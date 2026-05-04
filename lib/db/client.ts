@@ -6,7 +6,7 @@ import path from "node:path";
 export type DB = Database.Database;
 
 const DB_PATH =
-  process.env.KILN_DB_PATH ?? path.resolve(process.cwd(), "kiln.db");
+  process.env.KILN_DB_PATH ?? path.resolve(process.cwd(), "db/kiln.db");
 const MIGRATIONS_DIR = path.resolve(process.cwd(), "db/migrations");
 
 const globalForDb = globalThis as unknown as { __kilnDb?: DB };
