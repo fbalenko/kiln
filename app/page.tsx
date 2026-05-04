@@ -25,8 +25,8 @@ export default function DashboardPage() {
         <EntryCard
           href="/deals/deal_anthropic_2026q1_expansion"
           hardNavigation
-          title="Run the Anthropic strategic expansion review"
-          description="A $1.5M enterprise expansion with an MFN clause, a 6-month onboarding ramp, and a CFO-deadline-driven Procurement turn. The flagship hero scenario."
+          title="Run a live agent review"
+          description="Watch the Pricing Agent reason through Anthropic&rsquo;s $1.5M strategic expansion — guardrails, margin math, and 2&ndash;3 alternative deal structures stream in field-by-field."
           icon={<GeometricIcon shape="square" color="red" />}
         />
         <EntryCard

@@ -1,0 +1,89 @@
+{
+  "list_price": 588235,
+  "proposed_price": 500000,
+  "effective_discount_pct": 15,
+  "margin_pct_estimate": 29.4,
+  "guardrail_evaluations": [
+    {
+      "rule_name": "Enterprise discount hard ceiling",
+      "passed": true,
+      "severity": "block_absolute",
+      "actual_value": 15,
+      "threshold_value": 50,
+      "explanation": "The 15% discount is well below the 50% absolute ceiling, so this rule does not block the deal. No structural rebuild required on discount grounds alone."
+    },
+    {
+      "rule_name": "Enterprise discount requires CFO sign-off",
+      "passed": true,
+      "severity": "block_without_approval",
+      "actual_value": 15,
+      "threshold_value": 35,
+      "explanation": "At 15%, the discount sits below the 35% CFO sign-off threshold, so no CFO approval is required on the base discount. However, the cumulative economic impact of the ramp, $200K credits, MFN, and arrears billing may effectively push the realized discount higher — AE and manager should model the all-in concession stack before declaring this clean."
+    },
+    {
+      "rule_name": "Enterprise discount soft ceiling",
+      "passed": true,
+      "severity": "warn",
+      "actual_value": 15,
+      "threshold_value": 25,
+      "explanation": "The 15% headline discount is within the standard enterprise envelope of up to 25%. Justification is documented (multi-year volume commit, strategic logo), so this guardrail passes, though the concession stack warrants a holistic review."
+    },
+    {
+      "rule_name": "Enterprise ramp length soft ceiling",
+      "passed": true,
+      "severity": "warn",
+      "actual_value": 6,
+      "threshold_value": 6,
+      "explanation": "The ramp schedule covers exactly 6 months (months 1–6 at 50% of full price), which meets the soft ceiling of 6 months. This is at the boundary — any extension would trigger a warn and distort effective discount calculations further."
+    },
+    {
+      "rule_name": "Gross margin absolute floor",
+      "passed": true,
+      "severity": "block_absolute",
+      "actual_value": 29.4,
+      "threshold_value": 25,
+      "explanation": "Estimated gross margin of ~29.4% clears the 25% absolute floor, so the deal is not structurally non-viable on margin alone. However, this estimate does not yet account for the $200K data provider credits or the cash-flow drag from annual billing in arrears — both of which erode realized margin and should be modeled before final approval."
+    },
+    {
+      "rule_name": "Gross margin floor (warn)",
+      "passed": false,
+      "severity": "warn",
+      "actual_value": 29.4,
+      "threshold_value": 40,
+      "explanation": "At ~29.4%, the estimated gross margin falls below the 40% yellow-flag threshold. The deal team should rerun the margin math after accounting for the $200K credits, the 6-month 50% ramp (which reduces Year 1 realized revenue by ~$125K), and the arrears billing cash-flow cost before presenting to leadership."
+    }
+  ],
+  "alternative_structures": [
+    {
+      "label": "Tiered MFN + Escalator Swap",
+      "description": "Replace the unconditional 24-month MFN with a usage-tiered MFN that only triggers if Anthropic's annual spend exceeds $600K in a given contract year. In exchange, reduce the base discount from 15% to 10% (proposed price $529,412), and introduce a 3% annual escalator on the ACV in Years 2 and 3. Billing moves to annual in advance (standard), eliminating the arrears cash-flow risk. The $200K credit pool is retained but capped at $100K redeemable in Year 1 and $100K in Year 2.",
+      "proposed_price": 529412,
+      "effective_discount_pct": 10,
+      "expected_acv_impact": 29412,
+      "margin_pct_estimate": 33.3,
+      "rationale": "The unconditional MFN is the single highest-risk clause in this deal — it creates an open-ended obligation to pass through any future pricing improvement to a well-resourced customer with leverage. Tiering the MFN to a usage threshold protects Clay's pricing integrity for smaller customers while still giving Anthropic a meaningful protection at scale. The escalator partially offsets the ramp concession and improves TCV. Moving to advance billing eliminates the working capital drag of arrears. Net ACV impact is +$29K vs. current proposal, and margin improves ~4 points."
+    },
+    {
+      "label": "Usage-Commit Floor with Overage Upside",
+      "description": "Restructure from a flat hybrid deal to a usage-commit model: set a committed annual usage floor at $450K ACV (a 23.5% discount to list), with a defined overage rate of $0.85 per unit above the commit baseline. Remove the MFN clause entirely in exchange for a 'most-favored-structure' right — Clay commits to offering Anthropic the same deal architecture (commit + overage) as any peer AI lab, but not the same price. Retain the 6-month ramp at 50%, but move billing to quarterly in arrears (a compromise on their annual-in-arrears ask). The $200K credit pool is restructured as a usage credit applied against overages first, reducing Clay's cash outlay risk.",
+      "proposed_price": 450000,
+      "effective_discount_pct": 23.5,
+      "expected_acv_impact": -50000,
+      "margin_pct_estimate": 26.7,
+      "rationale": "This structure trades a lower guaranteed ACV for meaningful upside if Anthropic's usage scales — which is plausible given they are consolidating 6 workspaces and have a $4B ARR base to grow into. The overage mechanism aligns Clay's revenue with Anthropic's success, which is a compelling narrative for their RevOps lead. Removing the unconditional MFN eliminates the most structurally dangerous clause. The margin estimate (~26.7%) is thin and sits just above the absolute floor, so this option is only viable if the deal team has conviction on usage growth; it should be presented alongside an overage revenue scenario model. ACV impact is -$50K vs. current proposal but TCV upside from overages could exceed $200K over 36 months."
+    },
+    {
+      "label": "4-Year Lock-In with Logo & Co-Marketing Package",
+      "description": "Extend the term from 36 to 48 months in exchange for holding the discount at 12% (proposed price $517,647 ACV). Eliminate the termination-for-convenience clause entirely — or push it to start no earlier than month 25. Replace the $200K pre-paid credit pool with a $150K co-marketing and case study package (joint press release, Clay-hosted webinar, Anthropic reference in Clay's enterprise sales materials), which carries near-zero incremental COGS for Clay. Billing is annual in advance. MFN is narrowed to a 12-month window (not 24) and scoped only to list price changes, not promotional or volume-based pricing.",
+      "proposed_price": 517647,
+      "effective_discount_pct": 12,
+      "expected_acv_impact": 17647,
+      "margin_pct_estimate": 32,
+      "rationale": "Anthropic's strategic value as a logo in the AI/ML segment is significant — their brand on Clay's customer list and in co-marketing materials has pipeline value that offsets a portion of the discount. By converting $200K of cash credits into a co-marketing package, Clay avoids a direct cash outlay while giving Anthropic a tangible benefit (visibility, joint positioning). The 4-year term locks in TCV of $2.07M vs. $1.5M on the current deal, a 38% TCV improvement. Eliminating or deferring the termination-for-convenience clause removes the single largest revenue-at-risk item in the deal (currently Anthropic could exit after 13 months with 60 days notice, leaving Clay exposed on a deal it may have discounted for long-term value). Margin improves ~2.6 points vs. current proposal."
+    }
+  ],
+  "ltv_estimate_under_usage_assumptions": 1823625,
+  "similar_deal_references": [],
+  "confidence": "medium",
+  "reasoning_summary": "The headline discount of 15.0% is within the standard enterprise envelope (below the 25% warn threshold and well below the 35% CFO sign-off trigger), and the deal does not violate any hard-block guardrails on discount. However, the estimated gross margin of ~29.4% — computed under the working assumption that list price carries a 40% gross margin, which the CFO should validate against actual COGS — falls below the 40% warn floor, triggering a yellow flag. Critically, this margin estimate does not yet incorporate the economic drag of the 6-month 50% ramp (~$125K of deferred Year 1 revenue), the $200K pre-paid data provider credits (which represent a direct cash outlay), or the working capital cost of annual billing in arrears; when these are stacked, the realized margin could approach or breach the 25% absolute floor. No similar past deals were available in the precedent set, which reduces confidence in benchmarking the MFN and credits terms — the deal team should treat the alternative structures as directional rather than calibrated. The AE's verbal commitment to MFN 'with carve-outs' should be walked back to a tiered or time-limited structure before any term sheet is issued, as an unconditional 24-month MFN with a customer of Anthropic's scale and negotiating sophistication represents an open-ended pricing liability."
+}
