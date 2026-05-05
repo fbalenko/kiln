@@ -66,6 +66,7 @@ export async function runAsc606Agent(
   watcher.flushOpen();
 
   const json = extractJsonObject(assistantText);
+  coerceVariableConsiderationDifficulty(json);
   const output = Asc606OutputSchema.parse(json);
 
   emit({
@@ -300,4 +301,36 @@ function buildUserMessage(deal: DealWithCustomer): string {
     "",
     "Return one JSON object now. No preamble. No code fences. JSON only.",
   ].join("\n");
+}
+
+// Defensive coercion. The model occasionally returns synonyms like "moderate"
+// or "very high" for `estimation_difficulty` despite the schema. Map those to
+// the nearest legal value rather than failing the entire orchestrator run.
+function coerceVariableConsiderationDifficulty(json: unknown) {
+  if (!json || typeof json !== "object") return;
+  const root = json as Record<string, unknown>;
+  const flags = root.variable_consideration_flags;
+  if (!Array.isArray(flags)) return;
+  for (const f of flags) {
+    if (!f || typeof f !== "object") continue;
+    const flag = f as Record<string, unknown>;
+    const v = flag.estimation_difficulty;
+    if (typeof v !== "string") continue;
+    if (v === "low" || v === "medium" || v === "high") continue;
+    const lc = v.toLowerCase().trim();
+    if (lc.includes("low") || lc.includes("trivial") || lc.includes("simple")) {
+      flag.estimation_difficulty = "low";
+    } else if (
+      lc.includes("very high") ||
+      lc.includes("hard") ||
+      lc.includes("difficult") ||
+      lc.includes("complex") ||
+      lc.includes("severe")
+    ) {
+      flag.estimation_difficulty = "high";
+    } else {
+      // moderate, medium-high, etc.
+      flag.estimation_difficulty = "medium";
+    }
+  }
 }

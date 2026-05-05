@@ -35,7 +35,7 @@ Walk this in order. Show your work *inside* the JSON fields — not outside.
 2. **Variable consideration.** For every clause that introduces variable consideration, add an entry to `variable_consideration_flags`:
    - `source`: short tag like `'ramp'`, `'rollover_credits'`, `'usage_overage'`, `'mfn_true_up'`, `'expansion_pricing_lock'`, `'termination_for_convenience'`.
    - `treatment_required`: name the ASC 606 treatment (e.g., "expected_value_method", "most_likely_amount", "constrained_until_resolved").
-   - `estimation_difficulty`: low / medium / high.
+   - `estimation_difficulty`: **must be exactly one of the strings `"low"`, `"medium"`, or `"high"`** (lowercase, no other values). Do NOT use `"moderate"`, `"very high"`, `"hard"`, `"none"`, or any other value — pick one of the three.
    - `explanation`: one to three sentences.
 3. **Contract modification risk.** Set `is_at_risk` true when a future event (price drop to a peer, exercising a TFC clause, hitting a usage-overage tier) could re-open the contract under ASC 606 §606-10-25-10. Explain.
 4. **Revenue recognition schedule.** Produce `recognized_revenue_schedule` by period. Use `'Year 1'`, `'Year 2'`, etc. for annual buckets. For ramp deals add finer-grained entries like `'Year 1 — Months 1-6 (ramp)'` and `'Year 1 — Months 7-12'`. The dollar amounts should sum to TCV minus any consumed credits.

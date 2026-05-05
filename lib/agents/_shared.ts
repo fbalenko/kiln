@@ -1,4 +1,5 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
+import { jsonrepair } from "jsonrepair";
 import { CRM_TOOL_NAMES, crmMcpServer } from "../mcp-servers/crm-server";
 
 // Boilerplate for invoking the Claude Agent SDK on a leaf-node sub-agent —
@@ -84,8 +85,23 @@ export async function executeAgentQuery(
     if (msg.type === "result") {
       if (msg.subtype === "success") {
         assistantText = msg.result;
-        inputTokens = msg.usage?.input_tokens ?? null;
-        outputTokens = msg.usage?.output_tokens ?? null;
+        // The SDK reports `input_tokens` net of cache reads/creates. For a
+        // user-facing token count we want the gross input — sum all three.
+        const usage = msg.usage as
+          | {
+              input_tokens?: number;
+              output_tokens?: number;
+              cache_read_input_tokens?: number;
+              cache_creation_input_tokens?: number;
+            }
+          | undefined;
+        inputTokens =
+          usage === undefined
+            ? null
+            : (usage.input_tokens ?? 0) +
+              (usage.cache_read_input_tokens ?? 0) +
+              (usage.cache_creation_input_tokens ?? 0);
+        outputTokens = usage?.output_tokens ?? null;
         costUsd = msg.total_cost_usd ?? null;
       } else {
         resultErrored = true;
@@ -122,7 +138,15 @@ export function extractJsonObject(text: string): unknown {
       `Agent response did not contain a JSON object. Raw: ${text.slice(0, 200)}`,
     );
   }
-  return JSON.parse(stripped.slice(firstBrace, lastBrace + 1));
+  const candidate = stripped.slice(firstBrace, lastBrace + 1);
+  try {
+    return JSON.parse(candidate);
+  } catch {
+    // LLMs occasionally emit JSON with unescaped quotes inside strings,
+    // trailing commas, or smart quotes. Run through jsonrepair before
+    // surfacing a hard failure.
+    return JSON.parse(jsonrepair(candidate));
+  }
 }
 
 // Cheap counter using indexOf in a loop. Used by every StreamWatcher.
