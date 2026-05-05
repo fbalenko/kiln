@@ -4,19 +4,28 @@ import {
   type DealWithCustomer,
   type PricingGuardrail,
 } from "@/lib/db/queries";
+import type { SimilarDealRecord } from "@/lib/tools/vector-search";
 
-// Tool surface the agents call into. Phase 3: synchronous, in-process — these
-// just wrap the SQLite queries. Phase 4 will expose the same surface as MCP
-// tools the orchestrator dispatches to. Keeping the function signatures stable
-// now so the upgrade is mechanical.
+// Tool surface the agents call into. Synchronous, in-process — these just
+// wrap the SQLite queries. The same surface is also exposed as MCP tools
+// (lib/mcp-servers/crm-server.ts) for the orchestrator + sub-agents.
+//
+// Phase 5: similarDeals is now sourced from the vector-search helper and
+// passed in by the caller (the orchestrator's Step 2 fan-out fetches it once
+// and threads it into the Pricing Agent). Standalone callers may invoke
+// getDealContext() and pass `similarDeals: []` — Pricing's prompt explicitly
+// handles an empty precedent set.
 
 export interface DealContext {
   deal: DealWithCustomer;
   guardrails: PricingGuardrail[];
-  similarDeals: DealWithCustomer[];
+  similarDeals: SimilarDealRecord[];
 }
 
-export function getDealContext(dealId: string): DealContext {
+export function getDealContext(
+  dealId: string,
+  similarDeals: SimilarDealRecord[] = [],
+): DealContext {
   const deal = getDealById(dealId);
   if (!deal) throw new Error(`Deal not found: ${dealId}`);
 
@@ -24,10 +33,6 @@ export function getDealContext(dealId: string): DealContext {
     (g) =>
       !g.applies_to_segment || g.applies_to_segment === deal.customer.segment,
   );
-
-  // Vector search lands in Phase 5. For Phase 3 the Pricing Agent runs against
-  // an empty precedent set, which the prompt explicitly handles.
-  const similarDeals: DealWithCustomer[] = [];
 
   return { deal, guardrails, similarDeals };
 }

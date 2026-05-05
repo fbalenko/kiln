@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PricingOutputSchema, type PricingOutput } from "./schemas";
 import { getDealContext } from "../tools/crm";
+import type { SimilarDealRecord } from "../tools/vector-search";
 import {
   countOccurrences,
   executeAgentQuery,
@@ -40,6 +41,10 @@ export type PricingSubstepId =
 
 export interface RunPricingOptions {
   onSubstep?: SubstepEmitter;
+  // Optional precedent set — when called via the orchestrator, the Step 2
+  // fan-out has already run and the result is threaded in here so we don't
+  // re-query sqlite-vec.
+  similarDeals?: SimilarDealRecord[];
 }
 
 export async function runPricingAgent(
@@ -51,7 +56,7 @@ export async function runPricingAgent(
 
   // ---- Substep 1: deal fetch ----
   emit({ id: "fetch_deal", label: "Fetching deal record from CRM", status: "running" });
-  const ctx = getDealContext(dealId);
+  const ctx = getDealContext(dealId, opts.similarDeals ?? []);
   emit({ id: "fetch_deal", label: "Fetched deal record from CRM", status: "complete" });
 
   // ---- Substep 2: guardrails load ----
@@ -68,19 +73,19 @@ export async function runPricingAgent(
     status: "complete",
   });
 
-  // ---- Substep 3: similar deals (Phase 5 stub) ----
+  // ---- Substep 3: similar deals (precedent injection from orchestrator) ----
   emit({
     id: "similar_deals",
     label: "Identifying similar past deals via vector search",
     status: "running",
   });
-  await tinyPause(300);
+  await tinyPause(220);
   emit({
     id: "similar_deals",
     label:
       ctx.similarDeals.length > 0
-        ? `Found ${ctx.similarDeals.length} similar past deals`
-        : "Vector search returns no precedent set (Phase 5 stub)",
+        ? `Loaded ${ctx.similarDeals.length} similar deals as precedent`
+        : "No precedent set provided (running without similar-deal context)",
     status: "complete",
   });
 

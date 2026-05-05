@@ -37,6 +37,10 @@ import { Asc606Card } from "@/components/agent-cards/asc606-card";
 import { ApprovalCard } from "@/components/agent-cards/approval-card";
 import { CommsCard } from "@/components/agent-cards/comms-card";
 import { RedlineCard } from "@/components/agent-cards/redline-card";
+import { CustomerSignalsPanel } from "@/components/panels/customer-signals-panel";
+import { SimilarDealsPanel } from "@/components/panels/similar-deals-panel";
+import type { CustomerSignalsResult } from "@/lib/tools/exa-search";
+import type { SimilarDealRecord } from "@/lib/tools/vector-search";
 import { cn } from "@/lib/utils";
 
 // Live timeline that subscribes to /api/run-review/[dealId] over SSE.
@@ -85,6 +89,12 @@ type StreamEvent =
       status: "running" | "complete";
       ts: number;
     }
+  | {
+      type: "panel_data";
+      panel: "similar_deals" | "customer_signals";
+      data: unknown;
+      ts: number;
+    }
   | { type: "synthesis"; summary: string; review_id: string; ts: number }
   | { type: "error"; step: ParentName; message: string; ts: number };
 
@@ -97,6 +107,8 @@ interface SubstepPlan {
 const ORCHESTRATOR_SUBSTEPS: SubstepPlan[] = [
   { id: "fetch_deal", defaultLabel: "Fetch deal record and customer", icon: Database },
   { id: "step2_fanout", defaultLabel: "Fan out: customer signals + similar deals", icon: GitBranch },
+  { id: "step2_signals", defaultLabel: "Query Exa for recent customer signals", icon: Search },
+  { id: "step2_similar", defaultLabel: "Run k-NN over deal embeddings (sqlite-vec)", icon: Network },
   { id: "step3_dispatch", defaultLabel: "Dispatch parallel review (Pricing + ASC 606 + Redline)", icon: Layers },
   { id: "step3_await", defaultLabel: "Await parallel review completion", icon: Hourglass },
   { id: "step4_routing", defaultLabel: "Route approvals based on upstream outputs", icon: Network },
@@ -193,6 +205,11 @@ export function ReasoningStream({
     summary: string;
     reviewId: string;
   } | null>(null);
+  const [similarDeals, setSimilarDeals] = useState<SimilarDealRecord[] | null>(
+    null,
+  );
+  const [customerSignals, setCustomerSignals] =
+    useState<CustomerSignalsResult | null>(null);
   const [done, setDone] = useState(false);
   const esRef = useRef<EventSource | null>(null);
 
@@ -273,6 +290,14 @@ export function ReasoningStream({
               },
             };
           });
+          break;
+        }
+        case "panel_data": {
+          if (ev.panel === "similar_deals") {
+            setSimilarDeals(ev.data as SimilarDealRecord[]);
+          } else if (ev.panel === "customer_signals") {
+            setCustomerSignals(ev.data as CustomerSignalsResult);
+          }
           break;
         }
         case "synthesis": {
@@ -380,6 +405,25 @@ export function ReasoningStream({
             <div className="mt-2 font-mono text-[10px] text-muted-foreground">
               review {synthesis.reviewId}
             </div>
+          </div>
+        </li>
+      )}
+
+      {/* 6. Phase 5 panels — similar past deals + customer context. Mount as
+          soon as the orchestrator's Step 2 fan-out finishes (well before
+          synthesis), so the visitor sees the institutional-memory + external-
+          context surfaces fill in alongside the agent timeline. */}
+      {(similarDeals || customerSignals) && (
+        <li className="relative pt-1">
+          <span
+            aria-hidden
+            className="absolute -left-[26px] top-3 inline-flex h-4 w-4 items-center justify-center rounded-full border border-border bg-background text-muted-foreground sm:-left-[34px]"
+          >
+            <GitBranch className="h-2.5 w-2.5" />
+          </span>
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <SimilarDealsPanel deals={similarDeals} />
+            <CustomerSignalsPanel result={customerSignals} />
           </div>
         </li>
       )}

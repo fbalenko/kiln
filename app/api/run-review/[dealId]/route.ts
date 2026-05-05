@@ -3,6 +3,8 @@ import { randomUUID } from "node:crypto";
 import { runOrchestrator, type ParentName } from "@/lib/agents/orchestrator";
 import { getDb } from "@/lib/db/client";
 import { getDealById } from "@/lib/db/queries";
+import type { CustomerSignalsResult } from "@/lib/tools/exa-search";
+import type { SimilarDealRecord } from "@/lib/tools/vector-search";
 
 // SSE endpoint for the full Phase 4 orchestrator pipeline.
 //
@@ -40,6 +42,12 @@ type StreamEvent =
       id: string;
       label: string;
       status: "running" | "complete";
+      ts: number;
+    }
+  | {
+      type: "panel_data";
+      panel: "similar_deals" | "customer_signals";
+      data: unknown;
       ts: number;
     }
   | { type: "synthesis"; summary: string; review_id: string; ts: number }
@@ -122,6 +130,23 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
           },
         });
 
+        // Phase 5: panel data lands as soon as the orchestrator returns, so
+        // the SimilarDeals + CustomerSignals panels can paint before the
+        // per-agent reveal animations start. Both for cache replays and live
+        // runs the data is ready by this point.
+        send({
+          type: "panel_data",
+          panel: "similar_deals",
+          data: result.similarDeals,
+          ts: Date.now(),
+        });
+        send({
+          type: "panel_data",
+          panel: "customer_signals",
+          data: result.customerSignals,
+          ts: Date.now(),
+        });
+
         // After the orchestrator returns, fire field-by-field reveal of each
         // sub-agent's structured output, then a step_complete event carrying
         // the full payload + per-agent metadata.
@@ -162,8 +187,8 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
             result.metadata.total_input_tokens +
             result.metadata.total_output_tokens,
           fromCache: result.fromCache,
-          customerSignals: { source: "exa_stub", note: "Phase 5" },
-          similarDeals: [],
+          customerSignals: result.customerSignals,
+          similarDeals: result.similarDeals,
         });
 
         // ---- Synthesis card ----
@@ -292,8 +317,8 @@ interface PersistArgs {
   totalRuntimeMs: number;
   totalTokens: number;
   fromCache: boolean;
-  customerSignals: unknown;
-  similarDeals: unknown;
+  customerSignals: CustomerSignalsResult;
+  similarDeals: SimilarDealRecord[];
 }
 
 function persistReview({

@@ -14,6 +14,14 @@ import {
   type SubstepEvent,
 } from "./_shared";
 import {
+  fetchCustomerSignals,
+  type CustomerSignalsResult,
+} from "@/lib/tools/exa-search";
+import {
+  findSimilarDeals,
+  type SimilarDealRecord,
+} from "@/lib/tools/vector-search";
+import {
   ApprovalOutputSchema,
   Asc606OutputSchema,
   CommsOutputSchema,
@@ -41,7 +49,9 @@ import {
 // reviewed payload + the unified substep tape so cache-hit replays look
 // identical to a live run.
 
-const CACHE_VERSION = 2;
+// CACHE_VERSION bumped to 3 in Phase 5: cache files now carry similar_deals
+// (sqlite-vec) and customer_signals (Exa). v2 caches are treated as stale.
+const CACHE_VERSION = 3;
 const CACHE_DIR = join(process.cwd(), "db", "seed", "cached_outputs");
 const SYNTHESIS_MODEL = "claude-opus-4-7" as const;
 
@@ -97,6 +107,8 @@ export interface OrchestratorCacheFile {
   deal_id: string;
   outputs: OrchestratorOutputs;
   synthesis: string;
+  similar_deals: SimilarDealRecord[];
+  customer_signals: CustomerSignalsResult;
   timings: SubstepTimingEntry[];
   metadata: OrchestratorMetadata;
 }
@@ -109,6 +121,8 @@ export interface RunOrchestratorOptions {
 export interface RunOrchestratorResult {
   outputs: OrchestratorOutputs;
   synthesis: string;
+  similarDeals: SimilarDealRecord[];
+  customerSignals: CustomerSignalsResult;
   fromCache: boolean;
   durationMs: number;
   metadata: OrchestratorMetadata;
@@ -129,6 +143,8 @@ export async function runOrchestrator(
       return {
         outputs: cached.outputs,
         synthesis: cached.synthesis,
+        similarDeals: cached.similar_deals,
+        customerSignals: cached.customer_signals,
         fromCache: true,
         durationMs: Date.now() - start,
         metadata: cached.metadata,
@@ -162,20 +178,60 @@ export async function runOrchestrator(
     status: "complete",
   });
 
-  // ---- Step 2: Parallel fan-out — customer signals + similar deals
-  // (both Phase 5 stubs for now) ----
+  // ---- Step 2: Parallel fan-out — customer signals (Exa) + similar deals
+  // (sqlite-vec). Both are independent — kick them off together, narrate the
+  // umbrella step + per-source substeps, and use the result to enrich
+  // downstream agent prompts.
   orchEmit({
     id: "step2_fanout",
     label: "Fanning out: customer signals + similar past deals (parallel)",
     status: "running",
   });
+  orchEmit({
+    id: "step2_signals",
+    label: `Querying Exa for ${deal.customer.name} signals (≤6mo)`,
+    status: "running",
+  });
+  orchEmit({
+    id: "step2_similar",
+    label: "Running k-NN over deal_embeddings (sqlite-vec)",
+    status: "running",
+  });
+
+  const customerSignalsPromise = fetchCustomerSignals({
+    customer: { name: deal.customer.name, domain: deal.customer.domain },
+  }).then((r) => {
+    orchEmit({
+      id: "step2_signals",
+      label:
+        r.signals.length > 0
+          ? `Found ${r.signals.length} recent signals for ${deal.customer.name}`
+          : r.note ?? "No recent public signals found",
+      status: "complete",
+    });
+    return r;
+  });
+
+  const similarDealsPromise = findSimilarDeals(deal.id, 3).then((r) => {
+    orchEmit({
+      id: "step2_similar",
+      label:
+        r.length > 0
+          ? `Found ${r.length} similar past deals (top: ${r[0].similarity_pct}% match)`
+          : "No similar past deals found",
+      status: "complete",
+    });
+    return r;
+  });
+
   const [customerSignals, similarDeals] = await Promise.all([
-    fetchCustomerSignalsStub(deal),
-    fetchSimilarDealsStub(deal),
+    customerSignalsPromise,
+    similarDealsPromise,
   ]);
+
   orchEmit({
     id: "step2_fanout",
-    label: `Step 2 complete (signals: ${describeStub(customerSignals)}, similar deals: ${describeStub(similarDeals)})`,
+    label: `Step 2 complete (${customerSignals.signals.length} signals · ${similarDeals.length} similar deals)`,
     status: "complete",
   });
 
@@ -202,12 +258,13 @@ export async function runOrchestrator(
   };
 
   const [pricingResult, asc606Result, redlineResult] = await Promise.all([
-    runPricingAgent(deal.id, { onSubstep: fanOutEmit("Pricing Agent") }).then(
-      (r) => {
-        trackParallelDone("Pricing");
-        return r;
-      },
-    ),
+    runPricingAgent(deal.id, {
+      onSubstep: fanOutEmit("Pricing Agent"),
+      similarDeals,
+    }).then((r) => {
+      trackParallelDone("Pricing");
+      return r;
+    }),
     runAsc606Agent(deal, { onSubstep: fanOutEmit("ASC 606 Agent") }).then(
       (r) => {
         trackParallelDone("ASC 606");
@@ -354,6 +411,8 @@ export async function runOrchestrator(
     deal_id: dealId,
     outputs,
     synthesis: synthesis.text,
+    similar_deals: similarDeals,
+    customer_signals: customerSignals,
     timings: recordedTimings,
     metadata,
   };
@@ -363,6 +422,8 @@ export async function runOrchestrator(
   return {
     outputs,
     synthesis: synthesis.text,
+    similarDeals,
+    customerSignals,
     fromCache: false,
     durationMs,
     metadata,
@@ -440,35 +501,6 @@ Tone: direct, factual, no marketing voice. No bullet points. No headings. Plain 
     costUsd: result.costUsd,
     durationMs: Date.now() - start,
   };
-}
-
-// Phase 5 will replace these stubs with real Exa + sqlite-vec calls.
-async function fetchCustomerSignalsStub(_deal: DealWithCustomer): Promise<{
-  source: string;
-  signals: unknown[];
-  note: string;
-}> {
-  await tinyPause(250);
-  return {
-    source: "exa_stub",
-    signals: [],
-    note: "Exa customer signals land in Phase 5",
-  };
-}
-
-async function fetchSimilarDealsStub(
-  _deal: DealWithCustomer,
-): Promise<{ source: string; deals: unknown[]; note: string }> {
-  await tinyPause(350);
-  return {
-    source: "sqlite_vec_stub",
-    deals: [],
-    note: "Vector similar-deals search lands in Phase 5",
-  };
-}
-
-function describeStub(stub: { note: string }): string {
-  return stub.note;
 }
 
 function formatMoney(n: number): string {
