@@ -23,6 +23,12 @@ import {
   type SimilarDealRecord,
 } from "@/lib/tools/vector-search";
 import {
+  failureToRecord,
+  postDealReview,
+  successToRecord,
+  type SlackPostRecord,
+} from "@/lib/tools/slack";
+import {
   ApprovalOutputSchema,
   Asc606OutputSchema,
   CommsOutputSchema,
@@ -50,9 +56,11 @@ import {
 // reviewed payload + the unified substep tape so cache-hit replays look
 // identical to a live run.
 
-// CACHE_VERSION bumped to 3 in Phase 5: cache files now carry similar_deals
-// (sqlite-vec) and customer_signals (Exa). v2 caches are treated as stale.
-const CACHE_VERSION = 3;
+// CACHE_VERSION bumped to 4 in Phase 6: cache files now carry slack_post_result
+// (the channel/thread_ts/permalink of the original post) so cache replays can
+// link to the existing #deal-desk message instead of posting a duplicate.
+// v3 caches are treated as stale.
+const CACHE_VERSION = 4;
 const CACHE_DIR = join(process.cwd(), "db", "seed", "cached_outputs");
 const SYNTHESIS_MODEL = "claude-opus-4-7" as const;
 
@@ -110,6 +118,7 @@ export interface OrchestratorCacheFile {
   synthesis: string;
   similar_deals: SimilarDealRecord[];
   customer_signals: CustomerSignalsResult;
+  slack_post_result: SlackPostRecord;
   timings: SubstepTimingEntry[];
   metadata: OrchestratorMetadata;
 }
@@ -124,6 +133,10 @@ export interface RunOrchestratorResult {
   synthesis: string;
   similarDeals: SimilarDealRecord[];
   customerSignals: CustomerSignalsResult;
+  // Slack post metadata. status="cached" when the orchestrator served from
+  // cache (we skipped re-posting); status="success"/"failed"/"skipped"
+  // mirror the live post outcome.
+  slackPost: SlackPostRecord;
   fromCache: boolean;
   durationMs: number;
   metadata: OrchestratorMetadata;
@@ -146,6 +159,14 @@ export async function runOrchestrator(
         synthesis: cached.synthesis,
         similarDeals: cached.similar_deals,
         customerSignals: cached.customer_signals,
+        // Translate the persisted Slack post into status="cached" so the UI
+        // shows "Posted previously · view in #deal-desk" rather than firing
+        // a fresh post. If the original post failed, we still surface that
+        // state — but we don't auto-retry on cache replay.
+        slackPost:
+          cached.slack_post_result.status === "success"
+            ? { ...cached.slack_post_result, status: "cached" }
+            : cached.slack_post_result,
         fromCache: true,
         durationMs: Date.now() - start,
         metadata: cached.metadata,
@@ -338,23 +359,77 @@ export async function runOrchestrator(
     status: "complete",
   });
 
-  // ---- Step 6: Synthesis ----
+  // ---- Step 6: Synthesis (Opus 4.7) + Slack post (best-effort) in parallel
+  // Per docs/06-integrations.md §Slack: posting must not block the review.
+  // Synthesis is critical — must succeed; Slack is best-effort and never
+  // throws (postDealReview returns a typed failure object).
   orchEmit({
     id: "step6_synthesis",
     label: "Synthesizing executive summary",
     status: "running",
   });
-  const synthesis = await runSynthesis(
-    deal,
-    pricingResult.output,
-    asc606Result.output,
-    redlineResult.output,
-    approvalResult.output,
-    commsResult.output,
-  );
+  orchEmit({
+    id: "step6_slack_post",
+    label: "Posting deal review to #deal-desk",
+    status: "running",
+  });
+
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL?.trim() || "http://localhost:3000";
+
+  const [synthesisSettled, slackSettled] = await Promise.allSettled([
+    runSynthesis(
+      deal,
+      pricingResult.output,
+      asc606Result.output,
+      redlineResult.output,
+      approvalResult.output,
+      commsResult.output,
+    ),
+    postDealReview({
+      deal,
+      pricing: pricingResult.output,
+      asc606: asc606Result.output,
+      redline: redlineResult.output,
+      approval: approvalResult.output,
+      comms: commsResult.output,
+      appUrl,
+    }),
+  ]);
+
+  if (synthesisSettled.status === "rejected") {
+    // Synthesis is critical — let it propagate.
+    throw synthesisSettled.reason;
+  }
+  const synthesis = synthesisSettled.value;
   orchEmit({
     id: "step6_synthesis",
     label: "Synthesized 4-sentence executive overview",
+    status: "complete",
+  });
+
+  // Slack post never throws (postDealReview catches everything), so the
+  // settled-rejected branch shouldn't fire — but handle it defensively.
+  const slackResult: SlackPostRecord =
+    slackSettled.status === "fulfilled"
+      ? slackSettled.value.status === "success"
+        ? successToRecord(slackSettled.value)
+        : failureToRecord(slackSettled.value)
+      : {
+          status: "failed",
+          channel: null,
+          thread_ts: null,
+          posted_at: null,
+          permalink: null,
+          reason: "unknown_error",
+          error: String((slackSettled as PromiseRejectedResult).reason),
+        };
+  orchEmit({
+    id: "step6_slack_post",
+    label:
+      slackResult.status === "success"
+        ? `Posted to #deal-desk (${slackResult.thread_ts})`
+        : `Slack post failed: ${slackResult.reason ?? "unknown"}`,
     status: "complete",
   });
 
@@ -419,6 +494,7 @@ export async function runOrchestrator(
     synthesis: synthesis.text,
     similar_deals: similarDeals,
     customer_signals: customerSignals,
+    slack_post_result: slackResult,
     timings: recordedTimings,
     metadata,
   };
@@ -430,6 +506,7 @@ export async function runOrchestrator(
     synthesis: synthesis.text,
     similarDeals,
     customerSignals,
+    slackPost: slackResult,
     fromCache: false,
     durationMs,
     metadata,

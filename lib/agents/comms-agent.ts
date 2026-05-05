@@ -367,6 +367,12 @@ function coerceCustomerEmailTone(json: unknown) {
 }
 
 async function runOnePager(ctx: CommsContext) {
+  // The one-pager prompt produces long markdown with quotes, bullets, and
+  // dashes that occasionally trip JSON serialization (model emits an
+  // unescaped quote inside content_markdown). When parse-then-jsonrepair
+  // both fail, retry with a tightened reminder. One retry only — if the
+  // second pass also fails we surface the error and let the caller
+  // (orchestrator regenerator) decide whether to bail.
   const systemPrompt = [
     "You are Clay's deal-desk approval-one-pager drafter. Given a full deal review, produce a one-pager structured for an exec who has 90 seconds.",
     "",
@@ -383,8 +389,14 @@ async function runOnePager(ctx: CommsContext) {
     "{ title: string, sections: Array<{ heading: string, content_markdown: string }> }",
     "```",
     "No preamble. No code fences. JSON only.",
+    "",
+    "JSON encoding rules (critical — past failures came from unescaped strings):",
+    "- Every double-quote inside content_markdown MUST be escaped as \\\".",
+    "- Every newline inside content_markdown MUST be encoded as \\n.",
+    "- Do NOT use smart quotes (“ ” ‘ ’). Plain ASCII quotes only.",
+    "- Do NOT include backticks for code fences inside content_markdown.",
   ].join("\n");
-  const userMessage = [
+  const baseUserMessage = [
     "Build the approval review one-pager for the following deal review.",
     "",
     commonContextBlock(ctx),
@@ -392,14 +404,40 @@ async function runOnePager(ctx: CommsContext) {
     "Return one JSON object now. No preamble. No code fences. JSON only.",
   ].join("\n");
 
-  const r = await executeAgentQuery({ model: MODEL, systemPrompt, userMessage });
-  const json = extractJsonObject(r.assistantText) as CommsOutput["approval_review_one_pager"];
-  return {
-    output: CommsOutputSchema.shape.approval_review_one_pager.parse(json),
-    inputTokens: r.inputTokens,
-    outputTokens: r.outputTokens,
-    costUsd: r.costUsd,
-  };
+  let lastError: unknown = null;
+  let attempt = 0;
+  while (attempt < 2) {
+    attempt += 1;
+    const userMessage =
+      attempt === 1
+        ? baseUserMessage
+        : baseUserMessage +
+          "\n\nThe previous attempt produced JSON that failed to parse. Re-emit the same content but with strict JSON escaping: every \" inside a string becomes \\\", every newline becomes \\n.";
+    const r = await executeAgentQuery({
+      model: MODEL,
+      systemPrompt,
+      userMessage,
+    });
+    try {
+      const json = extractJsonObject(
+        r.assistantText,
+      ) as CommsOutput["approval_review_one_pager"];
+      return {
+        output: CommsOutputSchema.shape.approval_review_one_pager.parse(json),
+        inputTokens: r.inputTokens,
+        outputTokens: r.outputTokens,
+        costUsd: r.costUsd,
+      };
+    } catch (err) {
+      lastError = err;
+      // fall through to retry once
+    }
+  }
+  throw new Error(
+    `Comms one-pager failed to parse after 2 attempts: ${
+      lastError instanceof Error ? lastError.message : String(lastError)
+    }`,
+  );
 }
 
 function buildReasoningSummary(

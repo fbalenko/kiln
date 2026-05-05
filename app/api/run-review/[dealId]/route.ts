@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db/client";
 import { getDealById } from "@/lib/db/queries";
 import type { CustomerSignalsResult } from "@/lib/tools/exa-search";
 import type { SimilarDealRecord } from "@/lib/tools/vector-search";
+import type { SlackPostRecord } from "@/lib/tools/slack";
 
 // SSE endpoint for the full Phase 4 orchestrator pipeline.
 //
@@ -48,6 +49,11 @@ type StreamEvent =
       type: "panel_data";
       panel: "similar_deals" | "customer_signals";
       data: unknown;
+      ts: number;
+    }
+  | {
+      type: "slack_post";
+      record: SlackPostRecord;
       ts: number;
     }
   | { type: "synthesis"; summary: string; review_id: string; ts: number }
@@ -146,6 +152,14 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
           data: result.customerSignals,
           ts: Date.now(),
         });
+        // Phase 6: slack_post status. Emitted once per run with the final
+        // record (success/failed/cached). The UI uses this to render the
+        // post-status indicator on the Comms card.
+        send({
+          type: "slack_post",
+          record: result.slackPost,
+          ts: Date.now(),
+        });
 
         // After the orchestrator returns, fire field-by-field reveal of each
         // sub-agent's structured output, then a step_complete event carrying
@@ -189,6 +203,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
           fromCache: result.fromCache,
           customerSignals: result.customerSignals,
           similarDeals: result.similarDeals,
+          slackPost: result.slackPost,
         });
 
         // ---- Synthesis card ----
@@ -319,6 +334,7 @@ interface PersistArgs {
   fromCache: boolean;
   customerSignals: CustomerSignalsResult;
   similarDeals: SimilarDealRecord[];
+  slackPost: SlackPostRecord;
 }
 
 function persistReview({
@@ -331,6 +347,7 @@ function persistReview({
   fromCache,
   customerSignals,
   similarDeals,
+  slackPost,
 }: PersistArgs) {
   const db = getDb();
 
@@ -341,14 +358,18 @@ function persistReview({
       approval_output_json, comms_output_json,
       similar_deals_json, customer_signals_json,
       synthesis_summary, total_runtime_ms, total_tokens_used,
-      is_visitor_submitted
+      is_visitor_submitted,
+      slack_channel, slack_thread_ts, slack_posted_at, slack_permalink,
+      slack_post_status, slack_post_reason, slack_post_error
     ) VALUES (
       @id, @deal_id, datetime('now'), @ran_by,
       @pricing_output_json, @asc606_output_json, @redline_output_json,
       @approval_output_json, @comms_output_json,
       @similar_deals_json, @customer_signals_json,
       @synthesis_summary, @total_runtime_ms, @total_tokens_used,
-      0
+      0,
+      @slack_channel, @slack_thread_ts, @slack_posted_at, @slack_permalink,
+      @slack_post_status, @slack_post_reason, @slack_post_error
     )
   `);
 
@@ -379,6 +400,13 @@ function persistReview({
       synthesis_summary: synthesis,
       total_runtime_ms: totalRuntimeMs,
       total_tokens_used: totalTokens || null,
+      slack_channel: slackPost.channel,
+      slack_thread_ts: slackPost.thread_ts,
+      slack_posted_at: slackPost.posted_at,
+      slack_permalink: slackPost.permalink,
+      slack_post_status: slackPost.status,
+      slack_post_reason: slackPost.reason,
+      slack_post_error: slackPost.error,
     });
 
     const agentNames = ["pricing", "asc606", "redline", "approval", "comms"] as const;
