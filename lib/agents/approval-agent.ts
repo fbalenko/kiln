@@ -9,8 +9,7 @@ import type {
 } from "./schemas";
 import {
   countOccurrences,
-  executeAgentQuery,
-  extractJsonObject,
+  executeAgentWithSchemaRetry,
   tinyPause,
   type RunAgentResult,
   type SubstepEmitter,
@@ -74,18 +73,16 @@ export async function runApprovalAgent(
   const userMessage = buildUserMessage(deal, matrix, pricing, asc606, redline);
   const watcher = new ApprovalStreamWatcher(emit, matrix.length);
 
-  const { assistantText, inputTokens, outputTokens, costUsd } =
-    await executeAgentQuery({
+  const { output, inputTokens, outputTokens, costUsd } =
+    await executeAgentWithSchemaRetry({
       model: MODEL,
       systemPrompt,
-      userMessage,
+      baseUserMessage: userMessage,
       feedDelta: (delta) => watcher.feed(delta),
+      validate: (raw) => ApprovalOutputSchema.parse(raw),
     });
 
   watcher.flushOpen();
-
-  const json = extractJsonObject(assistantText);
-  const output = ApprovalOutputSchema.parse(json);
 
   emit({
     id: "finalizing",

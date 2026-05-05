@@ -7,8 +7,7 @@ import type {
   RedlineOutput,
 } from "./schemas";
 import {
-  executeAgentQuery,
-  extractJsonObject,
+  executeAgentWithSchemaRetry,
   tinyPause,
   type RunAgentResult,
   type SubstepEmitter,
@@ -262,10 +261,14 @@ async function runSlackPost(ctx: CommsContext) {
     "Return one JSON object now. No preamble. No code fences. JSON only.",
   ].join("\n");
 
-  const r = await executeAgentQuery({ model: MODEL, systemPrompt, userMessage });
-  const json = extractJsonObject(r.assistantText) as CommsOutput["slack_post"];
+  const r = await executeAgentWithSchemaRetry({
+    model: MODEL,
+    systemPrompt,
+    baseUserMessage: userMessage,
+    validate: (raw) => CommsOutputSchema.shape.slack_post.parse(raw),
+  });
   return {
-    output: CommsOutputSchema.shape.slack_post.parse(json),
+    output: r.output,
     inputTokens: r.inputTokens,
     outputTokens: r.outputTokens,
     costUsd: r.costUsd,
@@ -295,10 +298,14 @@ async function runAeEmail(ctx: CommsContext) {
     "Return one JSON object now. No preamble. No code fences. JSON only.",
   ].join("\n");
 
-  const r = await executeAgentQuery({ model: MODEL, systemPrompt, userMessage });
-  const json = extractJsonObject(r.assistantText) as CommsOutput["ae_email_draft"];
+  const r = await executeAgentWithSchemaRetry({
+    model: MODEL,
+    systemPrompt,
+    baseUserMessage: userMessage,
+    validate: (raw) => CommsOutputSchema.shape.ae_email_draft.parse(raw),
+  });
   return {
-    output: CommsOutputSchema.shape.ae_email_draft.parse(json),
+    output: r.output,
     inputTokens: r.inputTokens,
     outputTokens: r.outputTokens,
     costUsd: r.costUsd,
@@ -331,11 +338,15 @@ async function runCustomerEmail(ctx: CommsContext) {
     "Return one JSON object now. No preamble. No code fences. JSON only.",
   ].join("\n");
 
-  const r = await executeAgentQuery({ model: MODEL, systemPrompt, userMessage });
-  const json = extractJsonObject(r.assistantText) as CommsOutput["customer_email_draft"];
-  coerceCustomerEmailTone(json);
+  const r = await executeAgentWithSchemaRetry({
+    model: MODEL,
+    systemPrompt,
+    baseUserMessage: userMessage,
+    coerce: (raw) => coerceCustomerEmailTone(raw),
+    validate: (raw) => CommsOutputSchema.shape.customer_email_draft.parse(raw),
+  });
   return {
-    output: CommsOutputSchema.shape.customer_email_draft.parse(json),
+    output: r.output,
     inputTokens: r.inputTokens,
     outputTokens: r.outputTokens,
     costUsd: r.costUsd,
@@ -369,10 +380,8 @@ function coerceCustomerEmailTone(json: unknown) {
 async function runOnePager(ctx: CommsContext) {
   // The one-pager prompt produces long markdown with quotes, bullets, and
   // dashes that occasionally trip JSON serialization (model emits an
-  // unescaped quote inside content_markdown). When parse-then-jsonrepair
-  // both fail, retry with a tightened reminder. One retry only — if the
-  // second pass also fails we surface the error and let the caller
-  // (orchestrator regenerator) decide whether to bail.
+  // unescaped quote inside content_markdown). The shared retry helper handles
+  // the parse-and-validate-with-correction loop.
   const systemPrompt = [
     "You are Clay's deal-desk approval-one-pager drafter. Given a full deal review, produce a one-pager structured for an exec who has 90 seconds.",
     "",
@@ -396,7 +405,7 @@ async function runOnePager(ctx: CommsContext) {
     "- Do NOT use smart quotes (“ ” ‘ ’). Plain ASCII quotes only.",
     "- Do NOT include backticks for code fences inside content_markdown.",
   ].join("\n");
-  const baseUserMessage = [
+  const userMessage = [
     "Build the approval review one-pager for the following deal review.",
     "",
     commonContextBlock(ctx),
@@ -404,40 +413,19 @@ async function runOnePager(ctx: CommsContext) {
     "Return one JSON object now. No preamble. No code fences. JSON only.",
   ].join("\n");
 
-  let lastError: unknown = null;
-  let attempt = 0;
-  while (attempt < 2) {
-    attempt += 1;
-    const userMessage =
-      attempt === 1
-        ? baseUserMessage
-        : baseUserMessage +
-          "\n\nThe previous attempt produced JSON that failed to parse. Re-emit the same content but with strict JSON escaping: every \" inside a string becomes \\\", every newline becomes \\n.";
-    const r = await executeAgentQuery({
-      model: MODEL,
-      systemPrompt,
-      userMessage,
-    });
-    try {
-      const json = extractJsonObject(
-        r.assistantText,
-      ) as CommsOutput["approval_review_one_pager"];
-      return {
-        output: CommsOutputSchema.shape.approval_review_one_pager.parse(json),
-        inputTokens: r.inputTokens,
-        outputTokens: r.outputTokens,
-        costUsd: r.costUsd,
-      };
-    } catch (err) {
-      lastError = err;
-      // fall through to retry once
-    }
-  }
-  throw new Error(
-    `Comms one-pager failed to parse after 2 attempts: ${
-      lastError instanceof Error ? lastError.message : String(lastError)
-    }`,
-  );
+  const r = await executeAgentWithSchemaRetry({
+    model: MODEL,
+    systemPrompt,
+    baseUserMessage: userMessage,
+    validate: (raw) =>
+      CommsOutputSchema.shape.approval_review_one_pager.parse(raw),
+  });
+  return {
+    output: r.output,
+    inputTokens: r.inputTokens,
+    outputTokens: r.outputTokens,
+    costUsd: r.costUsd,
+  };
 }
 
 function buildReasoningSummary(

@@ -160,6 +160,156 @@ export function countOccurrences(haystack: string, needle: string): number {
   return count;
 }
 
+// Wrap an agent invocation in a parse-and-validate-with-retry loop. The
+// callable receives the user message (which the helper rewrites on retry to
+// append a correction hint extracted from the previous failure) and returns
+// the raw assistant text + token usage. The helper:
+//   1. extractJsonObject + applies the optional `coerce` mutator
+//   2. parses with the supplied Zod schema (or tries to JSON.parse if no
+//      schema is given — used by sub-runners that own their own schemas)
+//   3. on any failure, waits exponential-backoff and rewrites the user
+//      message with the failure summary
+//
+// Used by Pricing, ASC 606, Redline, Approval, and the per-artifact Comms
+// runners — every leaf sub-agent that emits a single JSON object.
+export interface ExecuteWithRetryOptions<T> {
+  model: Model;
+  systemPrompt: string;
+  baseUserMessage: string;
+  feedDelta?: (delta: string) => void;
+  maxTurns?: number;
+  // Mutate the parsed JSON before validation. Used to repair common drift
+  // (e.g. `estimation_difficulty: "moderate"` → "medium").
+  coerce?: (raw: unknown) => void;
+  // Validate the (possibly-coerced) JSON. Throws on failure.
+  validate: (raw: unknown) => T;
+  // How many extra attempts after the first. 2 = up to 3 total tries.
+  retries?: number;
+  // Backoff in ms between attempts. Default [1000, 3000].
+  backoffMsByAttempt?: number[];
+}
+
+export interface ExecuteWithRetryResult<T> {
+  output: T;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  costUsd: number | null;
+  attempts: number;
+}
+
+const DEFAULT_BACKOFF_MS = [1000, 3000];
+
+export async function executeAgentWithSchemaRetry<T>(
+  opts: ExecuteWithRetryOptions<T>,
+): Promise<ExecuteWithRetryResult<T>> {
+  const retries = opts.retries ?? 2;
+  const backoff = opts.backoffMsByAttempt ?? DEFAULT_BACKOFF_MS;
+
+  let lastError: unknown = null;
+  let lastFailureHint: string | null = null;
+  // Token usage accumulates across attempts so the orchestrator records the
+  // true cost of a flaky sub-agent rather than only the successful try.
+  let totalInput = 0;
+  let totalOutput = 0;
+  let totalCost = 0;
+  let sawTokens = false;
+  let sawCost = false;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const userMessage =
+      attempt === 0
+        ? opts.baseUserMessage
+        : opts.baseUserMessage +
+          "\n\n---\n\nPREVIOUS ATTEMPT FAILED VALIDATION. " +
+          (lastFailureHint ?? "Re-emit the full output with strict JSON.") +
+          " Return ONE valid JSON object now matching the schema exactly. No preamble. No code fences. JSON only.";
+
+    let raw: ExecuteAgentResult;
+    try {
+      raw = await executeAgentQuery({
+        model: opts.model,
+        systemPrompt: opts.systemPrompt,
+        userMessage,
+        feedDelta: attempt === 0 ? opts.feedDelta : undefined,
+        maxTurns: opts.maxTurns,
+      });
+    } catch (err) {
+      lastError = err;
+      lastFailureHint =
+        "The previous request errored before a JSON response was produced.";
+      if (attempt < retries) {
+        await tinyPause(backoff[Math.min(attempt, backoff.length - 1)]);
+      }
+      continue;
+    }
+
+    if (raw.inputTokens !== null) {
+      totalInput += raw.inputTokens;
+      sawTokens = true;
+    }
+    if (raw.outputTokens !== null) {
+      totalOutput += raw.outputTokens;
+      sawTokens = true;
+    }
+    if (raw.costUsd !== null) {
+      totalCost += raw.costUsd;
+      sawCost = true;
+    }
+
+    try {
+      const json = extractJsonObject(raw.assistantText);
+      opts.coerce?.(json);
+      const output = opts.validate(json);
+      return {
+        output,
+        inputTokens: sawTokens ? totalInput : null,
+        outputTokens: sawTokens ? totalOutput : null,
+        costUsd: sawCost ? totalCost : null,
+        attempts: attempt + 1,
+      };
+    } catch (err) {
+      lastError = err;
+      lastFailureHint = summarizeValidationFailure(err);
+      if (attempt < retries) {
+        await tinyPause(backoff[Math.min(attempt, backoff.length - 1)]);
+      }
+    }
+  }
+
+  throw new Error(
+    `Agent failed schema validation after ${retries + 1} attempts: ${
+      lastError instanceof Error ? lastError.message : String(lastError)
+    }`,
+  );
+}
+
+// Best-effort one-paragraph rendering of a Zod (or generic) error. Fed back
+// to the model on retry so it can self-correct.
+function summarizeValidationFailure(err: unknown): string {
+  if (!err) return "Unknown validation failure.";
+  // Zod v4 error shape: error.issues = [{ path, message, code, ... }]
+  const issues = (err as { issues?: unknown }).issues;
+  if (Array.isArray(issues) && issues.length > 0) {
+    const lines = issues.slice(0, 5).map((i) => {
+      const issue = i as { path?: unknown; message?: string };
+      const path =
+        Array.isArray(issue.path) && issue.path.length > 0
+          ? issue.path.join(".")
+          : "<root>";
+      return `- ${path}: ${issue.message ?? "invalid"}`;
+    });
+    return [
+      "The previous JSON did not match the schema. Failures:",
+      ...lines,
+      "Re-emit a fully corrected JSON object — every listed path must conform.",
+    ].join("\n");
+  }
+  if (err instanceof Error) {
+    return `The previous JSON failed to parse: ${err.message}`;
+  }
+  return "The previous JSON failed validation.";
+}
+
 // Standard substep-event shape every agent module accepts via opts.onSubstep.
 // The orchestrator wraps these with a `parent` label + absolute timestamp
 // before forwarding to the SSE stream.

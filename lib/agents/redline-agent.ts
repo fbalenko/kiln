@@ -4,8 +4,7 @@ import { RedlineOutputSchema, type RedlineOutput } from "./schemas";
 import type { DealWithCustomer } from "../db/queries";
 import {
   countOccurrences,
-  executeAgentQuery,
-  extractJsonObject,
+  executeAgentWithSchemaRetry,
   tinyPause,
   type RunAgentResult,
   type SubstepEmitter,
@@ -67,18 +66,16 @@ export async function runRedlineAgent(
   const userMessage = buildUserMessage(deal, customerSignals);
   const watcher = new RedlineStreamWatcher(emit);
 
-  const { assistantText, inputTokens, outputTokens, costUsd } =
-    await executeAgentQuery({
+  const { output, inputTokens, outputTokens, costUsd } =
+    await executeAgentWithSchemaRetry({
       model: MODEL,
       systemPrompt,
-      userMessage,
+      baseUserMessage: userMessage,
       feedDelta: (delta) => watcher.feed(delta),
+      validate: (raw) => RedlineOutputSchema.parse(raw),
     });
 
   watcher.flushOpen();
-
-  const json = extractJsonObject(assistantText);
-  const output = RedlineOutputSchema.parse(json);
 
   emit({
     id: "finalizing",

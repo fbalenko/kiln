@@ -78,3 +78,22 @@ Return one JSON object matching `Asc606OutputSchema`:
 ```
 
 No surrounding text. No code fences. The first character of your response must be `{` and the last must be `}`.
+
+---
+
+## Final reminder: enum values are strict
+
+The schema uses **closed enums**. Output ANY other value and the response will be rejected and re-attempted. Specifically:
+
+- `estimation_difficulty` ∈ exactly `"low"` | `"medium"` | `"high"`. **Examples:**
+  - Ramp ending in 6 months with deterministic pricing → `"low"`
+  - Usage-based overage with two pricing tiers and a known historical run-rate → `"medium"`
+  - MFN clause + multi-year escalator + competitor true-up → `"high"`
+  - Forbidden synonyms that will fail: `"moderate"`, `"very high"`, `"complex"`, `"hard"`, `"none"`, `"tbd"`, `null`, missing field.
+- `expected_recognition_pattern` ∈ exactly `"point_in_time"` | `"ratable_over_term"` | `"usage_based"` | `"milestone"`. No other values.
+- `severity` (in `red_flags[]`) ∈ exactly `"info"` | `"warn"` | `"block_without_approval"`. No other values.
+- `confidence` ∈ exactly `"low"` | `"medium"` | `"high"`. No other values.
+
+If you are uncertain about an enum, pick the closest legal value and explain the uncertainty in the adjacent `explanation` field — never invent a new enum string.
+
+JSON-only output reminder: every double-quote inside a string field MUST be escaped as `\"`. Every newline MUST be `\n`. No smart quotes (` ` ` ` ). No backticks. The very first character of your response is `{`. The very last character is `}`. Nothing else.

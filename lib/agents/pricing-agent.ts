@@ -5,8 +5,7 @@ import { getDealContext } from "../tools/crm";
 import type { SimilarDealRecord } from "../tools/vector-search";
 import {
   countOccurrences,
-  executeAgentQuery,
-  extractJsonObject,
+  executeAgentWithSchemaRetry,
   tinyPause,
   type RunAgentResult,
   type SubstepEmitter,
@@ -100,12 +99,13 @@ export async function runPricingAgent(
   const userMessage = buildUserMessage(ctx);
   const watcher = new PricingStreamWatcher(emit, ctx.guardrails.length);
 
-  const { assistantText, inputTokens, outputTokens, costUsd } =
-    await executeAgentQuery({
+  const { output, inputTokens, outputTokens, costUsd } =
+    await executeAgentWithSchemaRetry({
       model: MODEL,
       systemPrompt,
-      userMessage,
+      baseUserMessage: userMessage,
       feedDelta: (delta) => watcher.feed(delta),
+      validate: (raw) => PricingOutputSchema.parse(raw),
     });
 
   watcher.flushOpen();
@@ -117,8 +117,6 @@ export async function runPricingAgent(
     label: "Computing margin sensitivity under the 40% list-price baseline",
     status: "running",
   });
-  const json = extractJsonObject(assistantText);
-  const output = PricingOutputSchema.parse(json);
   await tinyPause(150);
   emit({
     id: "margin_sensitivity",

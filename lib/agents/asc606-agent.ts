@@ -4,8 +4,7 @@ import { Asc606OutputSchema, type Asc606Output } from "./schemas";
 import type { DealWithCustomer } from "../db/queries";
 import {
   countOccurrences,
-  executeAgentQuery,
-  extractJsonObject,
+  executeAgentWithSchemaRetry,
   tinyPause,
   type RunAgentResult,
   type SubstepEmitter,
@@ -55,19 +54,17 @@ export async function runAsc606Agent(
   const userMessage = buildUserMessage(deal);
   const watcher = new Asc606StreamWatcher(emit);
 
-  const { assistantText, inputTokens, outputTokens, costUsd } =
-    await executeAgentQuery({
+  const { output, inputTokens, outputTokens, costUsd } =
+    await executeAgentWithSchemaRetry({
       model: MODEL,
       systemPrompt,
-      userMessage,
+      baseUserMessage: userMessage,
       feedDelta: (delta) => watcher.feed(delta),
+      coerce: (raw) => coerceVariableConsiderationDifficulty(raw),
+      validate: (raw) => Asc606OutputSchema.parse(raw),
     });
 
   watcher.flushOpen();
-
-  const json = extractJsonObject(assistantText);
-  coerceVariableConsiderationDifficulty(json);
-  const output = Asc606OutputSchema.parse(json);
 
   emit({
     id: "finalizing",
@@ -304,8 +301,10 @@ function buildUserMessage(deal: DealWithCustomer): string {
 }
 
 // Defensive coercion. The model occasionally returns synonyms like "moderate"
-// or "very high" for `estimation_difficulty` despite the schema. Map those to
-// the nearest legal value rather than failing the entire orchestrator run.
+// or "very high" for `estimation_difficulty`, or omits the field entirely, or
+// nests it inside an object. Map every shape to a legal value so a single
+// stylistic drift doesn't fail the entire orchestrator run. Anything we can't
+// confidently map defaults to "medium".
 function coerceVariableConsiderationDifficulty(json: unknown) {
   if (!json || typeof json !== "object") return;
   const root = json as Record<string, unknown>;
@@ -315,21 +314,38 @@ function coerceVariableConsiderationDifficulty(json: unknown) {
     if (!f || typeof f !== "object") continue;
     const flag = f as Record<string, unknown>;
     const v = flag.estimation_difficulty;
-    if (typeof v !== "string") continue;
+
+    // Already legal — leave alone.
     if (v === "low" || v === "medium" || v === "high") continue;
+
+    // Missing / null / non-string → default to medium so the schema passes.
+    if (typeof v !== "string") {
+      flag.estimation_difficulty = "medium";
+      continue;
+    }
+
     const lc = v.toLowerCase().trim();
-    if (lc.includes("low") || lc.includes("trivial") || lc.includes("simple")) {
+    if (
+      lc === "low" ||
+      lc.includes("trivial") ||
+      lc.includes("simple") ||
+      lc.includes("easy") ||
+      lc === "minimal" ||
+      lc === "none"
+    ) {
       flag.estimation_difficulty = "low";
     } else if (
+      lc === "high" ||
       lc.includes("very high") ||
       lc.includes("hard") ||
       lc.includes("difficult") ||
       lc.includes("complex") ||
-      lc.includes("severe")
+      lc.includes("severe") ||
+      lc.includes("substantial")
     ) {
       flag.estimation_difficulty = "high";
     } else {
-      // moderate, medium-high, etc.
+      // moderate, medium-high, "tbd", any unrecognized string → medium.
       flag.estimation_difficulty = "medium";
     }
   }
