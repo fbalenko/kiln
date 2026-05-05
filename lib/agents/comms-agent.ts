@@ -191,12 +191,13 @@ interface CommsContext {
 }
 
 const TONE_GUIDANCE = [
-  "Tone calibration:",
-  "- Enterprise expansion → collaborative-but-firm",
-  "- PLG conversion → collaborative",
-  "- Competitive displacement at risk → firm",
-  "- Renewal at risk → warm",
-  "- Partnership / non-standard → formal",
+  "Tone calibration — `tone` MUST be one of `collaborative`, `firm`, `warm`, `urgent`. No other values:",
+  "- Enterprise expansion → `collaborative` (with firm boundaries inside the body)",
+  "- PLG conversion → `collaborative`",
+  "- Competitive displacement at risk → `firm`",
+  "- Renewal at risk → `warm`",
+  "- Partnership / non-standard → `collaborative`",
+  "- Tight customer deadline / lost-without-action → `urgent`",
 ].join("\n");
 
 function commonContextBlock(ctx: CommsContext): string {
@@ -332,12 +333,37 @@ async function runCustomerEmail(ctx: CommsContext) {
 
   const r = await executeAgentQuery({ model: MODEL, systemPrompt, userMessage });
   const json = extractJsonObject(r.assistantText) as CommsOutput["customer_email_draft"];
+  coerceCustomerEmailTone(json);
   return {
     output: CommsOutputSchema.shape.customer_email_draft.parse(json),
     inputTokens: r.inputTokens,
     outputTokens: r.outputTokens,
     costUsd: r.costUsd,
   };
+}
+
+// The model occasionally picks a tone outside the legal four (`formal`,
+// `professional`, etc.) despite the prompt. Map to the nearest legal value.
+function coerceCustomerEmailTone(json: unknown) {
+  if (!json || typeof json !== "object") return;
+  const root = json as Record<string, unknown>;
+  const v = root.tone;
+  if (typeof v !== "string") return;
+  if (v === "collaborative" || v === "firm" || v === "warm" || v === "urgent") {
+    return;
+  }
+  const lc = v.toLowerCase().trim();
+  if (lc.includes("formal") || lc.includes("professional") || lc.includes("collab")) {
+    root.tone = "collaborative";
+  } else if (lc.includes("firm") || lc.includes("direct") || lc.includes("assertive")) {
+    root.tone = "firm";
+  } else if (lc.includes("warm") || lc.includes("friendly") || lc.includes("empathetic")) {
+    root.tone = "warm";
+  } else if (lc.includes("urgent") || lc.includes("time")) {
+    root.tone = "urgent";
+  } else {
+    root.tone = "collaborative";
+  }
 }
 
 async function runOnePager(ctx: CommsContext) {

@@ -1,0 +1,1308 @@
+{
+  "version": 2,
+  "deal_id": "deal_anthropic_2026q1_expansion",
+  "outputs": {
+    "pricing": {
+      "list_price": 588235,
+      "proposed_price": 500000,
+      "effective_discount_pct": 15,
+      "margin_pct_estimate": 29.4,
+      "guardrail_evaluations": [
+        {
+          "rule_name": "Enterprise discount hard ceiling",
+          "passed": true,
+          "severity": "block_absolute",
+          "actual_value": 15,
+          "threshold_value": 50,
+          "explanation": "The 15% discount is well below the 50% absolute ceiling. No structural block triggered."
+        },
+        {
+          "rule_name": "Enterprise discount requires CFO sign-off",
+          "passed": true,
+          "severity": "block_without_approval",
+          "actual_value": 15,
+          "threshold_value": 35,
+          "explanation": "The 15% discount is below the 35% CFO sign-off threshold. No approval gate triggered on discount alone."
+        },
+        {
+          "rule_name": "Enterprise discount soft ceiling",
+          "passed": true,
+          "severity": "warn",
+          "actual_value": 15,
+          "threshold_value": 25,
+          "explanation": "The 15% discount is within the standard enterprise envelope of 25%. Justification should still be documented given the non-standard clause bundle."
+        },
+        {
+          "rule_name": "Enterprise ramp length soft ceiling",
+          "passed": true,
+          "severity": "warn",
+          "actual_value": 6,
+          "threshold_value": 6,
+          "explanation": "The ramp schedule covers exactly 6 months (months 1–6 at 50% of monthly ACV), which meets but does not exceed the soft ceiling. No additional distortion flag, but the 50% ramp effectively increases the economic discount in Year 1 and should be modeled accordingly."
+        },
+        {
+          "rule_name": "Gross margin absolute floor",
+          "passed": true,
+          "severity": "block_absolute",
+          "actual_value": 29.4,
+          "threshold_value": 25,
+          "explanation": "Estimated gross margin of ~29.4% is above the 25% absolute floor. However, the $200K data provider credit and 6-month 50% ramp erode effective Year 1 cash margin further — a fully-loaded margin recheck is recommended before close."
+        },
+        {
+          "rule_name": "Gross margin floor (warn)",
+          "passed": false,
+          "severity": "warn",
+          "actual_value": 29.4,
+          "threshold_value": 40,
+          "explanation": "Estimated gross margin of ~29.4% is below the 40% warn threshold. The AE and CFO should validate this is acceptable given the strategic logo value and multi-year TCV commitment."
+        }
+      ],
+      "alternative_structures": [
+        {
+          "label": "Shorten Ramp, Trade MFN for Co-Marketing",
+          "description": "Eliminate the 6-month 50% ramp (replace with a 3-month 75% ramp) and drop the unconditional MFN in favor of a co-marketing / case study commitment that provides Anthropic with $75K in equivalent marketing value. Hold the 15% price discount.",
+          "proposed_price": 500000,
+          "effective_discount_pct": 15,
+          "expected_acv_impact": 37500,
+          "margin_pct_estimate": 33.2,
+          "rationale": "Removing the 6-month 50% ramp accelerates cash collection in Year 1 by ~$125K and eliminates MFN pricing risk to future enterprise deals. The co-marketing credit costs less than $75K in COGS and replaces a clause that could structurally suppress future deal pricing. ACV impact is positive because effective Year-1 realized revenue increases."
+        },
+        {
+          "label": "Usage Commit Floor with Overage Upside",
+          "description": "Convert the flat-fee hybrid deal to a seat/usage-commit floor model: guaranteed $420K ACV base (15% less than list) with a contractual overage rate of $X per unit above the commit tier, and remove the $200K pre-paid credits (offer instead as an earn-back tied to usage milestones). Drop the MFN to a narrow tiered trigger (fires only above 3x their current usage tier).",
+          "proposed_price": 420000,
+          "effective_discount_pct": 28.6,
+          "expected_acv_impact": -80000,
+          "margin_pct_estimate": 14.3,
+          "rationale": "The base ACV is lower, which hurts Year-1 margin, but the structure captures expansion revenue as Anthropic consolidates 6 workspaces and grows. The tiered MFN carve-out neutralizes the most dangerous clause while still giving Procurement a win. The earn-back credit model keeps $200K on the balance sheet until it is earned, improving effective cash margin. Best suited if Anthropic's usage trajectory justifies the bet."
+        },
+        {
+          "label": "36-Month Prepaid Discount Swap with Billing Normalization",
+          "description": "Offer a 20% total discount (vs. 15% today) in exchange for upfront annual-in-advance billing (not in-arrears as requested), removal of the termination-for-convenience right, and the $200K credits recast as a Year-1-only enrichment stipend billed separately at full margin. Ramp stays at 6 months but at 75% (not 50%).",
+          "proposed_price": 470588,
+          "effective_discount_pct": 20,
+          "expected_acv_impact": -29412,
+          "margin_pct_estimate": 32.5,
+          "rationale": "The incremental 5% discount buys two structurally important wins: (1) annual-in-advance billing eliminates the AR risk of a $1.5M deal billed in arrears, and (2) removing termination-for-convenience after month 13 locks in the full 36-month TCV. The separate PS/credits line at full margin partially offsets the ACV concession. Net effective margin is healthier than the current proposal once billing risk is priced in."
+        }
+      ],
+      "ltv_estimate_under_usage_assumptions": 1823625,
+      "similar_deal_references": [],
+      "confidence": "medium",
+      "reasoning_summary": "The headline discount of 15.0% is well within all enterprise discount guardrails and does not trigger any block or CFO-approval gate. However, the estimated gross margin of ~29.4% (computed under the working assumption that list price carries a 40% gross margin — COGS = 60% of list; CFO should validate this baseline) falls below the 40% warn threshold, triggering a yellow flag. The deal's true economic risk lies not in the headline discount but in the non-standard clause bundle: a $200K pre-paid credit drawdown, a 6-month 50% ramp (reducing effective Year-1 ACV to ~$375K), annual billing in arrears, an MFN with broad scope, and a 60-day termination-for-convenience right starting month 13 — any one of which individually would warrant deal desk scrutiny. No precedent deals were available to benchmark; confidence is medium due to the hybrid pricing model complexity and margin estimate reliance on the 40% list-price assumption."
+    },
+    "asc606": {
+      "performance_obligations": [
+        {
+          "name": "Platform subscription (consolidated enterprise workspace)",
+          "description": "Single enterprise SaaS subscription consolidating 6 prior workspaces over 36 months.",
+          "is_distinct": true,
+          "estimated_standalone_value": 1300000,
+          "expected_recognition_pattern": "ratable_over_term",
+          "rationale": "Customer receives continuous access to the platform; service is distinct and benefit is consumed evenly over the term per ASC 606-10-25-19."
+        },
+        {
+          "name": "Pre-paid data provider credits",
+          "description": "$200K of TCV allocated as pre-paid credits redeemable against third-party enrichment partners.",
+          "is_distinct": true,
+          "estimated_standalone_value": 200000,
+          "expected_recognition_pattern": "usage_based",
+          "rationale": "Credits are separately identifiable from platform access and are consumed as the customer redeems them; recognition follows redemption (or breakage estimate). Principal-vs-agent analysis required for partner enrichment."
+        },
+        {
+          "name": "Onboarding/ramp implementation services (implied)",
+          "description": "Implicit onboarding during 6-month ramp consolidating 6 workspaces.",
+          "is_distinct": false,
+          "estimated_standalone_value": null,
+          "expected_recognition_pattern": "ratable_over_term",
+          "rationale": "No separate SOW/fee disclosed; onboarding appears bundled with subscription and not separately identifiable, so combined with the platform PO."
+        }
+      ],
+      "variable_consideration_flags": [
+        {
+          "source": "mfn_true_up",
+          "treatment_required": "constrained_until_resolved",
+          "estimation_difficulty": "high",
+          "explanation": "24-month MFN with carve-out intent could force retroactive price reductions if a peer AI lab gets better pricing. Under ASC 606-10-32-11, transaction price should be constrained for amounts that are not probable of not reversing."
+        },
+        {
+          "source": "ramp",
+          "treatment_required": "ratable_recognition_of_total_fixed_consideration",
+          "estimation_difficulty": "low",
+          "explanation": "50% ramp months 1-6 then full price; total fixed consideration is recognized ratably across the service period rather than as billed/invoiced (ASC 606-10-32-2)."
+        },
+        {
+          "source": "rollover_credits",
+          "treatment_required": "expected_value_method_with_breakage",
+          "estimation_difficulty": "medium",
+          "explanation": "$200K data provider credits require breakage estimation under ASC 606-10-55-46 to 55-49; recognize proportionally as redemptions occur."
+        },
+        {
+          "source": "termination_for_convenience",
+          "treatment_required": "reassess_contract_term",
+          "estimation_difficulty": "medium",
+          "explanation": "60-day TFC starting month 13 may shorten enforceable contract term to 12 months + notice under ASC 606-10-25-3, materially affecting allocation and amortization of contract costs."
+        },
+        {
+          "source": "annual_billing_in_arrears",
+          "treatment_required": "significant_financing_component_assessment",
+          "estimation_difficulty": "low",
+          "explanation": "Billing in arrears with ratable recognition typically does not create a significant financing component, but should be documented per ASC 606-10-32-15 to 32-18."
+        }
+      ],
+      "contract_modification_risk": {
+        "is_at_risk": true,
+        "explanation": "MFN clause may trigger a contract modification under ASC 606-10-25-10 if a peer is offered better pricing within 24 months, requiring a prospective or cumulative catch-up adjustment. Additionally, exercise of the month-13 TFC would shorten the term and likely be accounted for as a termination/modification."
+      },
+      "recognized_revenue_schedule": [
+        {
+          "period": "Year 1 — Months 1-6 (ramp)",
+          "amount": 124998,
+          "notes": "Ramp billings at ~$20,833/mo; revenue recognized ratably based on total fixed consideration may differ from billings."
+        },
+        {
+          "period": "Year 1 — Months 7-12",
+          "amount": 250002,
+          "notes": "Full-rate months at ~$41,667/mo subscription."
+        },
+        {
+          "period": "Year 2",
+          "amount": 500000,
+          "notes": "Full ACV; subject to MFN true-up constraint and TFC reassessment."
+        },
+        {
+          "period": "Year 3",
+          "amount": 500000,
+          "notes": "Full ACV; constrained for MFN through month 24."
+        },
+        {
+          "period": "Credits (across term)",
+          "amount": 125000,
+          "notes": "Estimated redemption of $200K data provider credits net of breakage; recognized as redeemed."
+        }
+      ],
+      "red_flags": [
+        {
+          "severity": "block_without_approval",
+          "label": "MFN clause with 24-month look-forward",
+          "explanation": "Creates ongoing variable consideration and contract modification exposure across the customer base; requires CFO/Legal/Audit pre-clearance and clear carve-out language."
+        },
+        {
+          "severity": "warn",
+          "label": "Termination-for-convenience starting month 13",
+          "explanation": "May shorten enforceable contract term to ~14 months for ASC 606 purposes, impacting TCV recognition and capitalized commission amortization (ASC 340-40)."
+        },
+        {
+          "severity": "warn",
+          "label": "Principal vs agent on data provider credits",
+          "explanation": "$200K of TCV is redeemable against third-party enrichment partners; gross vs net presentation under ASC 606-10-55-36 must be determined."
+        },
+        {
+          "severity": "warn",
+          "label": "Ramp recognition vs billing mismatch",
+          "explanation": "Recognizing ratably while billing annually in arrears at ramped rates creates a contract asset; ensure proper balance sheet treatment."
+        },
+        {
+          "severity": "info",
+          "label": "Annual billing in arrears",
+          "explanation": "Non-standard payment terms; confirm no significant financing component and assess credit risk."
+        }
+      ],
+      "confidence": "low",
+      "reasoning_summary": "This deal combines multiple interacting variable-consideration sources (MFN, ramp, pre-paid third-party credits, TFC) with a non-standard billing cadence, materially complicating transaction price determination and term assessment under ASC 606. The platform subscription is clearly distinct and ratable, but the credits require principal/agent and breakage analysis, and the MFN plus month-13 TFC create real contract-modification risk. This is an automated estimate; final determination requires CFO/auditor review."
+    },
+    "redline": {
+      "flagged_clauses": [
+        {
+          "clause_type": "MFN",
+          "customer_proposed_language": "Anthropic requests a Most-Favored-Nation clause guaranteeing they receive any pricing improvement Clay offers to peer AI labs over the next 24 months.",
+          "risk_level": "high",
+          "risk_explanation": "An uncapped, peer-lab-scoped MFN over 24 months means any discounted deal Clay closes with another AI/ML-vertical customer (OpenAI, Cohere, Mistral, etc.) could automatically reprice Anthropic's contract retroactively. At $500K ACV, a 10% triggering event equals $50K/yr revenue leak with no floor. The AE has already verbally floated 'MFN with carve-outs,' which creates anchoring risk if Clay's counter is seen as reneging.",
+          "suggested_counter": "Most-Favored-Nation pricing shall apply solely to (a) net-new enterprise customers headquartered in the United States, (b) in the AI/ML vertical, (c) with a minimum contract value of $750,000 ACV, (d) on a substantially similar product tier and feature set, and (e) shall be triggerable no more than once per twelve (12)-month period upon written request from Customer submitted within sixty (60) days of the close of the triggering transaction. MFN adjustments shall apply prospectively only from the date of Customer's written election and shall not be applied retroactively. Customer's MFN right expires twenty-four (24) months from the Effective Date.",
+          "fallback_position": "Accept the 24-month window and peer-lab scope but hold firm on: (1) $500K ACV floor for triggering deals, (2) prospective-only application, (3) one trigger per 12-month period, and (4) 'substantially similar product configuration' language to prevent feature-stripped deals from triggering.",
+          "precedent_notes": "Clay has previously accepted MFN clauses with vertical and ACV floor carve-outs for strategic logos; no known precedent for retroactive MFN application."
+        },
+        {
+          "clause_type": "rollover_credits",
+          "customer_proposed_language": "Anthropic requests $200,000 of the $1.5M TCV be applied as pre-paid credits redeemable against any of Clay's enrichment partners at any time during the contract term.",
+          "risk_level": "high",
+          "risk_explanation": "Pre-paid credits applied against third-party enrichment partner costs are a pass-through expense for Clay. If credits are redeemable against 'any' partner without constraint, Anthropic could concentrate redemptions on Clay's highest-margin partners or bulk-redeem in month 13 before exercising TFC, effectively extracting $200K in enrichment value and then exiting. Combined with the 60-day TFC right, this creates a structured extraction scenario.",
+          "suggested_counter": "Customer shall receive $200,000 in enrichment credits ('Credits') redeemable against Clay's then-current enrichment partner catalog, subject to the following: (a) Credits shall be allocated pro-rata across the Term at a maximum drawdown of $66,667 per contract year; (b) unused Credits in a given year shall carry forward into the following year but shall not accelerate; (c) Credits have no cash value and are non-transferable; (d) upon any termination of this Agreement, unused Credits are forfeited with no refund obligation; (e) Credits may not be applied against Clay's core platform subscription fees.",
+          "fallback_position": "Accept non-pro-rated drawdown (i.e., allow full $200K to be used at any pace) but hold firm on (d) forfeiture-upon-termination and (c) non-cash/non-transferable provisions. This protects against the TFC extraction scenario.",
+          "precedent_notes": "Custom credit pools have been granted to enterprise accounts but pro-rata drawdown caps are novel; forfeiture-on-termination is standard in Clay's enterprise template."
+        },
+        {
+          "clause_type": "termination_for_convenience",
+          "customer_proposed_language": "Anthropic requests a 60-day termination-for-convenience right effective starting month 13 of the 36-month term.",
+          "risk_level": "high",
+          "risk_explanation": "A 60-day TFC starting month 13 effectively converts a 3-year committed deal into a 12-month deal with optional extensions. Clay's $500K ACV discount was anchored on the full $1.5M TCV commitment; if Anthropic exits at month 13, realized revenue is ~$416K (months 1–6 at 50% ramp plus months 7–13 at full rate) against a list price of $588K — meaning Clay accepted a discount and absorbed ramp costs for a customer who may exit before breakeven. The risk is compounded by Anthropic's self-described build-vs-buy optionality.",
+          "suggested_counter": "Customer may terminate this Agreement for convenience no earlier than the end of month eighteen (18) upon ninety (90) days' prior written notice to Clay. In the event of such termination, Customer shall pay Clay a termination fee equal to three (3) months of the then-current monthly subscription fee ('Wind-Down Fee'), which the parties agree represents a reasonable estimate of Clay's re-deployment costs. No Wind-Down Fee applies if Customer provides notice after month thirty (30).",
+          "fallback_position": "Accept month 13 TFC window but require 90-day notice (not 60) and a wind-down fee equal to two (2) months of then-current fees. This at minimum closes the $200K credits extraction gap and partially compensates for ramp-period investment.",
+          "precedent_notes": "Clay has accepted TFC clauses on multi-year deals but typically not before month 18; 60-day notice with no wind-down fee is below standard floor."
+        },
+        {
+          "clause_type": "payment_terms",
+          "customer_proposed_language": "Anthropic requests annual billing in arrears rather than Clay's standard annual billing in advance.",
+          "risk_level": "medium",
+          "risk_explanation": "Annual billing in arrears on a $500K ACV deal means Clay carries up to $500K in unbilled receivables for 12 months before first payment. Combined with the TFC clause active from month 13, there is a scenario where Anthropic exercises TFC immediately after the first arrears payment, having consumed a full year of service on 30–60 day collection lag. This also creates a DSO impact on Clay's books for the first two quarters.",
+          "suggested_counter": "Customer shall be invoiced annually in advance on each anniversary of the Effective Date, with payment due net-30. As a one-time accommodation for the initial contract year, Clay agrees to invoice Customer on the first day of month two (2) of the Term (rather than the Effective Date) with payment due net-30, to allow for Customer's procurement cycle close.",
+          "fallback_position": "Accept annual billing with a split: invoice issued on day 1 of each contract year, payment due net-45 (extended from standard net-30). This is arrears-adjacent for procurement optics but keeps Clay on an advance-billing structure.",
+          "precedent_notes": "True annual-in-arrears has not been accepted on deals above $250K ACV per standard policy; net-45 advance billing has been approved as a compromise for enterprise procurement cycles."
+        },
+        {
+          "clause_type": "ramp_schedule",
+          "customer_proposed_language": "Anthropic requests a 6-month onboarding ramp where they pay 50% of contracted fees in months 1–6, then full price from month 7 onward.",
+          "risk_level": "medium",
+          "risk_explanation": "The ramp reduces Year 1 realized revenue from $500K to ~$375K ($250K at 50% for 6 months + $250K at full for 6 months), a $125K shortfall vs. ACV. This is recoverable over the 3-year term, but when combined with the TFC at month 13 and in-arrears billing, Clay could collect only one full-year invoice (months 7–18) before Anthropic exits — netting roughly $625K against a $1.5M TCV commitment and having granted 15% off list. The ramp itself is not unusual for consolidation deals but should not stack with both the TFC and arrears billing without mitigation.",
+          "suggested_counter": "Clay agrees to a ramp schedule as follows: months 1–6 at sixty percent (60%) of monthly contracted fees (not 50%), and months 7–36 at one hundred percent (100%) of monthly contracted fees. Ramp pricing is conditioned on Customer maintaining annual billing-in-advance terms; if billing terms are modified to arrears, the ramp schedule is void and standard monthly fees apply from month 1.",
+          "fallback_position": "Accept 50% ramp for months 1–6 but require that the ramp discount be structured as a credit memo applied at month 7 rather than reduced invoicing, so that Clay's recognized ACV remains $500K from day 1 for revenue accounting purposes.",
+          "precedent_notes": "Six-month ramps at 50% have been approved on consolidation deals above $400K ACV; conditioning ramp on advance billing is a novel linkage but legally defensible."
+        }
+      ],
+      "standard_clauses_affirmed": [
+        "Indemnification: not explicitly addressed in customer request — assume mutual standard applies",
+        "Data residency: not flagged as non-standard by AE — standard US data residency assumed",
+        "Warranty: not addressed — standard 99.5% uptime SLA assumed"
+      ],
+      "overall_redline_priority": "block",
+      "one_line_summary": "We cannot ship this deal as-is — the combination of unrestricted 24-month MFN, $200K credits with no drawdown cap, 60-day TFC from month 13, and in-arrears billing creates a structured extraction scenario that must be resolved before signature.",
+      "confidence": "high",
+      "reasoning_summary": "The headline risk is the stacking of five non-standard clauses that individually are manageable but collectively create a scenario where Anthropic could consume a full year of service plus $200K in enrichment credits at a 15% discount, then exit at month 13 with 60 days' notice and trigger MFN retroactively against any concession Clay made to a peer lab. The MFN and TFC clauses are individually blockable; together they are unambiguously a block. The AE's verbal MFN concession must be walked back to a scoped counter before Procurement anchors on it. Priority is to close the TFC wind-down gap and credits forfeiture language first, as those are the fastest cash-exposure vectors."
+    },
+    "approval": {
+      "required_approvers": [
+        {
+          "role": "ae_manager",
+          "rule_triggered": "Standard sub-$100K with ≤15% discount → AE Manager",
+          "rationale": "Default approval required for all deals regardless of size or discount."
+        },
+        {
+          "role": "cfo",
+          "rule_triggered": "TCV over $1M requires CFO",
+          "rationale": "Deal TCV of $1.5M exceeds the $1M threshold and requires CFO oversight for multi-year enterprise consolidation."
+        },
+        {
+          "role": "legal",
+          "rule_triggered": "MFN clause requires Legal",
+          "rationale": "Deal contains an MFN_24mo_with_carveout_intent clause that requires Legal to scope carve-outs and manage pricing model risk."
+        },
+        {
+          "role": "finance",
+          "rule_triggered": "Non-standard payment terms route to Finance",
+          "rationale": "Deal specifies annual_billing_in_arrears, a non-standard cash timing arrangement that requires Finance review for ASC 606 and DSO impact."
+        },
+        {
+          "role": "rev_ops",
+          "rule_triggered": "ACV $100K–$500K requires RevOps",
+          "rationale": "Deal ACV of $500K falls within the $100K–$500K band, triggering RevOps review for structural consistency and deal hygiene."
+        }
+      ],
+      "approval_chain": [
+        {
+          "step": 1,
+          "approver_role": "ae_manager",
+          "parallel_with": [],
+          "can_veto": false
+        },
+        {
+          "step": 2,
+          "approver_role": "rev_ops",
+          "parallel_with": [
+            "finance",
+            "cfo",
+            "legal"
+          ],
+          "can_veto": false
+        },
+        {
+          "step": 2,
+          "approver_role": "finance",
+          "parallel_with": [
+            "rev_ops",
+            "cfo",
+            "legal"
+          ],
+          "can_veto": false
+        },
+        {
+          "step": 2,
+          "approver_role": "cfo",
+          "parallel_with": [
+            "rev_ops",
+            "finance",
+            "legal"
+          ],
+          "can_veto": true
+        },
+        {
+          "step": 2,
+          "approver_role": "legal",
+          "parallel_with": [
+            "rev_ops",
+            "finance",
+            "cfo"
+          ],
+          "can_veto": true
+        }
+      ],
+      "expected_cycle_time_business_days": 8,
+      "blockers_to_address_first": [
+        "MFN clause must be scoped with carve-outs (minimum: $750K ACV floor, US-only, AI/ML vertical, substantially similar product tier, prospective-only application, one trigger per 12-month period) before Legal will approve. AE's verbal commitment to 'MFN with carve-outs' must be converted to a written counter-proposal immediately to avoid anchoring Procurement on uncapped language.",
+        "Redline Agent flagged MFN, termination-for-convenience, and credits clauses as 'block' priority. The combination of 24-month unrestricted MFN + 60-day TFC from month 13 + $200K pre-paid credits with no drawdown cap creates structured extraction risk that cannot proceed without Legal and Redline mitigation.",
+        "Termination-for-convenience clause active at month 13 must include either (a) wind-down fee of 2–3 months' fees, or (b) extension of TFC window to month 18+, or (c) 90-day notice requirement (not 60). Current terms convert 3-year $1.5M deal into 12-month deal with below-breakeven economics given the ramp and discount stacking.",
+        "Data provider credits ($200K) must include forfeiture-upon-termination language and pro-rata or annual drawdown caps to prevent Anthropic from bulk-redeeming before month-13 TFC exit.",
+        "Annual billing in arrears creates $500K DSO impact in Year 1 and compounds TFC extraction risk. Fallback position: accept net-45 advance billing (invoice issued in advance, payment due net-45) to preserve cash timing while accommodating Procurement cycle.",
+        "ASC 606 red-flag severity is 'block_without_approval' for MFN variable-consideration exposure. CFO and Audit must pre-clear contract modification risk and revenue-recognition constrain language before Finance sign-off.",
+        "Gross margin estimate of 29.4% falls below 40% warn threshold per Pricing Agent. CFO should validate this is acceptable for a strategic AI lab logo and confirm margin holds after ramp, credits, and MFN true-up modeling.",
+        "Obtain written MFN counter-proposal scoped to customer before deal reaches Legal; AE must clarify verbal commitment with Procurement in writing to reset expectations and avoid anchoring."
+      ],
+      "one_line_summary": "This deal routes to AE Manager → RevOps + Finance + CFO + Legal (parallel, step 2), expected ~8 business days, but cannot proceed without resolving five redline blockers: scoped MFN carve-outs, termination-for-convenience wind-down fee or extended trigger, credits forfeiture language, arrears-to-advance billing conversion, and ASC 606 variable-consideration pre-clearance.",
+      "confidence": "medium",
+      "reasoning_summary": "The deal fires six approval rules (AE Manager default + CFO TCV + Legal MFN + Finance payment terms + RevOps ACV band), assembling a parallel four-party step-2 chain. However, the Redline Agent marked the entire clause bundle as 'block' priority, the ASC 606 Agent flagged MFN variable consideration as 'block_without_approval,' and the Pricing Agent noted margin compression below guardrail warn threshold. The AE's verbal MFN concession anchors Procurement on unrestricted language that Legal cannot accept without scoped carve-outs. Termination-for-convenience at month 13 without wind-down fees converts the deal economics to effectively 12-month; combined with in-arrears billing and pre-paid credits, this creates extraction risk that CFO and Legal must jointly mitigate before submission. The chain is mechanically sound and well-precedented for $1.5M enterprise consolidation deals, but the blockers are material and must be resolved in the AE's pre-review cycle."
+    },
+    "comms": {
+      "slack_post": {
+        "channel_suggestion": "#deal-desk",
+        "blocks": [
+          {
+            "type": "header",
+            "text": {
+              "type": "plain_text",
+              "text": "Deal Review: 2026 Multi-Year Enterprise Consolidation — Anthropic",
+              "emoji": true
+            }
+          },
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*ACV*\n$500,000"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*TCV*\n$1,500,000 (36 months)"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Effective Discount*\n15% off list ($588,235)"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Est. Gross Margin*\n~29.4% (below 40% warn threshold)"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Approval Chain*\nAE Manager → RevOps + Finance + CFO (veto) + Legal (veto) — parallel Step 2"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Expected Cycle Time*\n~8 business days"
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*What the deal team needs to know*\n\n• *This deal is blocked until five redline items are resolved.* The stacking of an uncapped 24-month MFN, $200K pre-paid credits with no drawdown cap, and a 60-day termination-for-convenience right active at month 13 creates a structured extraction scenario: Anthropic could consume a full year of service plus all enrichment credits at a 15% discount, then exit before Clay reaches breakeven. Redline priority is `block`; ASC 606 flags the MFN as `block_without_approval` for variable-consideration exposure.\n\n• *The AE's verbal MFN concession must be walked back immediately.* Maya has floated \"MFN with carve-outs\" to Procurement, anchoring them on broad language Legal cannot accept. The required counter — $750K ACV floor, US-only, AI/ML vertical, substantially similar product tier, prospective-only, one trigger per 12-month period — must be delivered in writing before this enters the formal approval queue.\n\n• *Annual billing in arrears compounds every other risk.* Combined with the month-13 TFC and the 6-month 50% ramp, Clay's worst-case realized revenue before a possible exit is roughly $625K against a $1.5M TCV commitment. Finance fallback position is net-45 advance billing; true arrears has not been accepted above $250K ACV per policy."
+            }
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "context",
+            "elements": [
+              {
+                "type": "mrkdwn",
+                "text": "AE Owner: *Maya Chen* (mgr: Sarah Goldstein)  |  Close target: 2026-05-25  |  review filed by Kiln · agent-driven"
+              }
+            ]
+          }
+        ],
+        "plaintext_fallback": "Deal Review: Anthropic — 2026 Multi-Year Enterprise Consolidation\nACV $500K | TCV $1.5M / 36 mo | 15% discount | ~29.4% est. gross margin (below 40% warn threshold)\nApproval chain: AE Manager → RevOps + Finance + CFO + Legal (parallel), ~8 business days — but deal is currently BLOCKED.\nTop issues: (1) Uncapped 24-mo MFN + month-13 TFC + $200K unguarded credits = structured extraction risk; all three must be renegotiated before submission. (2) AE verbal MFN concession must be reset in writing immediately. (3) Annual billing in arrears has not been accepted above $250K ACV — fallback to net-45 advance billing required.\nAE: Maya Chen | review filed by Kiln · agent-driven"
+      },
+      "ae_email_draft": {
+        "to": "Maya Chen",
+        "subject": "[Anthropic] Deal desk review complete — 3 blockers before you can submit",
+        "body_markdown": "Maya, the deal desk has completed its review of the Anthropic $1.5M expansion — **this deal is blocked from submission in its current form** due to three interlocking clause risks that Legal and CFO will not pass.\n\n**You must resolve these before submitting:**\n\n1. **Walk back your verbal MFN commitment — in writing, today.** The current uncapped 24-month peer-lab MFN is a hard block. Send Procurement a written counter scoping it to: US-only, AI/ML vertical, $750K+ ACV floor, substantially similar product tier, prospective-only application, and one trigger per 12-month period. Do this before Procurement anchors on uncapped language.\n2. **Restructure the TFC clause.** A 60-day termination-for-convenience right starting month 13 converts this 3-year deal into a 12-month deal economically — unacceptable given the 15% discount and 6-month ramp stacking. Counter to: month 18 earliest trigger, 90-day notice, and a 2–3 month wind-down fee. Simultaneously, add credits forfeiture-upon-termination language to close the bulk-redemption extraction scenario.\n3. **Flip billing to advance (net-45 as the fallback).** Annual billing in arrears on a $500K ACV deal with a month-13 TFC creates a $500K DSO exposure and compounds extraction risk. Offer net-45 advance billing as a Procurement-friendly concession.\n\nOnce those three items are resolved and papered, submit to your manager Sarah Goldstein for step-1 sign-off, then RevOps, Finance, CFO, and Legal will run in parallel (step 2) — budget **~8 business days** for the full chain, and note that CFO and Legal both carry veto rights.",
+        "suggested_send_time": "within 4 business hours"
+      },
+      "customer_email_draft": {
+        "to_role": "procurement",
+        "subject": "Anthropic x Clay — Enterprise Consolidation: Our Position on Key Commercial Terms",
+        "body_markdown": "Thank you for the detailed term requests as part of consolidating your six workspaces into a single enterprise agreement — we understand Procurement has a Q1 close deadline and we want to move quickly and transparently toward a structure that works for both sides.\n\nOn the **MFN clause**: we can accept a 24-month MFN, but not in its current uncapped form. Our counter scopes it to net-new U.S. enterprise customers in the AI/ML vertical with a minimum $750K ACV on a substantially similar product configuration, triggers prospectively only from the date of your written election, and limits exercise to once per 12-month period — this gives you meaningful protection without creating a pricing floor across our entire enterprise book.\n\nOn the **$200K data provider credits**: we will include these in the TCV, but subject to annual drawdown caps of $66,667 per contract year (with unused credits carrying forward) and a forfeiture-upon-termination provision; this prevents a concentrated redemption scenario tied to any early exit.\n\nOn **termination for convenience**: we cannot accept a 60-day TFC active at month 13 without a corresponding wind-down fee — the 15% discount and 6-month ramp were priced against full 36-month commitment; our counter is either a TFC window beginning at month 18 with 90-day notice, or a month-13 TFC with a wind-down fee equal to three months of then-current subscription fees.\n\nOn **billing terms**: true annual-in-arrears is not something we can accept at this ACV; we can offer annual invoicing issued on day one of each contract year with net-45 payment terms, which we understand accommodates most enterprise procurement cycles while keeping our cash-timing structure intact.\n\nOn the **ramp schedule**: we can hold the 6-month ramp, but we'd like to move the ramp rate from 50% to 60% of monthly contracted fees, conditioned on maintaining advance billing terms — this is the structure we can take to internal approval.\n\nWe recognize this is a meaningful consolidation and a strategic relationship for both organizations, and we are committed to closing by your deadline; to do that, we'd ask for a working session with your procurement and legal contacts by end of this week so we can align on these five points and move to redlined order form simultaneously.",
+        "tone": "collaborative",
+        "counter_positions_included": [
+          "MFN",
+          "rollover_credits",
+          "termination_for_convenience",
+          "payment_terms",
+          "ramp_schedule"
+        ]
+      },
+      "approval_review_one_pager": {
+        "title": "2026 Multi-Year Enterprise Consolidation — Anthropic",
+        "sections": [
+          {
+            "heading": "Headline",
+            "content_markdown": "Anthropic seeks to consolidate 6 disparate workspaces into a single 36-month enterprise contract at **$500K ACV / $1.5M TCV**, with a 15% discount off list ($588K). Deal carries a strategic AI-lab logo and a multi-year commit, but is bundled with five non-standard clauses that collectively create a structured extraction risk requiring resolution before signature."
+          },
+          {
+            "heading": "Pricing Summary",
+            "content_markdown": "| Metric | Value |\n|---|---|\n| List Price (ACV) | $588,235 |\n| Proposed Price (ACV) | $500,000 |\n| Effective Discount | 15% |\n| Estimated Gross Margin | ~29.4% ⚠️ *(below 40% warn threshold)* |\n| TCV | $1,500,000 |\n| Term | 36 months |\n| Year-1 Realized ACV (post-ramp) | ~$375,000 *(6-mo 50% ramp reduces billings by $125K)* |\n\n**Key economic distortions:** $200K pre-paid third-party credits (pass-through) + 6-month 50% ramp + annual billing in arrears compress effective Year-1 cash margin materially below headline 29.4%. CFO should validate fully-loaded margin before close.\n\n**Alternative structures available:**\n- *Shorten ramp + swap MFN for co-marketing:* 3-mo 75% ramp, drop MFN → margin lifts to ~33.2%\n- *Prepaid discount swap:* 20% discount in exchange for advance billing + removal of TFC → margin ~32.5%, eliminates AR risk\n- *Usage-commit floor model:* $420K ACV base + overage upside; lower near-term margin (14.3%) but captures expansion revenue"
+          },
+          {
+            "heading": "Risk Findings",
+            "content_markdown": "**🔴 BLOCK — Must resolve before submission**\n\n1. **MFN clause (24-month, peer-lab scoped)** — Uncapped MFN auto-reprices Anthropic's contract if any peer AI lab (OpenAI, Cohere, Mistral, etc.) gets better pricing. A 10% trigger event = $50K/yr revenue leak with no floor. AE has already verbally floated \"MFN with carve-outs,\" anchoring Procurement on uncapped language. *Counter required:* scope to US-only, AI/ML vertical, ≥$750K ACV triggering deals, prospective-only, once per 12-month period. *(ASC 606: block_without_approval — MFN creates variable consideration; CFO/Audit pre-clearance required.)*\n\n2. **Termination-for-convenience at month 13 (60-day notice)** — Converts a 3-year $1.5M deal into an effective 12-month deal. If Anthropic exits at M13, Clay collects ~$416K against $588K list — discount granted, ramp absorbed, no wind-down compensation. Compounded by Anthropic's stated build-vs-buy optionality. *Counter required:* extend to month 18+, or 90-day notice, plus 2–3 month wind-down fee. *(ASC 606: may shorten enforceable contract term to ~14 months, impacting TCV recognition and capitalized commission amortization.)*\n\n3. **$200K pre-paid data provider credits (no drawdown cap)** — Pass-through cost. Anthropic could bulk-redeem all $200K in month 12, then exit via TFC at month 13. Combined with the TFC, this is a structured extraction scenario. *Counter required:* annual pro-rata drawdown cap ($66.7K/yr), forfeiture-upon-termination, non-transferable, non-cashable. *(ASC 606: principal-vs-agent analysis required; breakage estimation needed.)*\n\n**🟡 WARN — Address in negotiation**\n\n4. **Annual billing in arrears** — Clay carries up to $500K in unbilled receivables for 12 months. Non-standard above $250K ACV per policy. DSO impact in Q1–Q2. *Fallback:* net-45 advance billing (procurement-friendly optics, preserves cash timing).\n\n5. **Ramp stacking with TFC + arrears** — No single clause is fatal, but the ramp + TFC + arrears triple-stack means Clay could net ~$625K on a $1.5M committed deal. Do not accept all three simultaneously. *(ASC 606: contract asset created by ramp billing vs. ratable recognition mismatch.)*\n\n6. **Gross margin below warn threshold** — 29.4% estimated vs. 40% guardrail. Strategic logo justification required from CFO in writing."
+          },
+          {
+            "heading": "Approval Routing",
+            "content_markdown": "| Step | Approver | Veto Power | Notes |\n|---|---|---|---|\n| 1 | AE Manager (Sarah Goldstein) | No | Gate before parallel step |\n| 2 (parallel) | RevOps | No | ACV band $100K–$500K |\n| 2 (parallel) | Finance | No | Non-standard payment terms / ASC 606 |\n| 2 (parallel) | **CFO** | ✅ Yes | TCV >$1M + margin warn + MFN variable consideration |\n| 2 (parallel) | **Legal** | ✅ Yes | MFN clause scoping |\n\n**Estimated cycle time: ~8 business days** — but clock does not start until the 5 pre-review blockers are resolved by the AE. Current close date is **May 25, 2026** (21 days); 8-day approval cycle leaves limited buffer for redline back-and-forth.\n\n**Pre-submission blockers (AE must resolve first):**\n- Written MFN counter-proposal delivered to Procurement (walk back verbal commitment)\n- TFC extended to M18+ or wind-down fee added\n- Credits forfeiture-on-termination + drawdown cap language drafted\n- Billing terms converted to advance (net-45 fallback acceptable)\n- CFO/Audit pre-clearance initiated for MFN variable-consideration ASC 606 treatment"
+          },
+          {
+            "heading": "Recommendation",
+            "content_markdown": "**🔴 HOLD — Ship with conditions**\n\nDo not submit for approval in current form. The stacking of an uncapped 24-month MFN, 60-day TFC from month 13, $200K unprotected credits, and annual billing in arrears creates a legally defensible extraction scenario that Legal and CFO will block outright. AE must first deliver a scoped MFN counter to Procurement, add TFC wind-down fee language, and cap credits drawdown — then re-submit for the 8-day approval cycle with a realistic close of **~May 21** if AE moves within 48 hours."
+          }
+        ]
+      },
+      "reasoning_summary": "Calibrated customer email to collaborative tone given the deal context. AE email leads with verdict (ship-with-conditions (blockers must clear first)) and a numbered next-step list. One-pager and Slack post both headline the recommendation and surface 5 flagged redlines (5 countered in customer reply). Approval routing summary: ~8 business days through 5-step chain."
+    }
+  },
+  "synthesis": "Pricing clears the 15% discount guardrail but flags a yellow on ~29.4% gross margin, well below the 40% warn line and pending CFO validation of the list-price COGS assumption. ASC 606 identifies five red flags and live contract-modification risk from the MFN, ramp, pre-paid credits, and month-13 TFC interacting with in-arrears billing, requiring auditor review before transaction price can be fixed. Redline rates the deal an outright block: the MFN plus 60-day TFC stack lets Anthropic consume a full year plus $200K in credits at 15% off and exit at month 13, and the AE's verbal unrestricted-MFN concession must be walked back before Procurement anchors. Approval routes through a mechanically sound five-step chain (AE Manager → RevOps → Finance → CFO → Legal, ~8 business days), but Redline's block, ASC 606's block-without-approval on MFN, and the margin warn must all be cleared in the AE's pre-review cycle. Net call: hold and re-scope — ship-with-conditions only after TFC wind-down, credits forfeiture, and scoped MFN carve-outs are countered back in writing.",
+  "timings": [
+    {
+      "id": "fetch_deal",
+      "label": "Fetching deal record and customer",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 0
+    },
+    {
+      "id": "fetch_deal",
+      "label": "Fetched deal: Anthropic — 2026 Multi-Year Enterprise Consolidation",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 127
+    },
+    {
+      "id": "step2_fanout",
+      "label": "Fanning out: customer signals + similar past deals (parallel)",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 127
+    },
+    {
+      "id": "step2_fanout",
+      "label": "Step 2 complete (signals: Exa customer signals land in Phase 5, similar deals: Vector similar-deals search lands in Phase 5)",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 479
+    },
+    {
+      "id": "step3_dispatch",
+      "label": "Dispatching parallel review: Pricing + ASC 606 + Redline",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 479
+    },
+    {
+      "id": "step3_await",
+      "label": "Awaiting parallel review completion (0 of 3 returned)",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 479
+    },
+    {
+      "id": "fetch_deal",
+      "label": "Fetching deal record from CRM",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 479
+    },
+    {
+      "id": "fetch_deal",
+      "label": "Fetched deal record from CRM",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 481
+    },
+    {
+      "id": "load_guardrails",
+      "label": "Loading active pricing guardrails for enterprise segment",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 481
+    },
+    {
+      "id": "identify_obligations",
+      "label": "Identifying performance obligations",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 481
+    },
+    {
+      "id": "load_context",
+      "label": "Loading deal context and customer signals",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 494
+    },
+    {
+      "id": "load_context",
+      "label": "Loaded deal context and customer signals",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 645
+    },
+    {
+      "id": "scan_clauses",
+      "label": "Scanning non-standard clauses",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 645
+    },
+    {
+      "id": "load_guardrails",
+      "label": "Loaded 6 guardrails for enterprise segment",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 682
+    },
+    {
+      "id": "similar_deals",
+      "label": "Identifying similar past deals via vector search",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 682
+    },
+    {
+      "id": "similar_deals",
+      "label": "Vector search returns no precedent set (Phase 5 stub)",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 983
+    },
+    {
+      "id": "reasoning",
+      "label": "Reasoning about pricing economics",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 984
+    },
+    {
+      "id": "scan_clauses",
+      "label": "Scanned non-standard clauses",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 3213
+    },
+    {
+      "id": "analyze_clauses",
+      "label": "Analyzing flagged clauses (0)",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 3213
+    },
+    {
+      "id": "analyze_clauses",
+      "label": "Analyzing flagged clauses (1)",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 3213
+    },
+    {
+      "id": "identify_obligations",
+      "label": "Identified performance obligations",
+      "status": "complete",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 4921
+    },
+    {
+      "id": "evaluate_distinctness",
+      "label": "Evaluating distinctness (1)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 4921
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (0 of 6)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 5200
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (1 of 6)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 5717
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (2 of 6)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 6974
+    },
+    {
+      "id": "evaluate_distinctness",
+      "label": "Evaluating distinctness (2)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 7615
+    },
+    {
+      "id": "analyze_clauses",
+      "label": "Analyzed 1 flagged clauses",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 7628
+    },
+    {
+      "id": "draft_counters",
+      "label": "Drafting counter-positions for high-risk clauses",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 7628
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (3 of 6)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 8088
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (4 of 6)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 8789
+    },
+    {
+      "id": "evaluate_distinctness",
+      "label": "Evaluating distinctness (3)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 9914
+    },
+    {
+      "id": "draft_counters",
+      "label": "Drafted counter-positions",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 11197
+    },
+    {
+      "id": "draft_fallbacks",
+      "label": "Drafting fallback positions",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 11197
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (5 of 6)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 11247
+    },
+    {
+      "id": "evaluate_distinctness",
+      "label": "Evaluated 3 performance obligations",
+      "status": "complete",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 11396
+    },
+    {
+      "id": "analyze_variable_consideration",
+      "label": "Analyzing variable consideration sources",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 11396
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (6 of 6)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 14416
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluated 6 guardrails",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 14679
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (0 of 3)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 14679
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (1 of 3)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 17596
+    },
+    {
+      "id": "analyze_variable_consideration",
+      "label": "Analyzed variable consideration",
+      "status": "complete",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 23653
+    },
+    {
+      "id": "assess_modification_risk",
+      "label": "Assessing contract modification risk",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 23653
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (2 of 3)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 23952
+    },
+    {
+      "id": "assess_modification_risk",
+      "label": "Assessed contract modification risk",
+      "status": "complete",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 24698
+    },
+    {
+      "id": "compute_recognition_schedule",
+      "label": "Computing revenue recognition schedule",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 24698
+    },
+    {
+      "id": "compute_recognition_schedule",
+      "label": "Computing recognition schedule (period 1)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 24698
+    },
+    {
+      "id": "compute_recognition_schedule",
+      "label": "Computing recognition schedule (period 2)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 25095
+    },
+    {
+      "id": "compute_recognition_schedule",
+      "label": "Computing recognition schedule (period 3)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 25412
+    },
+    {
+      "id": "compute_recognition_schedule",
+      "label": "Computing recognition schedule (period 4)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 25937
+    },
+    {
+      "id": "compute_recognition_schedule",
+      "label": "Computing recognition schedule (period 5)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 26329
+    },
+    {
+      "id": "compute_recognition_schedule",
+      "label": "Computed recognition schedule (5 periods)",
+      "status": "complete",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 27223
+    },
+    {
+      "id": "flag_red_flags",
+      "label": "Flagging red flags (0)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 27223
+    },
+    {
+      "id": "flag_red_flags",
+      "label": "Flagging red flags (1)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 27223
+    },
+    {
+      "id": "flag_red_flags",
+      "label": "Flagging red flags (2)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 29063
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (3 of 3)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 30087
+    },
+    {
+      "id": "flag_red_flags",
+      "label": "Flagging red flags (3)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 30228
+    },
+    {
+      "id": "flag_red_flags",
+      "label": "Flagging red flags (4)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 31213
+    },
+    {
+      "id": "flag_red_flags",
+      "label": "Flagging red flags (5)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 32364
+    },
+    {
+      "id": "flag_red_flags",
+      "label": "Flagged 5 red flags",
+      "status": "complete",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 33109
+    },
+    {
+      "id": "alternatives",
+      "label": "Generated 3 alternative structures",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 33263
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalizing recognition recommendation",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 36196
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalized rev-rec analysis (low confidence, 5 red flags)",
+      "status": "complete",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 36317
+    },
+    {
+      "id": "step3_await",
+      "label": "Awaiting parallel review completion (1 of 3 returned — ASC 606)",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 36318
+    },
+    {
+      "id": "reasoning",
+      "label": "Reasoned about pricing economics",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 38597
+    },
+    {
+      "id": "margin_sensitivity",
+      "label": "Computing margin sensitivity under the 40% list-price baseline",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 38597
+    },
+    {
+      "id": "margin_sensitivity",
+      "label": "Computed margin sensitivity (29.4% est.)",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 38750
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalizing recommendation",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 38750
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalized recommendation (medium confidence)",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 38871
+    },
+    {
+      "id": "step3_await",
+      "label": "Awaiting parallel review completion (2 of 3 returned — Pricing)",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 38872
+    },
+    {
+      "id": "draft_fallbacks",
+      "label": "Drafted fallback positions",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 49902
+    },
+    {
+      "id": "cross_reference_signals",
+      "label": "Cross-referencing customer position-of-strength signals",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 49902
+    },
+    {
+      "id": "cross_reference_signals",
+      "label": "Cross-referenced position-of-strength signals",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 53537
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalizing redline recommendations",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 57669
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalized redline (5 flagged · priority: block)",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 57790
+    },
+    {
+      "id": "step3_await",
+      "label": "Awaiting parallel review completion (3 of 3 returned — Redline)",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 57791
+    },
+    {
+      "id": "step3_dispatch",
+      "label": "Parallel review complete (3 of 3 returned)",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 57791
+    },
+    {
+      "id": "step3_await",
+      "label": "All three parallel agents returned",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 57791
+    },
+    {
+      "id": "step4_routing",
+      "label": "Routing approvals based on upstream outputs",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 57791
+    },
+    {
+      "id": "load_matrix",
+      "label": "Loading active approval matrix (8 rules)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 57791
+    },
+    {
+      "id": "load_matrix",
+      "label": "Loaded 8 active matrix rules",
+      "status": "complete",
+      "parent": "Approval Agent",
+      "elapsed_ms": 57912
+    },
+    {
+      "id": "evaluate_rules",
+      "label": "Evaluating each matrix rule (0 of 8)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 57912
+    },
+    {
+      "id": "evaluate_rules",
+      "label": "Evaluated 8 matrix rules",
+      "status": "complete",
+      "parent": "Approval Agent",
+      "elapsed_ms": 59892
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identifying triggered rules (0)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 59892
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identifying triggered rules (1)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 59892
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identifying triggered rules (2)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 60551
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identifying triggered rules (3)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 61013
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identifying triggered rules (4)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 61820
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identifying triggered rules (5)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 62663
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identified 5 triggered rules",
+      "status": "complete",
+      "parent": "Approval Agent",
+      "elapsed_ms": 63087
+    },
+    {
+      "id": "build_chain",
+      "label": "Building approval chain",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 63087
+    },
+    {
+      "id": "build_chain",
+      "label": "Built approval chain",
+      "status": "complete",
+      "parent": "Approval Agent",
+      "elapsed_ms": 64602
+    },
+    {
+      "id": "compute_cycle_time",
+      "label": "Computing expected cycle time",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 64602
+    },
+    {
+      "id": "compute_cycle_time",
+      "label": "Computed expected cycle time",
+      "status": "complete",
+      "parent": "Approval Agent",
+      "elapsed_ms": 72224
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalizing routing decision",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 76273
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalized routing (5 steps · 8d cycle time)",
+      "status": "complete",
+      "parent": "Approval Agent",
+      "elapsed_ms": 76394
+    },
+    {
+      "id": "step4_routing",
+      "label": "Routed approvals (5 steps)",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 76394
+    },
+    {
+      "id": "step5_comms",
+      "label": "Generating communications based on full review",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 76394
+    },
+    {
+      "id": "analyze_context",
+      "label": "Analyzing deal context and tone requirements",
+      "status": "running",
+      "parent": "Comms Agent",
+      "elapsed_ms": 76395
+    },
+    {
+      "id": "analyze_context",
+      "label": "Selected tone calibration based on deal context",
+      "status": "complete",
+      "parent": "Comms Agent",
+      "elapsed_ms": 76546
+    },
+    {
+      "id": "draft_slack_post",
+      "label": "Drafting Slack post for #deal-desk",
+      "status": "running",
+      "parent": "Comms Agent",
+      "elapsed_ms": 76546
+    },
+    {
+      "id": "draft_ae_email",
+      "label": "Drafting AE email with structured action items",
+      "status": "running",
+      "parent": "Comms Agent",
+      "elapsed_ms": 76546
+    },
+    {
+      "id": "draft_customer_email",
+      "label": "Drafting customer reply with counter-positions",
+      "status": "running",
+      "parent": "Comms Agent",
+      "elapsed_ms": 76546
+    },
+    {
+      "id": "build_one_pager",
+      "label": "Building approval review one-pager",
+      "status": "running",
+      "parent": "Comms Agent",
+      "elapsed_ms": 76546
+    },
+    {
+      "id": "draft_ae_email",
+      "label": "Drafted AE email",
+      "status": "complete",
+      "parent": "Comms Agent",
+      "elapsed_ms": 89769
+    },
+    {
+      "id": "draft_customer_email",
+      "label": "Drafted customer reply (collaborative tone)",
+      "status": "complete",
+      "parent": "Comms Agent",
+      "elapsed_ms": 94554
+    },
+    {
+      "id": "draft_slack_post",
+      "label": "Drafted Slack post",
+      "status": "complete",
+      "parent": "Comms Agent",
+      "elapsed_ms": 96621
+    },
+    {
+      "id": "build_one_pager",
+      "label": "Built approval review one-pager (5 sections)",
+      "status": "complete",
+      "parent": "Comms Agent",
+      "elapsed_ms": 116505
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalizing communication artifacts",
+      "status": "running",
+      "parent": "Comms Agent",
+      "elapsed_ms": 116505
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalized 4 artifacts (Slack · AE email · customer email · one-pager)",
+      "status": "complete",
+      "parent": "Comms Agent",
+      "elapsed_ms": 116628
+    },
+    {
+      "id": "step5_comms",
+      "label": "Generated all communication artifacts",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 116628
+    },
+    {
+      "id": "step6_synthesis",
+      "label": "Synthesizing executive summary",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 116628
+    },
+    {
+      "id": "step6_synthesis",
+      "label": "Synthesized 4-sentence executive overview",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 125980
+    }
+  ],
+  "metadata": {
+    "duration_ms": 125980,
+    "total_input_tokens": 100783,
+    "total_output_tokens": 12220,
+    "total_cost_usd": 0.49972475,
+    "recorded_at": "2026-05-05T02:22:09.246Z",
+    "per_agent": {
+      "pricing": {
+        "duration_ms": 38393,
+        "input_tokens": 7474,
+        "output_tokens": 1822,
+        "cost_usd": 0.04459265
+      },
+      "asc606": {
+        "duration_ms": 35837,
+        "input_tokens": 9786,
+        "output_tokens": 2053,
+        "cost_usd": 0.0813
+      },
+      "redline": {
+        "duration_ms": 57296,
+        "input_tokens": 6757,
+        "output_tokens": 2595,
+        "cost_usd": 0.05283290000000001
+      },
+      "approval": {
+        "duration_ms": 18603,
+        "input_tokens": 14596,
+        "output_tokens": 1622,
+        "cost_usd": 0.03519649999999999
+      },
+      "comms": {
+        "duration_ms": 40233,
+        "input_tokens": 54329,
+        "output_tokens": 3732,
+        "cost_usd": 0.25822195
+      },
+      "synthesis": {
+        "duration_ms": 9352,
+        "input_tokens": 7841,
+        "output_tokens": 396,
+        "cost_usd": 0.027580749999999998
+      }
+    }
+  }
+}

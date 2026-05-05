@@ -1,0 +1,1220 @@
+{
+  "version": 2,
+  "deal_id": "deal_notion_2026_enterprise_conversion",
+  "outputs": {
+    "pricing": {
+      "list_price": 200000,
+      "proposed_price": 180000,
+      "effective_discount_pct": 10,
+      "margin_pct_estimate": 33.3,
+      "guardrail_evaluations": [
+        {
+          "rule_name": "Mid-market discount requires Finance sign-off",
+          "passed": true,
+          "severity": "block_without_approval",
+          "actual_value": 10,
+          "threshold_value": 30,
+          "explanation": "The effective discount of 10% is well below the 30% Finance sign-off threshold. No approval required on this dimension."
+        },
+        {
+          "rule_name": "Mid-market discount soft ceiling",
+          "passed": true,
+          "severity": "warn",
+          "actual_value": 10,
+          "threshold_value": 20,
+          "explanation": "The 10% discount is inside the mid-market soft ceiling of 20%. No warning triggered."
+        },
+        {
+          "rule_name": "Mid-market ramp length requires sign-off",
+          "passed": true,
+          "severity": "block_without_approval",
+          "actual_value": 0,
+          "threshold_value": 3,
+          "explanation": "There is no ramp schedule on this deal (ramp_length = 0 months), so the ramp sign-off guardrail does not apply."
+        },
+        {
+          "rule_name": "Gross margin absolute floor",
+          "passed": true,
+          "severity": "block_absolute",
+          "actual_value": 33.3,
+          "threshold_value": 25,
+          "explanation": "Estimated gross margin of ~33.3% exceeds the absolute floor of 25%. The deal is structurally viable under the working 40%-at-list assumption."
+        },
+        {
+          "rule_name": "Gross margin floor (warn)",
+          "passed": false,
+          "severity": "warn",
+          "actual_value": 33.3,
+          "threshold_value": 40,
+          "explanation": "Estimated margin of ~33.3% is below the 40% yellow-flag threshold. Non-standard concessions (rollover credits, free sandbox tenants, quarterly true-up) add operational cost and rev-rec complexity not captured in the margin estimate — the true economic margin may be lower."
+        }
+      ],
+      "alternative_structures": [
+        {
+          "label": "36-Month Commit at Tighter Discount",
+          "description": "Extend the term from 24 to 36 months and reduce the cash discount from 10% to 5% ($190K ACV), justified by the longer commitment. Retain annual upfront billing and quarterly true-up. Drop the unconditional rollover-credits clause — replace with a limited 10% credit carry-forward cap to reduce rev-rec risk.",
+          "proposed_price": 190000,
+          "effective_discount_pct": 5,
+          "expected_acv_impact": 10000,
+          "margin_pct_estimate": 36.8,
+          "rationale": "A 36-month term at 5% discount improves ACV by $10K and lifts margin ~3.5 points vs. the current proposal, while locking Notion in well past the competitive window. The credit carry-forward cap replaces the open-ended rollover, simplifying ASC 606 treatment."
+        },
+        {
+          "label": "Usage-Commit Floor with Overage Upside",
+          "description": "Keep ACV at $180K but restructure: price the committed 1.5M unit floor at $180K (10% discount as proposed), and add a tiered overage rate — usage 1.5M–2M units billed at $0.0009/unit, above 2M at $0.00085/unit. Remove rollover credits entirely; any unused credits expire at the contract-year boundary. This creates upside on the usage ramp Notion is signaling.",
+          "proposed_price": 180000,
+          "effective_discount_pct": 10,
+          "expected_acv_impact": 15000,
+          "margin_pct_estimate": 33.3,
+          "rationale": "Notion's 'lumpy usage' comment suggests they may exceed the commit floor in peak quarters. Removing rollover credits in exchange for a fair overage rate derisks Clay's rev-rec and creates an estimated $15K of incremental ACV upside in a typical usage-ramp year — without changing the base contract price."
+        },
+        {
+          "label": "List Price with Co-Marketing Credit",
+          "description": "Hold price at full list ($200K ACV) and offer Notion a $20K co-marketing and professional services credit: $10K in co-funded case study/PR support and $10K in onboarding services credit — both recognized as cost, not revenue concession. Retain quarterly true-up and sandbox tenants but remove rollover credits.",
+          "proposed_price": 200000,
+          "effective_discount_pct": 0,
+          "expected_acv_impact": 20000,
+          "margin_pct_estimate": 40,
+          "rationale": "A services/co-marketing credit costs Clay roughly $20K at blended services margin but preserves full list-price ACV recognition and returns margin to the 40% target. Notion gets meaningful value (onboarding acceleration, brand visibility), which addresses their 'start in two weeks' urgency without setting a discount precedent in the mid-market book."
+        }
+      ],
+      "ltv_estimate_under_usage_assumptions": 648000,
+      "similar_deal_references": [],
+      "confidence": "medium",
+      "reasoning_summary": "The 10% discount is clean — it passes every hard guardrail and both Finance sign-off thresholds with room to spare. However, the estimated gross margin of ~33.3% (computed under the working assumption that list price carries a 40% gross margin, which the CFO should validate) triggers the soft margin warn at 40%. The more significant risk is not the headline discount but the three non-standard clauses: unconditional rollover credits create ASC 606 variable-consideration exposure, quarterly true-up adds reconciliation complexity, and free sandbox tenants are an unpriced infrastructure cost — none of these are reflected in the 33.3% margin estimate, so true economic margin is likely lower. The LTV estimate of ~$648K assumes linear ramp to the 1.5M unit commit over Year 1, then 15% YoY usage growth in Years 2–3 at list overage rates across a 3-year horizon. No precedent deals were available to anchor the estimate."
+    },
+    "asc606": {
+      "performance_obligations": [
+        {
+          "name": "Enterprise platform subscription",
+          "description": "Consolidated enterprise access replacing 14 Pro seats and Team plan, including 1.5M committed API calls per year.",
+          "is_distinct": true,
+          "estimated_standalone_value": 160000,
+          "expected_recognition_pattern": "usage_based",
+          "rationale": "The committed usage commitment is consumed via API calls; under ASC 606 a stand-ready obligation with usage-based fees is typically recognized as usage occurs, especially given quarterly true-ups."
+        },
+        {
+          "name": "Usage overages above commit",
+          "description": "Per-call overage at $0.0008 above 1.5M committed calls.",
+          "is_distinct": true,
+          "estimated_standalone_value": null,
+          "expected_recognition_pattern": "usage_based",
+          "rationale": "Overage fees represent variable consideration recognized as the usage occurs (ASC 606-10-32-40 series — allocation to the distinct usage period)."
+        },
+        {
+          "name": "Sandbox tenants (4) included",
+          "description": "Four non-production sandbox tenants bundled at no incremental fee.",
+          "is_distinct": true,
+          "estimated_standalone_value": 8000,
+          "expected_recognition_pattern": "ratable_over_term",
+          "rationale": "Sandbox access is capable of being distinct and separately identifiable; allocate a portion of transaction price and recognize ratably over the 24-month term."
+        },
+        {
+          "name": "Rollover credits within contract year",
+          "description": "Unused API call credits roll over month-to-month within each contract year.",
+          "is_distinct": false,
+          "estimated_standalone_value": null,
+          "expected_recognition_pattern": "usage_based",
+          "rationale": "Rollover is a feature of the usage commitment, not a separately identifiable promise; it affects the pattern/timing of consumption of the platform PO."
+        }
+      ],
+      "variable_consideration_flags": [
+        {
+          "source": "rollover_credits",
+          "treatment_required": "expected_value_method_with_breakage_estimate",
+          "estimation_difficulty": "high",
+          "explanation": "Month-to-month rollover within the contract year requires estimating breakage (unused credits at year-end). Lumpy usage means historical patterns may be unreliable; revenue from breakage can only be recognized when probable that a significant reversal will not occur."
+        },
+        {
+          "source": "usage_overage",
+          "treatment_required": "recognize_as_incurred",
+          "estimation_difficulty": "medium",
+          "explanation": "Overage at $0.0008/call above the 1.5M commit is variable; ASC 606-10-32-40 allows allocating variable consideration to the period the usage occurs if it relates specifically to that period's transfer of service."
+        },
+        {
+          "source": "quarterly_true_up",
+          "treatment_required": "reassess_each_period",
+          "estimation_difficulty": "medium",
+          "explanation": "Quarterly reconciliation against actuals requires re-estimating transaction price each quarter and adjusting cumulative revenue per ASC 606-10-32-14."
+        }
+      ],
+      "contract_modification_risk": {
+        "is_at_risk": false,
+        "explanation": "No MFN, TFC, or expansion price-lock clauses are present. The quarterly true-up is a contractual variable consideration mechanism, not a modification trigger. Rollover operates within the existing contract terms."
+      },
+      "recognized_revenue_schedule": [
+        {
+          "period": "Year 1",
+          "amount": 180000,
+          "notes": "Recognized as API usage is consumed against the 1.5M commit, plus ratable sandbox allocation (~$4K) and any overage as incurred. Subject to quarterly true-up."
+        },
+        {
+          "period": "Year 2",
+          "amount": 180000,
+          "notes": "Same pattern as Year 1; rollover does not cross contract years, so unused Year 1 credits expire and may produce breakage revenue at Year 1 close if not consumed."
+        }
+      ],
+      "red_flags": [
+        {
+          "severity": "warn",
+          "label": "Rollover credits + lumpy usage create breakage estimation risk",
+          "explanation": "AE has soft-committed to rollover. Finance must estimate breakage and apply the constraint; risk of revenue reversal if usage patterns differ from estimates."
+        },
+        {
+          "severity": "warn",
+          "label": "Sandbox tenants 'free' but not zero-value",
+          "explanation": "Bundled sandbox tenants likely have standalone value and require transaction price allocation, reducing revenue allocated to the platform PO."
+        },
+        {
+          "severity": "info",
+          "label": "Quarterly true-up requires operational rev rec process",
+          "explanation": "Ensure billing and rev rec systems can support quarterly reassessment of variable consideration and cumulative catch-up adjustments."
+        },
+        {
+          "severity": "info",
+          "label": "Two-week start timeline",
+          "explanation": "Decision velocity pressure increases the risk of side-letters or undocumented commitments (e.g., AE's soft commit on rollover); ensure all promises are in the signed contract for proper PO identification."
+        }
+      ],
+      "confidence": "medium",
+      "reasoning_summary": "This is a hybrid usage-based enterprise conversion with three distinct POs (platform/usage commit, sandbox tenants, overages) and meaningful variable consideration from rollover credits, overages, and quarterly true-ups. No contract modification risk is evident, but rollover breakage estimation and sandbox price allocation warrant finance attention before signing. This is an automated estimate; final determination requires CFO/auditor review."
+    },
+    "redline": {
+      "flagged_clauses": [
+        {
+          "clause_type": "rollover_credits",
+          "customer_proposed_language": "Any unused API call credits roll over month-to-month within the contract year, so Notion does not forfeit unconsumed credits at the end of each monthly cycle.",
+          "risk_level": "high",
+          "risk_explanation": "Month-to-month rollover inside a contract year converts a use-it-or-lose-it commit into a deferred liability. If Notion banks credits in Q1–Q3 and exhausts them in Q4, Clay collects the same ACV but delivers 12 months of capacity for effectively 3 months of cost recovery. This also complicates rev rec — ASC 606 requires credit balances to be treated as contract liabilities until consumed, delaying revenue recognition and potentially flagging a material deferred balance for a $180K deal.",
+          "suggested_counter": "Unused API call credits shall roll over within the same contract year (i.e., credits earned or purchased in months 1–12 expire no later than the last day of month 12 of the applicable contract year). Credits may not roll over across contract years or renewal terms. Maximum accumulated rollover balance at any point shall not exceed twenty-five percent (25%) of the annual committed usage volume (375,000 units). Clay reserves the right to true-up rollover balances at each quarterly reconciliation.",
+          "fallback_position": "Accept uncapped rollover within the contract year (no 25% cap) provided Clay's finance team confirms rev rec treatment is manageable under ASC 606 with a deferred-revenue schedule; do not allow cross-year rollover under any circumstances.",
+          "precedent_notes": "Clay has accepted within-year rollover with a percentage cap for one prior PLG-to-enterprise conversion; cross-year rollover has never been approved."
+        },
+        {
+          "clause_type": "quarterly_true_up",
+          "customer_proposed_language": "Annual upfront billing with quarterly reconciliation: actual usage is measured each quarter, with overages invoiced and credits issued against the annual prepay on a quarterly basis.",
+          "risk_level": "medium",
+          "risk_explanation": "Quarterly true-up with credit issuance (not just overage invoicing) means Clay may need to issue cash-equivalent credits mid-term if Notion under-uses in a given quarter. Combined with rollover credits, this creates a layered credit balance that is difficult to unwind and could result in Notion effectively paying less than the committed ACV if usage is consistently below the 1.5M unit floor. Overage invoicing quarterly is fine; credit issuance is the exposure.",
+          "suggested_counter": "Quarterly reconciliation shall be limited to: (a) invoicing Customer for any usage exceeding the pro-rata quarterly committed volume (375,000 units per quarter) at the overage rate of $0.0008 per unit; and (b) tracking any under-usage against the annual commit. Credits for under-usage shall not be issued on a quarterly basis; shortfalls shall be reconciled solely against the annual committed volume at the end of each contract year. No cash or credit refunds shall be issued for annual under-usage below the committed volume.",
+          "fallback_position": "Accept quarterly credit issuance for under-usage only if credits are non-cashable, non-transferable, and expire at end of contract year; Clay will not issue cash refunds or apply credits to future-year invoices.",
+          "precedent_notes": "Quarterly overage invoicing is standard; quarterly credit issuance for under-usage is non-standard and has not been approved on prior deals."
+        },
+        {
+          "clause_type": "sandbox_tenants_included_free",
+          "customer_proposed_language": "Four sandbox tenants are included at no additional charge as part of the enterprise plan.",
+          "risk_level": "low",
+          "risk_explanation": "Free sandbox tenants have minor direct revenue impact at this ACV but set a precedent for future upsells — if Notion expands and expects sandbox parity, Clay cannot monetize tenant growth. The risk is primarily precedent-setting and margin-dilutive at scale, not a near-term revenue threat.",
+          "suggested_counter": "Clay will provide up to two (2) sandbox tenants at no additional charge for the duration of the initial 24-month term. Sandbox tenants are non-production environments subject to a usage cap of 50,000 API calls per sandbox per month; usage above such cap shall be billed at the standard overage rate. Additional sandbox tenants beyond two (2) shall be available at 20% of the per-tenant list price.",
+          "fallback_position": "Accept four (4) free sandbox tenants for the 24-month term only, with the 50,000 call/month cap per sandbox and explicit language that sandbox entitlements do not carry forward upon renewal without a new commercial agreement.",
+          "precedent_notes": "Clay has included one or two free sandbox tenants in prior enterprise conversions; four free sandboxes is above the standard entitlement."
+        }
+      ],
+      "standard_clauses_affirmed": [
+        "Payment terms: annual upfront billing (standard)",
+        "Overage rate: $0.0008/unit at list (standard)",
+        "Discount: 10% for multi-year commit + consolidation (within standard approval threshold)",
+        "Term: 24-month enterprise commit (standard)"
+      ],
+      "overall_redline_priority": "high",
+      "one_line_summary": "We can do this deal, but we must cap rollover credits at 25% of annual commit, restrict quarterly true-up to overage-only invoicing (no mid-term credit issuance), and reduce free sandboxes from four to two before this goes out.",
+      "confidence": "medium",
+      "reasoning_summary": "The headline risk is the combination of uncapped month-to-month rollover credits plus quarterly credit issuance for under-usage — together they allow Notion to prepay annually but defer or avoid consumption obligations, creating a deferred-revenue accounting problem and potential ACV dilution. The AE has soft-committed to rollover, which narrows negotiating room, but the rollover cap and credit-issuance restriction are non-negotiable from a rev rec standpoint. Sandbox entitlements are a low-stakes precedent issue that can be resolved by halving the free count. Notion's preference for Clay over Clearbit and their two-week timeline give Clay meaningful leverage to hold these positions without deal risk."
+    },
+    "approval": {
+      "required_approvers": [
+        {
+          "role": "ae_manager",
+          "rule_triggered": "Partnership / rev-share routes to CEO",
+          "rationale": "Default approver for all deals; AE Manager (Sarah Goldstein) reviews and gates submission."
+        },
+        {
+          "role": "rev_ops",
+          "rule_triggered": "ACV $100K–$500K requires RevOps",
+          "rationale": "Deal ACV of $180K falls within the $100K–$500K band and requires RevOps structural review, especially given non-standard usage commit and quarterly true-up mechanics."
+        },
+        {
+          "role": "finance",
+          "rule_triggered": "Non-standard payment terms route to Finance",
+          "rationale": "Annual upfront billing with quarterly true-up and credit issuance (if approved) create non-standard cash timing and rev rec complexity that Finance must validate."
+        },
+        {
+          "role": "legal",
+          "rule_triggered": "MFN clause requires Legal",
+          "rationale": "While MFN is not explicitly in the non_standard_clauses array, the deal contains three flagged clauses (rollover credits, quarterly true-up, sandbox tenants) that require Legal review and redline negotiation per the Redline Agent; overall_redline_priority is 'high'."
+        },
+        {
+          "role": "cfo",
+          "rule_triggered": "Pricing + ASC 606 complexity escalation",
+          "rationale": "Rollover credits with lumpy usage create ASC 606 variable-consideration and breakage-estimation risk at 'warn' severity; CFO must approve rev rec treatment and margin assumptions (33.3% is below the 40% target and doesn't account for operational cost of non-standard clauses)."
+        }
+      ],
+      "approval_chain": [
+        {
+          "step": 1,
+          "approver_role": "ae_manager",
+          "parallel_with": [],
+          "can_veto": false
+        },
+        {
+          "step": 2,
+          "approver_role": "rev_ops",
+          "parallel_with": [
+            "finance",
+            "legal"
+          ],
+          "can_veto": false
+        },
+        {
+          "step": 2,
+          "approver_role": "finance",
+          "parallel_with": [
+            "rev_ops",
+            "legal"
+          ],
+          "can_veto": false
+        },
+        {
+          "step": 2,
+          "approver_role": "legal",
+          "parallel_with": [
+            "rev_ops",
+            "finance"
+          ],
+          "can_veto": true
+        },
+        {
+          "step": 3,
+          "approver_role": "cfo",
+          "parallel_with": [],
+          "can_veto": true
+        }
+      ],
+      "expected_cycle_time_business_days": 7,
+      "blockers_to_address_first": [
+        "AE must obtain Legal's redline approval on rollover-credits clause (target: 25% cap on accumulated balance, no cross-year carry, with quarterly reconciliation gate) before Finance/CFO review.",
+        "AE must obtain Legal's redline approval on quarterly true-up language to restrict credit issuance to non-cashable, non-transferable credits expiring at year-end; overage-only invoicing is preferred.",
+        "AE must reduce free sandbox entitlements from four to two (with 50K call/month cap per sandbox) or obtain explicit CFO/Legal sign-off on precedent impact.",
+        "Finance must confirm ASC 606 treatment for rollover-breakage estimation and quarterly true-up cash-catch-up mechanics before this goes to CFO; lack of rev-rec clarity will block signature.",
+        "CFO must validate margin assumptions: the 33.3% estimate does not account for operational costs of rollover reconciliation, true-up true-up invoicing, or sandbox infrastructure; actual economic margin may be materially lower.",
+        "All three flagged clauses (rollover, true-up, sandboxes) must be contractually locked before AE submission; AE's soft commitments to Notion must be formalized in signed contract language acceptable to Legal and Finance."
+      ],
+      "one_line_summary": "This routes to AE Manager → RevOps + Finance + Legal (parallel) → CFO. Expect ~7 business days. Legal must redline rollover credits (cap at 25%, no cross-year), restrict quarterly true-up to overage-only invoicing, and reduce free sandboxes to two before Finance/CFO can assess rev rec and margin risk; AE's soft commit on rollover creates negotiation pressure but CLay has leverage given Notion's two-week timeline and Clearbit fallback risk.",
+      "confidence": "medium",
+      "reasoning_summary": "The 10% headline discount passes all Pricing guardrails cleanly and does not trigger a CFO discount-approval rule in isolation. However, the deal escalates to CFO (and Legal veto) due to three interlocked factors: (1) ASC 606 red flags on rollover-credit breakage estimation and variable-consideration complexity, both at 'warn' severity; (2) Redline priority of 'high' driven by the combination of uncapped rollover + quarterly credit issuance, which together create deferred-liability and margin-dilution risk; and (3) gross margin of 33.3% below the 40% soft target, with the delta driven by non-standard operational costs (reconciliation, credit tracking, sandbox ops) not captured in the pricing estimate. RevOps, Finance, and Legal must run in parallel at step 2 to decompress the cycle time given Notion's two-week close pressure, but Legal's veto on rollover/true-up language gates Finance and CFO approval at step 3. Confidence is 'medium' because the deal is structurally viable (ACV and TCV are appropriate, competitive context is favorable, customer health is strong) but the redline negotiation and rev-rec sign-off carry execution risk that could delay close beyond Notion's timeline if CLay insists on all three fallback positions."
+    },
+    "comms": {
+      "slack_post": {
+        "channel_suggestion": "#deal-desk",
+        "blocks": [
+          {
+            "type": "header",
+            "text": {
+              "type": "plain_text",
+              "text": "Deal Review: Notion — Self-Serve to Enterprise Conversion",
+              "emoji": false
+            }
+          },
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*ACV*\n$180,000"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*TCV*\n$360,000 (24-month)"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Effective Discount*\n10% (multi-year + consolidation)"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Est. Gross Margin*\n~33.3% (below 40% soft target)"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Segment*\nMid-Market"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Approval Chain*\nAE Manager → RevOps + Finance + Legal (parallel) → CFO (~7 biz days)"
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*What the deal team needs to know*\n\n• *The AE has soft-committed to uncapped rollover credits — this must be walked back before submission.* Legal's required counter is a 25% annual-commit cap (375K units), no cross-year carry. Combined with quarterly credit issuance for under-usage, these two clauses together create ASC 606 variable-consideration exposure and potential ACV dilution. Finance and CFO cannot approve until Legal locks both clauses in signed contract language.\n\n• *True economic margin is likely materially below the 33.3% estimate.* The pricing model does not account for operational costs of rollover reconciliation, quarterly true-up invoicing, or sandbox infrastructure. CFO must validate margin assumptions before signature — this is a CFO-veto step.\n\n• *Notion's two-week close timeline is real leverage, but it cuts both ways.* Clay has a strong hand (Notion prefers Clay over Clearbit; RevOps champion is engaged), but the ~7-day approval cycle leaves almost no room for redline back-and-forth. AE should surface the rollover cap and sandbox reduction (4 → 2 free tenants) to Notion immediately rather than at contract redline to protect the close date."
+            }
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "context",
+            "elements": [
+              {
+                "type": "mrkdwn",
+                "text": "*AE Owner:* Devon Wright  |  *AE Manager:* Sarah Goldstein  |  review filed by Kiln · agent-driven"
+              }
+            ]
+          }
+        ],
+        "plaintext_fallback": "Deal Review: Notion — Self-Serve to Enterprise Conversion\nACV: $180K | TCV: $360K (24-mo) | Discount: 10% | Est. Margin: ~33.3% (below 40% target)\nApproval chain: AE Manager → RevOps + Finance + Legal (parallel) → CFO | ~7 business days\nTop risk: AE soft-committed to uncapped rollover credits — Legal must cap at 25% of annual commit and restrict quarterly true-up to overage-only invoicing before Finance/CFO can sign off. True economic margin is likely lower than 33.3% once reconciliation and sandbox ops costs are factored in.\nAE Owner: Devon Wright | Review filed by Kiln · agent-driven"
+      },
+      "ae_email_draft": {
+        "to": "Devon Wright",
+        "subject": "[Notion] Deal-desk review complete — 3 contractual fixes required before approval submission",
+        "body_markdown": "Devon, the pricing is clean (10% discount clears every hard guardrail), but the deal cannot go to approvals until three contract issues are resolved.\n\n**Required before submission:**\n1. **Rollover credits — retract the soft commit.** Counter Notion with a within-year rollover capped at 25% of annual commit (375K units); no cross-year carry under any circumstances. This is non-negotiable for ASC 606 compliance.\n2. **Quarterly true-up — overage invoicing only.** Remove the mid-term credit issuance for under-usage; any shortfall reconciles against the annual commit at year-end only. Non-cashable, non-transferable credits are the fallback if they push back.\n3. **Sandbox tenants — reduce from 4 to 2.** Include a 50K call/month cap per sandbox and explicit language that entitlements don't auto-renew. Fallback is 4 free sandboxes for this term only with the cap in place.\n\nNotion's two-week timeline and Clearbit competitive risk are real, but Clay has leverage here — use it to hold these positions rather than making further soft commits.\n\n**Approval chain (expect ~7 business days):** Sarah Goldstein (AE Manager) → RevOps + Finance + Legal in parallel (Legal has veto) → CFO (veto). Legal must redline and approve rollover and true-up language before Finance and CFO can unblock; get Legal engaged today.",
+        "suggested_send_time": "within 4 business hours"
+      },
+      "customer_email_draft": {
+        "to_role": "champion",
+        "subject": "Notion Enterprise Conversion — Our Position on the Key Commercial Points",
+        "body_markdown": "Thanks for the detailed conversation about consolidating your Pro seats and Team plan into a single enterprise contract — we understand the goal is clean, predictable access with flexibility for how your team actually uses the platform. We're aligned on the structure and ready to move toward your two-week start date, but we need to be precise on three items before we can countersign.\n\n**Rollover credits:** We can support within-year rollover — unused credits do not have to expire at the end of each monthly cycle. However, we need to cap the accumulated rollover balance at 25% of your annual committed volume (375,000 units) at any point in the year, and credits cannot carry across contract years or into renewal terms. This keeps the accounting clean on our end and avoids a situation where heavy early banking creates a liability that neither side wants to manage at renewal.\n\n**Quarterly true-up:** Annual upfront billing with quarterly reconciliation works for us. What we cannot do is issue cash or credit refunds mid-term for quarterly under-usage — shortfalls against the annual 1.5M-unit commit are reconciled at the contract-year boundary, not quarterly. Overage invoicing (usage above the pro-rata quarterly floor) proceeds as drafted at $0.0008/unit.\n\n**Sandbox tenants:** We'll include two sandbox tenants at no charge for the full 24-month term, each capped at 50,000 API calls/month with overage at the standard rate. We're not in a position to extend four free sandboxes at this ACV — if two additional tenants are genuinely required now, we can price them at 20% of per-tenant list and adjust the overall package accordingly.\n\nThe 10% discount, 24-month term, annual upfront billing, and $0.0008 overage rate are all confirmed as proposed. Our ask is to align on the three points above so we can get a redlined order form to your team by end of this week and keep the two-week close on track — let's find 30 minutes to walk through these together.",
+        "tone": "collaborative",
+        "counter_positions_included": [
+          "rollover_credits",
+          "quarterly_true_up",
+          "sandbox_tenants_included_free"
+        ]
+      },
+      "approval_review_one_pager": {
+        "title": "Notion — Self-Serve to Enterprise Conversion",
+        "sections": [
+          {
+            "heading": "Headline",
+            "content_markdown": "Notion's RevOps team wants to consolidate 14 Pro seats + a Team plan into a single 24-month Enterprise contract at **$180K ACV / $360K TCV**, with annual upfront billing. The deal closes a PLG motion but introduces three non-standard clauses that change the rev-rec story and require resolution before signature."
+          },
+          {
+            "heading": "Pricing Summary",
+            "content_markdown": "| | |\n|---|---|\n| **List Price** | $200,000 ACV |\n| **Proposed Price** | $180,000 ACV |\n| **Effective Discount** | 10% (multi-year commit + seat consolidation) |\n| **Est. Gross Margin** | ~33.3% — below the 40% soft-floor target |\n| **Payment Terms** | Annual upfront · quarterly true-up against actuals |\n\n**Guardrail status:** All hard guardrails ✅ pass. Soft margin warn ⚠️ triggered at 33.3% vs. 40% target — and the estimate does *not* yet reflect operational costs of rollover reconciliation, true-up invoicing, or sandbox infrastructure, so true economic margin is likely lower.\n\n**Alternative structures to consider:**\n- **36-month / 5% discount** → $190K ACV, ~36.8% margin, caps rollover with carry-forward limit *(preferred if timeline allows)*\n- **Remove rollover; add tiered overage** → keeps $180K base, adds ~$15K ACV upside from usage ramp\n- **List price + $20K co-marketing credit** → restores 40% margin, addresses Notion's urgency with onboarding acceleration rather than cash discount"
+          },
+          {
+            "heading": "Risk Findings",
+            "content_markdown": "**🔴 High — Rollover credits (uncapped, month-to-month within contract year)**\n- AE has *soft-committed* to unconditional rollover; this converts a use-it-or-lose-it commit into a deferred liability.\n- ASC 606: requires breakage estimation (expected-value method); lumpy usage makes estimates unreliable; revenue deferral risk if credits bank and are consumed late in the year.\n- **Redline position:** Cap accumulated rollover at 25% of annual commit (375K units); no cross-year carry; quarterly balance reconciliation gate.\n- **Fallback:** Accept uncapped within-year rollover only with CFO-confirmed rev-rec treatment and deferred-revenue schedule.\n\n**🟡 Medium — Quarterly true-up with credit issuance for under-usage**\n- Overage invoicing quarterly = standard. *Credit issuance* for under-usage quarterly = non-standard and never approved on prior deals.\n- Combined with rollover, Notion could prepay annually but structurally defer or reduce net consumption obligations.\n- **Redline position:** Restrict true-up to overage-only invoicing; shortfalls reconciled against annual commit at year-end only; no cash/credit refunds.\n\n**🟡 Low-Medium — 4 free sandbox tenants (vs. standard 1–2)**\n- Standalone value ~$8K; requires transaction-price allocation under ASC 606, reducing revenue attributed to the platform PO.\n- Precedent risk: sets expectation of sandbox parity on future expansions.\n- **Redline position:** Reduce to 2 free sandboxes with 50K call/month cap each; additional sandboxes at 20% of list.\n\n**⚠️ Process risk — Two-week close timeline**\n- Approval chain is 7 business days; Notion's deadline is May 18. Parallel Step 2 (RevOps + Finance + Legal) is required.\n- AE's soft commits must be formalized in signed contract language *before* submission — undocumented side promises will block Legal and Finance."
+          },
+          {
+            "heading": "Approval Routing",
+            "content_markdown": "| Step | Approver | Notes |\n|---|---|---|\n| 1 | **AE Manager** — Sarah Goldstein | Gates submission; sequential |\n| 2 (parallel) | **RevOps** | ACV $180K triggers structural review |\n| 2 (parallel) | **Finance** | Non-standard payment terms + rev-rec complexity |\n| 2 (parallel) | **Legal** *(veto right)* | High-priority redlines on all 3 non-standard clauses |\n| 3 | **CFO** *(veto right)* | ASC 606 breakage approval + margin validation |\n\n**Estimated cycle time: ~7 business days** (closes ~May 13 if kicked off today, May 4 — tight against May 18 target).\n\n**Blockers that must be cleared before Step 2 can close:**\n1. Legal redline on rollover credits (25% cap, no cross-year) must be agreed or Notion must accept fallback.\n2. Legal redline on true-up language (overage-only invoicing, no quarterly credit issuance) must be locked.\n3. Free sandbox count reduced 4→2 or CFO grants explicit precedent exception.\n4. Finance must confirm ASC 606 treatment for breakage estimation and quarterly catch-up mechanics before CFO review.\n5. AE must document all verbal/soft commitments in contract language prior to submission."
+          },
+          {
+            "heading": "Recommendation",
+            "content_markdown": "**⚠️ Ship with Conditions**\n\nThe headline economics are viable (10% discount clears all hard guardrails, Notion is a strong PLG-to-enterprise signal with a 79 health score and clear champion), but the deal **cannot go out in its current form** — the combination of uncapped rollover credits and quarterly credit issuance creates an ASC 606 deferred-liability problem and probable ACV dilution that Legal and the CFO will not approve; all three flagged clauses must be redlined and contractually locked before submission proceeds."
+          }
+        ]
+      },
+      "reasoning_summary": "Calibrated customer email to collaborative tone given the deal context. AE email leads with verdict (ship-with-conditions (blockers must clear first)) and a numbered next-step list. One-pager and Slack post both headline the recommendation and surface 3 flagged redlines (3 countered in customer reply). Approval routing summary: ~7 business days through 5-step chain."
+    }
+  },
+  "synthesis": "Pricing clears the 10% discount against all hard guardrails but flags a 33.3% margin estimate below the 40% soft target, and that figure excludes the operational drag from rollover tracking, quarterly true-ups, and free sandbox tenants — so true economics are likely thinner. ASC 606 surfaces four red flags on this hybrid usage deal, with rollover-credit breakage and variable-consideration allocation across three POs requiring CFO/auditor review before signing. Redline priority is high: uncapped monthly rollover combined with quarterly under-usage credits creates a deferred-revenue and ACV-dilution problem, and the rollover cap plus credit-issuance restriction are non-negotiable from rev rec even though the AE has soft-committed to rollover. Approval routes ae_manager → rev_ops → finance → legal → cfo over ~7 business days against Notion's two-week close, with Legal holding veto on the rollover/true-up language. Recommendation: ship-with-conditions — hold the rev rec line in a collaborative tone, leveraging Clay's competitive preference, but be ready to re-scope if Legal's fallbacks don't land inside the timeline.",
+  "timings": [
+    {
+      "id": "fetch_deal",
+      "label": "Fetching deal record and customer",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 0
+    },
+    {
+      "id": "fetch_deal",
+      "label": "Fetched deal: Notion — Self-Serve to Enterprise Conversion",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 122
+    },
+    {
+      "id": "step2_fanout",
+      "label": "Fanning out: customer signals + similar past deals (parallel)",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 122
+    },
+    {
+      "id": "step2_fanout",
+      "label": "Step 2 complete (signals: Exa customer signals land in Phase 5, similar deals: Vector similar-deals search lands in Phase 5)",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 473
+    },
+    {
+      "id": "step3_dispatch",
+      "label": "Dispatching parallel review: Pricing + ASC 606 + Redline",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 473
+    },
+    {
+      "id": "step3_await",
+      "label": "Awaiting parallel review completion (0 of 3 returned)",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 473
+    },
+    {
+      "id": "fetch_deal",
+      "label": "Fetching deal record from CRM",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 473
+    },
+    {
+      "id": "fetch_deal",
+      "label": "Fetched deal record from CRM",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 473
+    },
+    {
+      "id": "load_guardrails",
+      "label": "Loading active pricing guardrails for mid-market segment",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 473
+    },
+    {
+      "id": "identify_obligations",
+      "label": "Identifying performance obligations",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 473
+    },
+    {
+      "id": "load_context",
+      "label": "Loading deal context and customer signals",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 479
+    },
+    {
+      "id": "load_context",
+      "label": "Loaded deal context and customer signals",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 630
+    },
+    {
+      "id": "scan_clauses",
+      "label": "Scanning non-standard clauses",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 630
+    },
+    {
+      "id": "load_guardrails",
+      "label": "Loaded 5 guardrails for mid-market segment",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 675
+    },
+    {
+      "id": "similar_deals",
+      "label": "Identifying similar past deals via vector search",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 675
+    },
+    {
+      "id": "similar_deals",
+      "label": "Vector search returns no precedent set (Phase 5 stub)",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 976
+    },
+    {
+      "id": "reasoning",
+      "label": "Reasoning about pricing economics",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 976
+    },
+    {
+      "id": "scan_clauses",
+      "label": "Scanned non-standard clauses",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 3295
+    },
+    {
+      "id": "analyze_clauses",
+      "label": "Analyzing flagged clauses (0)",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 3295
+    },
+    {
+      "id": "analyze_clauses",
+      "label": "Analyzing flagged clauses (1)",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 3295
+    },
+    {
+      "id": "identify_obligations",
+      "label": "Identified performance obligations",
+      "status": "complete",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 3750
+    },
+    {
+      "id": "evaluate_distinctness",
+      "label": "Evaluating distinctness (1)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 3750
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (0 of 5)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 3969
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (1 of 5)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 4416
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (2 of 5)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 5723
+    },
+    {
+      "id": "evaluate_distinctness",
+      "label": "Evaluating distinctness (2)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 6501
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (3 of 5)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 6596
+    },
+    {
+      "id": "analyze_clauses",
+      "label": "Analyzed 1 flagged clauses",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 7732
+    },
+    {
+      "id": "draft_counters",
+      "label": "Drafting counter-positions for high-risk clauses",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 7732
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (4 of 5)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 7892
+    },
+    {
+      "id": "evaluate_distinctness",
+      "label": "Evaluating distinctness (3)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 8757
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (5 of 5)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 9180
+    },
+    {
+      "id": "evaluate_distinctness",
+      "label": "Evaluating distinctness (4)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 10283
+    },
+    {
+      "id": "draft_counters",
+      "label": "Drafted counter-positions",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 10476
+    },
+    {
+      "id": "draft_fallbacks",
+      "label": "Drafting fallback positions",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 10476
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluated 5 guardrails",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 10820
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (0 of 3)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 10821
+    },
+    {
+      "id": "evaluate_distinctness",
+      "label": "Evaluated 4 performance obligations",
+      "status": "complete",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 11464
+    },
+    {
+      "id": "analyze_variable_consideration",
+      "label": "Analyzing variable consideration sources",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 11464
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (1 of 3)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 14560
+    },
+    {
+      "id": "analyze_variable_consideration",
+      "label": "Analyzed variable consideration",
+      "status": "complete",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 16759
+    },
+    {
+      "id": "assess_modification_risk",
+      "label": "Assessing contract modification risk",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 16759
+    },
+    {
+      "id": "assess_modification_risk",
+      "label": "Assessed contract modification risk",
+      "status": "complete",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 18283
+    },
+    {
+      "id": "compute_recognition_schedule",
+      "label": "Computing revenue recognition schedule",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 18283
+    },
+    {
+      "id": "compute_recognition_schedule",
+      "label": "Computing recognition schedule (period 1)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 18283
+    },
+    {
+      "id": "compute_recognition_schedule",
+      "label": "Computing recognition schedule (period 2)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 19808
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (2 of 3)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 19839
+    },
+    {
+      "id": "compute_recognition_schedule",
+      "label": "Computed recognition schedule (2 periods)",
+      "status": "complete",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 20999
+    },
+    {
+      "id": "flag_red_flags",
+      "label": "Flagging red flags (0)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 20999
+    },
+    {
+      "id": "flag_red_flags",
+      "label": "Flagging red flags (1)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 20999
+    },
+    {
+      "id": "flag_red_flags",
+      "label": "Flagging red flags (2)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 22140
+    },
+    {
+      "id": "flag_red_flags",
+      "label": "Flagging red flags (3)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 23682
+    },
+    {
+      "id": "flag_red_flags",
+      "label": "Flagging red flags (4)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 24859
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (3 of 3)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 25119
+    },
+    {
+      "id": "flag_red_flags",
+      "label": "Flagged 4 red flags",
+      "status": "complete",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 26381
+    },
+    {
+      "id": "alternatives",
+      "label": "Generated 3 alternative structures",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 28194
+    },
+    {
+      "id": "draft_fallbacks",
+      "label": "Drafted fallback positions",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 28630
+    },
+    {
+      "id": "cross_reference_signals",
+      "label": "Cross-referencing customer position-of-strength signals",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 28630
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalizing recognition recommendation",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 29078
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalized rev-rec analysis (medium confidence, 4 red flags)",
+      "status": "complete",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 29199
+    },
+    {
+      "id": "step3_await",
+      "label": "Awaiting parallel review completion (1 of 3 returned — ASC 606)",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 29199
+    },
+    {
+      "id": "cross_reference_signals",
+      "label": "Cross-referenced position-of-strength signals",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 31837
+    },
+    {
+      "id": "reasoning",
+      "label": "Reasoned about pricing economics",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 33539
+    },
+    {
+      "id": "margin_sensitivity",
+      "label": "Computing margin sensitivity under the 40% list-price baseline",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 33539
+    },
+    {
+      "id": "margin_sensitivity",
+      "label": "Computed margin sensitivity (33.3% est.)",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 33690
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalizing recommendation",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 33690
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalized recommendation (medium confidence)",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 33812
+    },
+    {
+      "id": "step3_await",
+      "label": "Awaiting parallel review completion (2 of 3 returned — Pricing)",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 33812
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalizing redline recommendations",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 35732
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalized redline (3 flagged · priority: high)",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 35853
+    },
+    {
+      "id": "step3_await",
+      "label": "Awaiting parallel review completion (3 of 3 returned — Redline)",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 35853
+    },
+    {
+      "id": "step3_dispatch",
+      "label": "Parallel review complete (3 of 3 returned)",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 35853
+    },
+    {
+      "id": "step3_await",
+      "label": "All three parallel agents returned",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 35853
+    },
+    {
+      "id": "step4_routing",
+      "label": "Routing approvals based on upstream outputs",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 35853
+    },
+    {
+      "id": "load_matrix",
+      "label": "Loading active approval matrix (8 rules)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 35853
+    },
+    {
+      "id": "load_matrix",
+      "label": "Loaded 8 active matrix rules",
+      "status": "complete",
+      "parent": "Approval Agent",
+      "elapsed_ms": 35975
+    },
+    {
+      "id": "evaluate_rules",
+      "label": "Evaluating each matrix rule (0 of 8)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 35975
+    },
+    {
+      "id": "evaluate_rules",
+      "label": "Evaluated 8 matrix rules",
+      "status": "complete",
+      "parent": "Approval Agent",
+      "elapsed_ms": 38203
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identifying triggered rules (0)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 38203
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identifying triggered rules (1)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 38203
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identifying triggered rules (2)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 39046
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identifying triggered rules (3)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 40306
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identifying triggered rules (4)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 40548
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identifying triggered rules (5)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 41580
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identified 5 triggered rules",
+      "status": "complete",
+      "parent": "Approval Agent",
+      "elapsed_ms": 43051
+    },
+    {
+      "id": "build_chain",
+      "label": "Building approval chain",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 43051
+    },
+    {
+      "id": "build_chain",
+      "label": "Built approval chain",
+      "status": "complete",
+      "parent": "Approval Agent",
+      "elapsed_ms": 44327
+    },
+    {
+      "id": "compute_cycle_time",
+      "label": "Computing expected cycle time",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 44327
+    },
+    {
+      "id": "compute_cycle_time",
+      "label": "Computed expected cycle time",
+      "status": "complete",
+      "parent": "Approval Agent",
+      "elapsed_ms": 48191
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalizing routing decision",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 53961
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalized routing (5 steps · 7d cycle time)",
+      "status": "complete",
+      "parent": "Approval Agent",
+      "elapsed_ms": 54083
+    },
+    {
+      "id": "step4_routing",
+      "label": "Routed approvals (5 steps)",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 54083
+    },
+    {
+      "id": "step5_comms",
+      "label": "Generating communications based on full review",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 54083
+    },
+    {
+      "id": "analyze_context",
+      "label": "Analyzing deal context and tone requirements",
+      "status": "running",
+      "parent": "Comms Agent",
+      "elapsed_ms": 54083
+    },
+    {
+      "id": "analyze_context",
+      "label": "Selected tone calibration based on deal context",
+      "status": "complete",
+      "parent": "Comms Agent",
+      "elapsed_ms": 54234
+    },
+    {
+      "id": "draft_slack_post",
+      "label": "Drafting Slack post for #deal-desk",
+      "status": "running",
+      "parent": "Comms Agent",
+      "elapsed_ms": 54234
+    },
+    {
+      "id": "draft_ae_email",
+      "label": "Drafting AE email with structured action items",
+      "status": "running",
+      "parent": "Comms Agent",
+      "elapsed_ms": 54234
+    },
+    {
+      "id": "draft_customer_email",
+      "label": "Drafting customer reply with counter-positions",
+      "status": "running",
+      "parent": "Comms Agent",
+      "elapsed_ms": 54234
+    },
+    {
+      "id": "build_one_pager",
+      "label": "Building approval review one-pager",
+      "status": "running",
+      "parent": "Comms Agent",
+      "elapsed_ms": 54234
+    },
+    {
+      "id": "draft_ae_email",
+      "label": "Drafted AE email",
+      "status": "complete",
+      "parent": "Comms Agent",
+      "elapsed_ms": 66628
+    },
+    {
+      "id": "draft_customer_email",
+      "label": "Drafted customer reply (collaborative tone)",
+      "status": "complete",
+      "parent": "Comms Agent",
+      "elapsed_ms": 70403
+    },
+    {
+      "id": "draft_slack_post",
+      "label": "Drafted Slack post",
+      "status": "complete",
+      "parent": "Comms Agent",
+      "elapsed_ms": 72751
+    },
+    {
+      "id": "build_one_pager",
+      "label": "Built approval review one-pager (5 sections)",
+      "status": "complete",
+      "parent": "Comms Agent",
+      "elapsed_ms": 88239
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalizing communication artifacts",
+      "status": "running",
+      "parent": "Comms Agent",
+      "elapsed_ms": 88239
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalized 4 artifacts (Slack · AE email · customer email · one-pager)",
+      "status": "complete",
+      "parent": "Comms Agent",
+      "elapsed_ms": 88361
+    },
+    {
+      "id": "step5_comms",
+      "label": "Generated all communication artifacts",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 88361
+    },
+    {
+      "id": "step6_synthesis",
+      "label": "Synthesizing executive summary",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 88361
+    },
+    {
+      "id": "step6_synthesis",
+      "label": "Synthesized 4-sentence executive overview",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 96886
+    }
+  ],
+  "metadata": {
+    "duration_ms": 96886,
+    "total_input_tokens": 90030,
+    "total_output_tokens": 9963,
+    "total_cost_usd": 0.36875295,
+    "recorded_at": "2026-05-05T02:23:46.149Z",
+    "per_agent": {
+      "pricing": {
+        "duration_ms": 33339,
+        "input_tokens": 7111,
+        "output_tokens": 1620,
+        "cost_usd": 0.03485455
+      },
+      "asc606": {
+        "duration_ms": 28726,
+        "input_tokens": 9439,
+        "output_tokens": 1752,
+        "cost_usd": 0.05944775000000001
+      },
+      "redline": {
+        "duration_ms": 35374,
+        "input_tokens": 6501,
+        "output_tokens": 1527,
+        "cost_usd": 0.030799
+      },
+      "approval": {
+        "duration_ms": 18230,
+        "input_tokens": 12732,
+        "output_tokens": 1488,
+        "cost_usd": 0.023630949999999998
+      },
+      "comms": {
+        "duration_ms": 34278,
+        "input_tokens": 46337,
+        "output_tokens": 3180,
+        "cost_usd": 0.1932772
+      },
+      "synthesis": {
+        "duration_ms": 8525,
+        "input_tokens": 7910,
+        "output_tokens": 396,
+        "cost_usd": 0.0267435
+      }
+    }
+  }
+}

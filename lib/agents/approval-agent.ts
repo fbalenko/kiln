@@ -116,6 +116,7 @@ class ApprovalStreamWatcher {
   private chainStarted = false;
   private chainRunning = false;
   private cycleTimeSeen = false;
+  private cycleTimeClosed = false;
   private readonly matrixSize: number;
 
   constructor(
@@ -179,6 +180,7 @@ class ApprovalStreamWatcher {
     // expected_cycle_time appearance closes build_chain, opens compute.
     if (
       !this.cycleTimeSeen &&
+      !this.cycleTimeClosed &&
       this.acc.includes('"expected_cycle_time_business_days"')
     ) {
       this.cycleTimeSeen = true;
@@ -198,8 +200,13 @@ class ApprovalStreamWatcher {
     }
 
     // one_line_summary appearance closes compute_cycle_time.
-    if (this.cycleTimeSeen && this.acc.includes('"one_line_summary"')) {
+    if (
+      this.cycleTimeSeen &&
+      !this.cycleTimeClosed &&
+      this.acc.includes('"one_line_summary"')
+    ) {
       this.cycleTimeSeen = false;
+      this.cycleTimeClosed = true;
       this.emit({
         id: "compute_cycle_time",
         label: "Computed expected cycle time",

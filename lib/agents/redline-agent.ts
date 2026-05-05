@@ -109,6 +109,7 @@ class RedlineStreamWatcher {
   private countersStarted = false;
   private fallbacksStarted = false;
   private signalsStarted = false;
+  private signalsClosed = false;
 
   constructor(private readonly emit: (e: SubstepEvent) => void) {}
 
@@ -182,6 +183,7 @@ class RedlineStreamWatcher {
     // models reliably emit fields in declaration order.
     if (
       !this.signalsStarted &&
+      !this.signalsClosed &&
       this.acc.includes('"standard_clauses_affirmed"')
     ) {
       this.signalsStarted = true;
@@ -197,9 +199,15 @@ class RedlineStreamWatcher {
       });
     }
 
-    // reasoning_summary closes cross-reference.
-    if (this.signalsStarted && this.acc.includes('"reasoning_summary"')) {
+    // reasoning_summary closes cross-reference. Mark signalsClosed so we
+    // never re-open this section if more deltas land later.
+    if (
+      this.signalsStarted &&
+      !this.signalsClosed &&
+      this.acc.includes('"reasoning_summary"')
+    ) {
       this.signalsStarted = false;
+      this.signalsClosed = true;
       this.emit({
         id: "cross_reference_signals",
         label: "Cross-referenced position-of-strength signals",
