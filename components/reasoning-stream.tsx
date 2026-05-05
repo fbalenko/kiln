@@ -2,15 +2,30 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Activity,
   AlertCircle,
+  AlertTriangle,
   Brain,
+  Calendar,
   Check,
   ChevronDown,
   ChevronRight,
+  Clock,
   Database,
+  FileText,
+  Flag,
+  GitBranch,
+  Hourglass,
+  Layers,
   ListChecks,
   Loader2,
+  Mail,
+  MessageCircle,
+  MessageSquare,
+  Network,
+  PenTool,
   Search,
+  Send,
   Shield,
   Sparkles,
   Target,
@@ -18,68 +33,28 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { AgentOutputCard } from "@/components/agent-output-card";
+import { Asc606Card } from "@/components/agent-cards/asc606-card";
+import { ApprovalCard } from "@/components/agent-cards/approval-card";
+import { CommsCard } from "@/components/agent-cards/comms-card";
+import { RedlineCard } from "@/components/agent-cards/redline-card";
 import { cn } from "@/lib/utils";
 
 // Live timeline that subscribes to /api/run-review/[dealId] over SSE.
-// Mirrors the 6-step orchestrator plan from docs/03-agents.md so the visual
-// shape stays stable when Phase 4 wires the remaining four sub-agents.
+// Phase 4: shows the orchestrator card on top, then a parallel grid for the
+// three fan-out agents (Pricing | ASC 606 | Redline), then sequential
+// Approval and Comms cards, then the synthesis card.
 
-const STEP_PLAN: Array<{ id: string; label: string; note: string }> = [
-  {
-    id: "Gather context",
-    label: "Gather context",
-    note: "CRM record, customer signals (Exa), top-3 similar past deals",
-  },
-  {
-    id: "Pricing Agent",
-    label: "Pricing Agent",
-    note: "Effective discount, margin, guardrail evaluation, alternative structures",
-  },
-  {
-    id: "ASC 606 Agent",
-    label: "ASC 606 Agent",
-    note: "Performance obligations, variable consideration, recognition schedule",
-  },
-  {
-    id: "Redline Agent",
-    label: "Redline Agent",
-    note: "Non-standard clauses, suggested counters, fallback positions",
-  },
-  {
-    id: "Approval Agent",
-    label: "Approval Agent",
-    note: "Required approver path per the active matrix",
-  },
-  {
-    id: "Comms Agent",
-    label: "Comms Agent",
-    note: "Slack post, AE email, customer reply draft",
-  },
-];
+const PARENTS = [
+  "Orchestrator",
+  "Pricing Agent",
+  "ASC 606 Agent",
+  "Redline Agent",
+  "Approval Agent",
+  "Comms Agent",
+] as const;
+export type ParentName = (typeof PARENTS)[number];
 
-// The canonical sub-stage sequence the Pricing Agent walks through. The
-// server emits substep events with these `id`s; pending entries render with
-// the static label below until a server event flips them to running/complete.
-const PRICING_SUBSTEPS: Array<{
-  id: string;
-  defaultLabel: string;
-  icon: LucideIcon;
-}> = [
-  { id: "fetch_deal", defaultLabel: "Fetch deal record from CRM", icon: Database },
-  { id: "load_guardrails", defaultLabel: "Load active pricing guardrails", icon: Shield },
-  { id: "similar_deals", defaultLabel: "Identify similar past deals", icon: Search },
-  { id: "reasoning", defaultLabel: "Reason about pricing economics", icon: Brain },
-  { id: "guardrail_eval", defaultLabel: "Evaluate guardrails", icon: ListChecks },
-  { id: "alternatives", defaultLabel: "Generate alternative structures", icon: Sparkles },
-  { id: "margin_sensitivity", defaultLabel: "Compute margin sensitivity", icon: TrendingUp },
-  { id: "finalizing", defaultLabel: "Finalize recommendation", icon: Target },
-];
-
-const SUBSTEP_PLANS: Record<string, typeof PRICING_SUBSTEPS> = {
-  "Pricing Agent": PRICING_SUBSTEPS,
-};
-
-type Status = "pending" | "running" | "complete" | "error" | "skipped";
+type Status = "pending" | "running" | "complete" | "error";
 
 interface SubstepState {
   status: "pending" | "running" | "complete";
@@ -99,25 +74,108 @@ interface StepState {
 }
 
 type StreamEvent =
-  | { type: "step_start"; step: string; agent: string | null; ts: number }
-  | { type: "step_progress"; step: string; partial_output: unknown; ts: number }
-  | { type: "step_complete"; step: string; output: unknown; ts: number }
+  | { type: "step_start"; step: ParentName; ts: number }
+  | { type: "step_progress"; step: ParentName; partial_output: unknown; ts: number }
+  | { type: "step_complete"; step: ParentName; output: unknown; ts: number }
   | {
       type: "substep";
-      parent: string;
+      parent: ParentName;
       id: string;
       label: string;
       status: "running" | "complete";
       ts: number;
     }
   | { type: "synthesis"; summary: string; review_id: string; ts: number }
-  | { type: "error"; step: string; message: string; ts: number };
+  | { type: "error"; step: ParentName; message: string; ts: number };
 
-function initialSteps(): Record<string, StepState> {
-  const init: Record<string, StepState> = {};
-  STEP_PLAN.forEach((s) => {
-    init[s.id] = { status: "pending", substeps: {} };
-  });
+interface SubstepPlan {
+  id: string;
+  defaultLabel: string;
+  icon: LucideIcon;
+}
+
+const ORCHESTRATOR_SUBSTEPS: SubstepPlan[] = [
+  { id: "fetch_deal", defaultLabel: "Fetch deal record and customer", icon: Database },
+  { id: "step2_fanout", defaultLabel: "Fan out: customer signals + similar deals", icon: GitBranch },
+  { id: "step3_dispatch", defaultLabel: "Dispatch parallel review (Pricing + ASC 606 + Redline)", icon: Layers },
+  { id: "step3_await", defaultLabel: "Await parallel review completion", icon: Hourglass },
+  { id: "step4_routing", defaultLabel: "Route approvals based on upstream outputs", icon: Network },
+  { id: "step5_comms", defaultLabel: "Generate communications", icon: MessageCircle },
+  { id: "step6_synthesis", defaultLabel: "Synthesize executive summary", icon: Sparkles },
+];
+
+const PRICING_SUBSTEPS: SubstepPlan[] = [
+  { id: "fetch_deal", defaultLabel: "Fetch deal record from CRM", icon: Database },
+  { id: "load_guardrails", defaultLabel: "Load active pricing guardrails", icon: Shield },
+  { id: "similar_deals", defaultLabel: "Identify similar past deals", icon: Search },
+  { id: "reasoning", defaultLabel: "Reason about pricing economics", icon: Brain },
+  { id: "guardrail_eval", defaultLabel: "Evaluate guardrails", icon: ListChecks },
+  { id: "alternatives", defaultLabel: "Generate alternative structures", icon: Sparkles },
+  { id: "margin_sensitivity", defaultLabel: "Compute margin sensitivity", icon: TrendingUp },
+  { id: "finalizing", defaultLabel: "Finalize recommendation", icon: Target },
+];
+
+const ASC606_SUBSTEPS: SubstepPlan[] = [
+  { id: "identify_obligations", defaultLabel: "Identify performance obligations", icon: Database },
+  { id: "evaluate_distinctness", defaultLabel: "Evaluate distinctness for each obligation", icon: ListChecks },
+  { id: "analyze_variable_consideration", defaultLabel: "Analyze variable consideration", icon: Activity },
+  { id: "assess_modification_risk", defaultLabel: "Assess contract modification risk", icon: AlertTriangle },
+  { id: "compute_recognition_schedule", defaultLabel: "Compute revenue recognition schedule", icon: Calendar },
+  { id: "flag_red_flags", defaultLabel: "Flag red flags", icon: Flag },
+  { id: "finalizing", defaultLabel: "Finalize recognition recommendation", icon: Target },
+];
+
+const REDLINE_SUBSTEPS: SubstepPlan[] = [
+  { id: "load_context", defaultLabel: "Load deal context and customer signals", icon: Database },
+  { id: "scan_clauses", defaultLabel: "Scan non-standard clauses", icon: Search },
+  { id: "analyze_clauses", defaultLabel: "Analyze flagged clauses", icon: FileText },
+  { id: "draft_counters", defaultLabel: "Draft counter-positions", icon: PenTool },
+  { id: "draft_fallbacks", defaultLabel: "Draft fallback positions", icon: Shield },
+  { id: "cross_reference_signals", defaultLabel: "Cross-reference customer signals", icon: TrendingUp },
+  { id: "finalizing", defaultLabel: "Finalize redline recommendations", icon: Target },
+];
+
+const APPROVAL_SUBSTEPS: SubstepPlan[] = [
+  { id: "load_matrix", defaultLabel: "Load active approval matrix", icon: Shield },
+  { id: "evaluate_rules", defaultLabel: "Evaluate each matrix rule", icon: ListChecks },
+  { id: "identify_triggered", defaultLabel: "Identify triggered rules", icon: Flag },
+  { id: "build_chain", defaultLabel: "Build approval chain", icon: Network },
+  { id: "compute_cycle_time", defaultLabel: "Compute expected cycle time", icon: Clock },
+  { id: "finalizing", defaultLabel: "Finalize routing decision", icon: Target },
+];
+
+const COMMS_SUBSTEPS: SubstepPlan[] = [
+  { id: "analyze_context", defaultLabel: "Analyze deal context and tone requirements", icon: Database },
+  { id: "draft_slack_post", defaultLabel: "Draft Slack post for #deal-desk", icon: MessageSquare },
+  { id: "draft_ae_email", defaultLabel: "Draft AE email with action items", icon: Mail },
+  { id: "draft_customer_email", defaultLabel: "Draft customer reply with counter-positions", icon: Send },
+  { id: "build_one_pager", defaultLabel: "Build approval review one-pager", icon: FileText },
+  { id: "finalizing", defaultLabel: "Finalize communication artifacts", icon: Target },
+];
+
+const SUBSTEP_PLANS: Record<ParentName, SubstepPlan[]> = {
+  Orchestrator: ORCHESTRATOR_SUBSTEPS,
+  "Pricing Agent": PRICING_SUBSTEPS,
+  "ASC 606 Agent": ASC606_SUBSTEPS,
+  "Redline Agent": REDLINE_SUBSTEPS,
+  "Approval Agent": APPROVAL_SUBSTEPS,
+  "Comms Agent": COMMS_SUBSTEPS,
+};
+
+const STEP_NOTES: Record<ParentName, string> = {
+  Orchestrator: "Coordinates the pipeline: fetch context → parallel review → approval → comms → synthesis",
+  "Pricing Agent": "Effective discount, margin, guardrail evaluation, alternative structures",
+  "ASC 606 Agent": "Performance obligations, variable consideration, recognition schedule",
+  "Redline Agent": "Non-standard clauses, suggested counters, fallback positions",
+  "Approval Agent": "Required approver path per the active matrix",
+  "Comms Agent": "Slack post, AE email, customer reply draft, approval one-pager",
+};
+
+function initialSteps(): Record<ParentName, StepState> {
+  const init = {} as Record<ParentName, StepState>;
+  for (const p of PARENTS) {
+    init[p] = { status: "pending", substeps: {} };
+  }
   return init;
 }
 
@@ -128,7 +186,9 @@ export function ReasoningStream({
   dealId: string;
   live?: boolean;
 }) {
-  const [steps, setSteps] = useState<Record<string, StepState>>(initialSteps);
+  const [steps, setSteps] = useState<Record<ParentName, StepState>>(
+    initialSteps,
+  );
   const [synthesis, setSynthesis] = useState<{
     summary: string;
     reviewId: string;
@@ -207,6 +267,8 @@ export function ReasoningStream({
               ...prev,
               [ev.parent]: {
                 ...parent,
+                status:
+                  parent.status === "pending" ? "running" : parent.status,
                 substeps: { ...parent.substeps, [ev.id]: nextSub },
               },
             };
@@ -215,22 +277,6 @@ export function ReasoningStream({
         }
         case "synthesis": {
           setSynthesis({ summary: ev.summary, reviewId: ev.review_id });
-          // Phase 3 doesn't run the remaining 4 agents — mark them as
-          // "skipped" so they don't sit forever in pending state.
-          setSteps((prev) => {
-            const next = { ...prev };
-            for (const key of [
-              "ASC 606 Agent",
-              "Redline Agent",
-              "Approval Agent",
-              "Comms Agent",
-            ]) {
-              if (next[key]?.status === "pending") {
-                next[key] = { ...next[key], status: "skipped" };
-              }
-            }
-            return next;
-          });
           setDone(true);
           es.close();
           break;
@@ -267,70 +313,55 @@ export function ReasoningStream({
 
   return (
     <ol className="relative space-y-2.5 border-l border-border pl-6 sm:pl-8">
-      {STEP_PLAN.map((step, i) => {
-        const state = steps[step.id];
-        const isPricing = step.id === "Pricing Agent";
-        const substepPlan = SUBSTEP_PLANS[step.id];
-        return (
-          <li key={step.id} className="relative">
-            <StepDot index={i + 1} status={state.status} />
-            <div
-              className={cn(
-                "rounded-md border bg-card transition-colors",
-                state.status === "running" && "border-[var(--brand)]/40 bg-[var(--brand)]/[0.03]",
-                state.status === "complete" && "border-border",
-                state.status === "error" && "border-red-300 bg-red-50/50 dark:bg-red-900/10",
-                state.status === "pending" && "border-border opacity-70",
-                state.status === "skipped" && "border-dashed border-border opacity-50",
-              )}
-            >
-              <div className="flex items-center justify-between gap-3 px-3.5 py-2.5 sm:px-4 sm:py-3">
-                <div className="min-w-0">
-                  <div className="text-sm font-medium text-foreground">
-                    {step.label}
-                  </div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">
-                    {step.note}
-                  </div>
-                </div>
-                <StatusLabel status={state.status} />
-              </div>
+      {/* 1. Orchestrator */}
+      <TimelineRow
+        index={1}
+        parent="Orchestrator"
+        state={steps.Orchestrator}
+      />
 
-              {state.status === "error" && state.errorMessage && (
-                <div className="border-t border-red-200 bg-red-50 px-3.5 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-900/20 dark:text-red-300 sm:px-4">
-                  {state.errorMessage}
-                </div>
-              )}
+      {/* 2. Parallel grid: Pricing | ASC 606 | Redline. The three cards
+          mount inside a single timeline row so the visitor sees them
+          spinning simultaneously — "wow, it's actually multi-agent." */}
+      <li className="relative">
+        <ParallelGroupDot
+          status={collapseStatuses([
+            steps["Pricing Agent"].status,
+            steps["ASC 606 Agent"].status,
+            steps["Redline Agent"].status,
+          ])}
+        />
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <ParallelAgentCard
+            parent="Pricing Agent"
+            state={steps["Pricing Agent"]}
+          />
+          <ParallelAgentCard
+            parent="ASC 606 Agent"
+            state={steps["ASC 606 Agent"]}
+          />
+          <ParallelAgentCard
+            parent="Redline Agent"
+            state={steps["Redline Agent"]}
+          />
+        </div>
+      </li>
 
-              {/* Sub-stage timeline shows up while the parent is running OR
-                  after it completes (collapsed by default once done). */}
-              {substepPlan &&
-                (state.status === "running" || state.status === "complete") && (
-                  <SubstepList
-                    plan={substepPlan}
-                    state={state}
-                    parentStatus={state.status}
-                  />
-                )}
+      {/* 3. Approval — sequential after the parallel block */}
+      <TimelineRow
+        index={3}
+        parent="Approval Agent"
+        state={steps["Approval Agent"]}
+      />
 
-              {/* Pricing payload renders inline beneath the step card as the
-                  output streams in. The other steps stay headers-only in
-                  Phase 3. */}
-              {isPricing &&
-                state.partialOutput !== undefined &&
-                (state.status === "running" ||
-                  state.status === "complete") && (
-                  <div className="border-t border-border p-3 sm:p-4">
-                    <AgentOutputCard
-                      output={state.partialOutput as Parameters<typeof AgentOutputCard>[0]["output"]}
-                    />
-                  </div>
-                )}
-            </div>
-          </li>
-        );
-      })}
+      {/* 4. Comms — sequential after Approval */}
+      <TimelineRow
+        index={4}
+        parent="Comms Agent"
+        state={steps["Comms Agent"]}
+      />
 
+      {/* 5. Synthesis */}
       {synthesis && (
         <li className="relative pt-1">
           <span
@@ -341,9 +372,9 @@ export function ReasoningStream({
           </span>
           <div className="rounded-md border border-[var(--brand)]/30 bg-[var(--brand)]/[0.04] p-3.5 sm:p-4 animate-in fade-in slide-in-from-bottom-1 duration-300">
             <div className="text-[11px] font-medium uppercase tracking-wider text-[var(--brand)]">
-              Synthesis
+              Executive synthesis
             </div>
-            <p className="mt-1 text-[13px] leading-relaxed text-foreground">
+            <p className="mt-1 whitespace-pre-line text-[13px] leading-relaxed text-foreground">
               {synthesis.summary}
             </p>
             <div className="mt-2 font-mono text-[10px] text-muted-foreground">
@@ -360,29 +391,141 @@ export function ReasoningStream({
   );
 }
 
+function TimelineRow({
+  index,
+  parent,
+  state,
+}: {
+  index: number;
+  parent: ParentName;
+  state: StepState;
+}) {
+  const plan = SUBSTEP_PLANS[parent];
+  return (
+    <li className="relative">
+      <StepDot index={index} status={state.status} />
+      <StepCard parent={parent} state={state} plan={plan} />
+    </li>
+  );
+}
+
+function ParallelAgentCard({
+  parent,
+  state,
+}: {
+  parent: ParentName;
+  state: StepState;
+}) {
+  const plan = SUBSTEP_PLANS[parent];
+  return <StepCard parent={parent} state={state} plan={plan} compact />;
+}
+
+function StepCard({
+  parent,
+  state,
+  plan,
+  compact = false,
+}: {
+  parent: ParentName;
+  state: StepState;
+  plan: SubstepPlan[];
+  compact?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-md border bg-card transition-colors",
+        state.status === "running" && "border-[var(--brand)]/40 bg-[var(--brand)]/[0.03]",
+        state.status === "complete" && "border-border",
+        state.status === "error" && "border-red-300 bg-red-50/50 dark:bg-red-900/10",
+        state.status === "pending" && "border-border opacity-70",
+      )}
+    >
+      <div className="flex items-center justify-between gap-3 px-3.5 py-2.5 sm:px-4 sm:py-3">
+        <div className="min-w-0">
+          <div className={cn("text-sm font-medium text-foreground", compact && "text-[13px]")}>
+            {parent}
+          </div>
+          {!compact && (
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              {STEP_NOTES[parent]}
+            </div>
+          )}
+        </div>
+        <StatusLabel status={state.status} />
+      </div>
+
+      {state.status === "error" && state.errorMessage && (
+        <div className="border-t border-red-200 bg-red-50 px-3.5 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-900/20 dark:text-red-300 sm:px-4">
+          {state.errorMessage}
+        </div>
+      )}
+
+      {plan && (state.status === "running" || state.status === "complete") && (
+        <SubstepList plan={plan} state={state} parentStatus={state.status} />
+      )}
+
+      {(state.status === "running" || state.status === "complete") &&
+        state.partialOutput !== undefined && (
+          <div className="border-t border-border p-3 sm:p-4">
+            <AgentOutputRouter parent={parent} payload={state.partialOutput} />
+          </div>
+        )}
+    </div>
+  );
+}
+
+function AgentOutputRouter({
+  parent,
+  payload,
+}: {
+  parent: ParentName;
+  payload: unknown;
+}) {
+  if (parent === "Pricing Agent") {
+    return <AgentOutputCard output={payload as Parameters<typeof AgentOutputCard>[0]["output"]} />;
+  }
+  if (parent === "ASC 606 Agent") {
+    return <Asc606Card output={payload as Parameters<typeof Asc606Card>[0]["output"]} />;
+  }
+  if (parent === "Redline Agent") {
+    return <RedlineCard output={payload as Parameters<typeof RedlineCard>[0]["output"]} />;
+  }
+  if (parent === "Approval Agent") {
+    return <ApprovalCard output={payload as Parameters<typeof ApprovalCard>[0]["output"]} />;
+  }
+  if (parent === "Comms Agent") {
+    return <CommsCard output={payload as Parameters<typeof CommsCard>[0]["output"]} />;
+  }
+  // Orchestrator has no structured output beyond synthesis; render nothing.
+  return null;
+}
+
 function SubstepList({
   plan,
   state,
   parentStatus,
 }: {
-  plan: typeof PRICING_SUBSTEPS;
+  plan: SubstepPlan[];
   state: StepState;
   parentStatus: Status;
 }) {
-  // While the parent step is running, the sub-stage list is always expanded so
-  // the user can watch progression. Once the parent completes it auto-collapses
-  // to a one-line summary; clicking the chevron re-opens it for review.
   const [expanded, setExpanded] = useState(false);
-  const effectiveOpen = parentStatus === "running" ? true : expanded;
 
   const counts = useMemo(
-    () => summarize(plan, state.substeps),
+    () => ({
+      total: plan.length,
+      complete: plan.filter((p) => state.substeps[p.id]?.status === "complete")
+        .length,
+    }),
     [plan, state.substeps],
   );
   const elapsedMs =
     state.completedAt && state.startedAt
       ? state.completedAt - state.startedAt
       : null;
+
+  const effectiveOpen = parentStatus === "running" ? true : expanded;
 
   return (
     <div className="border-t border-border">
@@ -405,7 +548,7 @@ function SubstepList({
           </span>
         </button>
       )}
-      {(parentStatus === "running" || effectiveOpen) && (
+      {effectiveOpen && (
         <ul className="space-y-0.5 px-3.5 py-2 sm:px-4">
           {plan.map((p) => {
             const sub = state.substeps[p.id];
@@ -435,16 +578,6 @@ function SubstepList({
   );
 }
 
-function summarize(
-  plan: typeof PRICING_SUBSTEPS,
-  substeps: Record<string, SubstepState>,
-): { complete: number; total: number } {
-  return {
-    total: plan.length,
-    complete: plan.filter((p) => substeps[p.id]?.status === "complete").length,
-  };
-}
-
 function SubstepGlyph({
   status,
   icon: Icon,
@@ -466,7 +599,6 @@ function SubstepGlyph({
       </span>
     );
   }
-  // pending — show the topical icon faintly so the user has a hint of what's coming
   return (
     <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-foreground/30">
       <Icon className="h-3 w-3" strokeWidth={1.5} />
@@ -507,19 +639,6 @@ function StepDot({ index, status }: { index: number; status: Status }) {
       </span>
     );
   }
-  if (status === "skipped") {
-    return (
-      <span
-        aria-hidden
-        className={cn(
-          base,
-          "border border-dashed border-border bg-background text-muted-foreground",
-        )}
-      >
-        {index}
-      </span>
-    );
-  }
   return (
     <span
       aria-hidden
@@ -530,28 +649,57 @@ function StepDot({ index, status }: { index: number; status: Status }) {
   );
 }
 
+// The parallel-group dot collapses three sibling statuses into one. Running if
+// any are running; complete only when all three are complete.
+function ParallelGroupDot({ status }: { status: Status }) {
+  const base =
+    "absolute -left-[26px] top-3 inline-flex h-4 w-4 items-center justify-center rounded-full font-mono text-[10px] sm:-left-[34px]";
+  if (status === "running") {
+    return (
+      <span
+        aria-hidden
+        className={cn(base, "border border-[var(--brand)] bg-[var(--brand)] text-white")}
+      >
+        <Layers className="h-2.5 w-2.5" />
+      </span>
+    );
+  }
+  if (status === "complete") {
+    return (
+      <span
+        aria-hidden
+        className={cn(base, "border border-[var(--brand)] bg-[var(--brand)] text-white")}
+      >
+        <Check className="h-2.5 w-2.5" strokeWidth={3} />
+      </span>
+    );
+  }
+  return (
+    <span
+      aria-hidden
+      className={cn(base, "border border-border bg-background text-muted-foreground")}
+    >
+      2
+    </span>
+  );
+}
+
+function collapseStatuses(arr: Status[]): Status {
+  if (arr.some((s) => s === "error")) return "error";
+  if (arr.some((s) => s === "running")) return "running";
+  if (arr.every((s) => s === "complete")) return "complete";
+  return "pending";
+}
+
 function StatusLabel({ status }: { status: Status }) {
   const map: Record<Status, { text: string; className: string }> = {
-    pending: {
-      text: "Pending",
-      className: "text-muted-foreground",
-    },
-    running: {
-      text: "Running",
-      className: "text-[var(--brand)]",
-    },
+    pending: { text: "Pending", className: "text-muted-foreground" },
+    running: { text: "Running", className: "text-[var(--brand)]" },
     complete: {
       text: "Complete",
       className: "text-emerald-700 dark:text-emerald-400",
     },
-    error: {
-      text: "Error",
-      className: "text-red-700 dark:text-red-400",
-    },
-    skipped: {
-      text: "Phase 4",
-      className: "text-muted-foreground",
-    },
+    error: { text: "Error", className: "text-red-700 dark:text-red-400" },
   };
   const { text, className } = map[status];
   return (
@@ -565,4 +713,3 @@ function StatusLabel({ status }: { status: Status }) {
     </span>
   );
 }
-

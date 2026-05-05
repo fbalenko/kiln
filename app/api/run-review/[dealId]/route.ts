@@ -1,23 +1,25 @@
 import { NextRequest } from "next/server";
 import { randomUUID } from "node:crypto";
-import { runPricingAgent } from "@/lib/agents/pricing-agent";
+import { runOrchestrator, type ParentName } from "@/lib/agents/orchestrator";
 import { getDb } from "@/lib/db/client";
 import { getDealById } from "@/lib/db/queries";
-import type { PricingOutput } from "@/lib/agents/schemas";
 
-// SSE endpoint for the Phase 3 single-agent review.
+// SSE endpoint for the full Phase 4 orchestrator pipeline.
 //
-// Stream contract (docs/03-agents.md §Streaming contract):
-//   step_start | step_progress | step_complete | synthesis | error
+// Stream contract (docs/03-agents.md §Streaming contract, extended in Phase 4
+// for multi-agent coordination):
+//   step_start    — orchestrator marking a top-level step as begun
+//   step_complete — orchestrator marking a top-level step as done
+//   substep       — { parent, id, label, status } substep events from the
+//                    orchestrator OR any of the 5 sub-agents (parent names
+//                    them: "Pricing Agent", "Orchestrator", etc.)
+//   step_progress — agent-specific structured-output reveal slices (kept
+//                    for the post-completion field-by-field reveal of each
+//                    agent's payload)
+//   synthesis     — final 4-sentence executive overview + review_id
+//   error         — agent failed mid-stream
 //
-// Phase 3 emits exactly one real agent step (Pricing) plus a token "Gather
-// context" step for visual continuity. Phase 4 will fan this out to all five
-// sub-agents through the orchestrator.
-//
-// Partial-output reveal: the Pricing Agent returns the entire JSON in one shot
-// (we ask the model for a single object, not a stream of fields). We synthesize
-// the field-by-field reveal here so the UI's <ReasoningStream> sees the same
-// shape it will see from the future real-streaming orchestrator.
+// The orchestrator itself owns the cache. ?live=1 → forceRefresh: true.
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -29,19 +31,28 @@ interface RouteParams {
 const FIELD_REVEAL_INTERVAL_MS = 140;
 
 type StreamEvent =
-  | { type: "step_start"; step: string; agent: string | null; ts: number }
-  | { type: "step_progress"; step: string; partial_output: unknown; ts: number }
-  | { type: "step_complete"; step: string; output: unknown; ts: number }
+  | { type: "step_start"; step: ParentName; ts: number }
+  | { type: "step_progress"; step: ParentName; partial_output: unknown; ts: number }
+  | { type: "step_complete"; step: ParentName; output: unknown; ts: number }
   | {
       type: "substep";
-      parent: string;
+      parent: ParentName;
       id: string;
       label: string;
       status: "running" | "complete";
       ts: number;
     }
   | { type: "synthesis"; summary: string; review_id: string; ts: number }
-  | { type: "error"; step: string; message: string; ts: number };
+  | { type: "error"; step: ParentName; message: string; ts: number };
+
+const AGENT_STEPS: ParentName[] = [
+  "Orchestrator",
+  "Pricing Agent",
+  "ASC 606 Agent",
+  "Redline Agent",
+  "Approval Agent",
+  "Comms Agent",
+];
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
   const { dealId } = await params;
@@ -57,11 +68,6 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      // React 19 strict mode (and short-lived SSE clients like our Puppeteer
-      // smoke test) can disconnect mid-stream while we're still sleeping
-      // between field-reveal slices. After that, controller.enqueue throws
-      // ERR_INVALID_STATE — swallow it instead of letting the catch block
-      // try to emit a downstream `error` event on the same dead controller.
       let closed = false;
       const send = (e: StreamEvent) => {
         if (closed) return;
@@ -74,47 +80,40 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       const sleep = (ms: number) =>
         new Promise<void>((res) => setTimeout(res, ms));
 
+      // Track which agent steps we've opened so we know which ones to mark
+      // complete when their first substep completes / their last substep
+      // closes. The orchestrator emits substeps with `parent`; we lift the
+      // first running substep for a given parent into a step_start event,
+      // and the last "complete" substep into a step_complete carrying the
+      // full agent output (set after the orchestrator returns).
+      const opened = new Set<ParentName>();
+      const lastSubstepStatusByParent = new Map<
+        ParentName,
+        { id: string; status: "running" | "complete" }
+      >();
+
       try {
-        // ---- Step 1: Gather context (synthetic, instant) ----
-        const ctxLabel = "Gather context";
-        send({
-          type: "step_start",
-          step: ctxLabel,
-          agent: null,
-          ts: Date.now(),
-        });
-        // Tiny breath so the UI gets a paint between start and complete.
-        await sleep(120);
-        send({
-          type: "step_complete",
-          step: ctxLabel,
-          output: {
-            deal_id: deal.id,
-            customer: deal.customer.name,
-            segment: deal.customer.segment,
-            similar_deals_loaded: 0,
-            customer_signals_loaded: 0,
-            note: "Vector search + Exa land in Phase 5. Phase 3 runs the Pricing Agent against guardrails only.",
-          },
-          ts: Date.now(),
-        });
+        const orchestratorStart = Date.now();
 
-        // ---- Step 2: Pricing Agent ----
-        const pricingLabel = "Pricing Agent";
-        const pricingStart = Date.now();
-        send({
-          type: "step_start",
-          step: pricingLabel,
-          agent: "pricing",
-          ts: pricingStart,
-        });
-
-        const result = await runPricingAgent(dealId, {
+        const result = await runOrchestrator(dealId, {
           forceRefresh,
           onSubstep: (e) => {
+            // Lazily open the parent's step the first time we see it.
+            if (!opened.has(e.parent)) {
+              opened.add(e.parent);
+              send({
+                type: "step_start",
+                step: e.parent,
+                ts: Date.now(),
+              });
+            }
+            lastSubstepStatusByParent.set(e.parent, {
+              id: e.id,
+              status: e.status,
+            });
             send({
               type: "substep",
-              parent: pricingLabel,
+              parent: e.parent,
               id: e.id,
               label: e.label,
               status: e.status,
@@ -123,55 +122,67 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
           },
         });
 
-        // Field-by-field reveal of the structured output. Spec: progressive
-        // partials, NOT raw token streaming. Order chosen to mirror how a
-        // human pricing analyst would talk through the deal — headline numbers
-        // first, then guardrails, then alternatives, then context.
-        await emitFieldReveal(send, pricingLabel, result.output);
+        // After the orchestrator returns, fire field-by-field reveal of each
+        // sub-agent's structured output, then a step_complete event carrying
+        // the full payload + per-agent metadata.
+        const meta = result.metadata.per_agent;
+        await emitAgentReveal(send, "Pricing Agent", result.outputs.pricing, meta.pricing);
+        await emitAgentReveal(send, "ASC 606 Agent", result.outputs.asc606, meta.asc606);
+        await emitAgentReveal(send, "Redline Agent", result.outputs.redline, meta.redline);
+        await emitAgentReveal(send, "Approval Agent", result.outputs.approval, meta.approval);
+        await emitAgentReveal(send, "Comms Agent", result.outputs.comms, meta.comms);
 
-        send({
-          type: "step_complete",
-          step: pricingLabel,
-          output: {
-            ...result.output,
-            _meta: {
-              from_cache: result.fromCache,
-              duration_ms: result.durationMs,
-              input_tokens: result.inputTokens,
-              output_tokens: result.outputTokens,
-            },
-          },
-          ts: Date.now(),
-        });
+        // Orchestrator step itself has no structured output — just its
+        // synthesis text. Send a step_complete so the UI flips its dot.
+        for (const stepName of AGENT_STEPS) {
+          if (opened.has(stepName)) {
+            // Pricing/ASC606/etc. were already step_completed inside
+            // emitAgentReveal. Orchestrator wasn't — handle it here.
+            if (stepName === "Orchestrator") {
+              send({
+                type: "step_complete",
+                step: stepName,
+                output: { synthesis: result.synthesis, metadata: result.metadata },
+                ts: Date.now(),
+              });
+            }
+          }
+        }
 
-        // ---- Persist review + audit log ----
+        // ---- Persist deal_review + audit_log ----
         const reviewId = `rev_${randomUUID()}`;
-        const totalRuntimeMs = Date.now() - pricingStart;
-        const totalTokens =
-          (result.inputTokens ?? 0) + (result.outputTokens ?? 0);
+        const totalRuntimeMs = Date.now() - orchestratorStart;
         persistReview({
           reviewId,
           dealId,
-          pricingOutput: result.output,
+          outputs: result.outputs,
+          synthesis: result.synthesis,
           totalRuntimeMs,
-          totalTokens,
+          totalTokens:
+            result.metadata.total_input_tokens +
+            result.metadata.total_output_tokens,
           fromCache: result.fromCache,
+          customerSignals: { source: "exa_stub", note: "Phase 5" },
+          similarDeals: [],
         });
 
-        // ---- Synthesis ----
+        // ---- Synthesis card ----
         send({
           type: "synthesis",
-          summary: result.output.reasoning_summary,
+          summary: result.synthesis,
           review_id: reviewId,
           ts: Date.now(),
         });
+
+        // Tiny tail to let the UI paint the synthesis transition.
+        await sleep(60);
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : "Unknown agent error";
-        console.error("[run-review] Pricing Agent failed:", err);
+          err instanceof Error ? err.message : "Unknown orchestrator error";
+        console.error("[run-review] Orchestrator failed:", err);
         send({
           type: "error",
-          step: "Pricing Agent",
+          step: "Orchestrator",
           message,
           ts: Date.now(),
         });
@@ -197,81 +208,106 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   });
 }
 
-async function emitFieldReveal(
+// Slice the agent's structured output into 2-3 progressively-populated
+// partials, then fire a final step_complete with the full payload + metadata.
+// The slicing is per-agent because each schema has different "headline" vs
+// "detail" sections.
+async function emitAgentReveal(
   send: (e: StreamEvent) => void,
-  step: string,
-  output: PricingOutput,
+  step: ParentName,
+  output: Record<string, unknown>,
+  meta: { duration_ms: number; input_tokens: number | null; output_tokens: number | null; cost_usd: number | null },
 ) {
   const sleep = (ms: number) =>
     new Promise<void>((res) => setTimeout(res, ms));
 
-  // Slice 1: headline pricing numbers.
+  // Two slices: headline keys (the fields the user wants to see first), then
+  // the rest. step_complete carries the full output + meta.
+  const headlineKeys = HEADLINE_KEYS[step] ?? Object.keys(output);
+  const headline: Record<string, unknown> = {};
+  for (const k of headlineKeys) {
+    if (k in output) headline[k] = output[k];
+  }
+
   send({
     type: "step_progress",
     step,
-    partial_output: {
-      list_price: output.list_price,
-      proposed_price: output.proposed_price,
-      effective_discount_pct: output.effective_discount_pct,
-      margin_pct_estimate: output.margin_pct_estimate,
-    },
+    partial_output: headline,
     ts: Date.now(),
   });
   await sleep(FIELD_REVEAL_INTERVAL_MS);
 
-  // Slice 2: + guardrail evaluations.
   send({
     type: "step_progress",
     step,
-    partial_output: {
-      list_price: output.list_price,
-      proposed_price: output.proposed_price,
-      effective_discount_pct: output.effective_discount_pct,
-      margin_pct_estimate: output.margin_pct_estimate,
-      guardrail_evaluations: output.guardrail_evaluations,
-    },
+    partial_output: output,
     ts: Date.now(),
   });
   await sleep(FIELD_REVEAL_INTERVAL_MS);
 
-  // Slice 3: + alternative structures.
   send({
-    type: "step_progress",
+    type: "step_complete",
     step,
-    partial_output: {
-      list_price: output.list_price,
-      proposed_price: output.proposed_price,
-      effective_discount_pct: output.effective_discount_pct,
-      margin_pct_estimate: output.margin_pct_estimate,
-      guardrail_evaluations: output.guardrail_evaluations,
-      alternative_structures: output.alternative_structures,
+    output: {
+      ...output,
+      _meta: {
+        from_cache: false,
+        duration_ms: meta.duration_ms,
+        input_tokens: meta.input_tokens,
+        output_tokens: meta.output_tokens,
+        cost_usd: meta.cost_usd,
+      },
     },
     ts: Date.now(),
   });
-  await sleep(FIELD_REVEAL_INTERVAL_MS);
-
-  // (step_complete carries the rest — confidence, references, summary.)
 }
+
+const HEADLINE_KEYS: Partial<Record<ParentName, string[]>> = {
+  "Pricing Agent": [
+    "list_price",
+    "proposed_price",
+    "effective_discount_pct",
+    "margin_pct_estimate",
+  ],
+  "ASC 606 Agent": [
+    "performance_obligations",
+    "contract_modification_risk",
+  ],
+  "Redline Agent": ["overall_redline_priority", "one_line_summary"],
+  "Approval Agent": ["one_line_summary", "expected_cycle_time_business_days"],
+  "Comms Agent": ["customer_email_draft"],
+};
 
 interface PersistArgs {
   reviewId: string;
   dealId: string;
-  pricingOutput: PricingOutput;
+  outputs: {
+    pricing: unknown;
+    asc606: unknown;
+    redline: unknown;
+    approval: unknown;
+    comms: unknown;
+  };
+  synthesis: string;
   totalRuntimeMs: number;
   totalTokens: number;
   fromCache: boolean;
+  customerSignals: unknown;
+  similarDeals: unknown;
 }
 
 function persistReview({
   reviewId,
   dealId,
-  pricingOutput,
+  outputs,
+  synthesis,
   totalRuntimeMs,
   totalTokens,
   fromCache,
+  customerSignals,
+  similarDeals,
 }: PersistArgs) {
   const db = getDb();
-  const PHASE3_PLACEHOLDER = "{}";
 
   const insertReview = db.prepare(`
     INSERT INTO deal_reviews (
@@ -307,31 +343,40 @@ function persistReview({
     insertReview.run({
       id: reviewId,
       deal_id: dealId,
-      ran_by: fromCache ? "cache" : "pricing-agent",
-      pricing_output_json: JSON.stringify(pricingOutput),
-      asc606_output_json: PHASE3_PLACEHOLDER,
-      redline_output_json: PHASE3_PLACEHOLDER,
-      approval_output_json: PHASE3_PLACEHOLDER,
-      comms_output_json: PHASE3_PLACEHOLDER,
-      similar_deals_json: "[]",
-      customer_signals_json: "{}",
-      synthesis_summary: pricingOutput.reasoning_summary,
+      ran_by: fromCache ? "cache" : "orchestrator",
+      pricing_output_json: JSON.stringify(outputs.pricing),
+      asc606_output_json: JSON.stringify(outputs.asc606),
+      redline_output_json: JSON.stringify(outputs.redline),
+      approval_output_json: JSON.stringify(outputs.approval),
+      comms_output_json: JSON.stringify(outputs.comms),
+      similar_deals_json: JSON.stringify(similarDeals),
+      customer_signals_json: JSON.stringify(customerSignals),
+      synthesis_summary: synthesis,
       total_runtime_ms: totalRuntimeMs,
       total_tokens_used: totalTokens || null,
     });
 
-    insertAudit.run({
-      id: `aud_${randomUUID()}`,
-      review_id: reviewId,
-      step_index: 1,
-      agent_name: "pricing",
-      step_label: "Pricing Agent",
-      input_json: JSON.stringify({ deal_id: dealId }),
-      output_json: JSON.stringify(pricingOutput),
-      reasoning_text: pricingOutput.reasoning_summary,
-      tools_called: JSON.stringify(["crm.get_deal", "crm.get_pricing_guardrails"]),
-      duration_ms: totalRuntimeMs,
-      tokens_used: totalTokens || null,
+    const agentNames = ["pricing", "asc606", "redline", "approval", "comms"] as const;
+    agentNames.forEach((name, i) => {
+      insertAudit.run({
+        id: `aud_${randomUUID()}`,
+        review_id: reviewId,
+        step_index: i + 1,
+        agent_name: name,
+        step_label: `${name[0].toUpperCase() + name.slice(1)} Agent`,
+        input_json: JSON.stringify({ deal_id: dealId }),
+        output_json: JSON.stringify(outputs[name]),
+        reasoning_text:
+          (outputs[name] as { reasoning_summary?: string })?.reasoning_summary ??
+          "",
+        tools_called: JSON.stringify([
+          "crm.get_deal",
+          ...(name === "pricing" ? ["crm.get_pricing_guardrails"] : []),
+          ...(name === "approval" ? ["crm.get_approval_matrix"] : []),
+        ]),
+        duration_ms: 0,
+        tokens_used: null,
+      });
     });
   });
 
