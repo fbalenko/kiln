@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "deal_id": "deal_northbeam_2026_renewal",
   "outputs": {
     "pricing": {
@@ -14,7 +14,7 @@
           "severity": "warn",
           "actual_value": 30,
           "threshold_value": 20,
-          "explanation": "The proposed 30% discount exceeds the mid-market soft ceiling of 20%. This is a yellow flag that the AE should be prepared to defend with utilization data and competitive evidence."
+          "explanation": "The proposed 30% discount exceeds the mid-market soft ceiling of 20%. This is a yellow flag — the AE should be prepared to justify why a retention concession of this magnitude is warranted versus alternatives."
         },
         {
           "rule_name": "Mid-market discount requires Finance sign-off",
@@ -22,7 +22,7 @@
           "severity": "block_without_approval",
           "actual_value": 30,
           "threshold_value": 30,
-          "explanation": "The proposed 30% discount sits exactly at the Finance sign-off threshold (<=30%). The deal technically passes the numeric gate but requires Finance approval before execution — it is not below the threshold by any margin."
+          "explanation": "The proposed discount is exactly at the 30% Finance approval threshold (operator is <=, so 30 = 30 passes). However, Finance sign-off is still required before this deal can be countersigned — do not proceed without that approval in hand."
         },
         {
           "rule_name": "Mid-market ramp length requires sign-off",
@@ -30,7 +30,7 @@
           "severity": "block_without_approval",
           "actual_value": 0,
           "threshold_value": 3,
-          "explanation": "No ramp schedule is present in this deal, so ramp length is treated as 0 months — well within the 3-month limit. No sign-off required on this dimension."
+          "explanation": "No ramp schedule is present in this deal (ramp_length_months = 0), so the ramp sign-off guardrail does not apply. This is clean."
         },
         {
           "rule_name": "Gross margin floor (warn)",
@@ -38,7 +38,7 @@
           "severity": "warn",
           "actual_value": 14.3,
           "threshold_value": 40,
-          "explanation": "Estimated gross margin at $280K is approximately 14.3% — dramatically below the 40% warn threshold. Under a 40%-margin-at-list assumption, COGS is $240K, leaving only ~$40K of gross profit on this deal."
+          "explanation": "Estimated gross margin of ~14.3% is well below the 40% warn floor. Under the 40%-at-list working assumption, COGS is $240K and the proposed price of $280K leaves only ~$40K of gross profit — a very thin cushion."
         },
         {
           "rule_name": "Gross margin absolute floor",
@@ -46,36 +46,36 @@
           "severity": "block_absolute",
           "actual_value": 14.3,
           "threshold_value": 25,
-          "explanation": "Estimated gross margin of 14.3% is below the absolute floor of 25%. This deal is structurally non-viable as proposed and must be reshaped before re-quoting — it cannot proceed without a material concession trade-off that improves the margin profile."
+          "explanation": "BLOCKER: Estimated margin of 14.3% falls below the 25% absolute floor. Deal cannot proceed as structured — concessions must be reshaped before re-quoting. The proposed price of $280K against an estimated COGS of $240K yields only ~$40K gross profit."
         }
       ],
       "alternative_structures": [
         {
-          "label": "Usage-Floor Commit with Overage Upside",
-          "description": "Reset the base commit to $310K (reflecting actual ~75% utilization of the original $400K list, signaling goodwill without going to 70%), but structure it as a hard usage floor with overage charged at the $0.0008/unit rate. Include a 12-month review clause: if Northbeam exceeds the floor by >20%, the base auto-steps to $340K at renewal. This trades a smaller one-time concession for structural upside as their origination volume recovers.",
-          "proposed_price": 310000,
-          "effective_discount_pct": 22.5,
-          "expected_acv_impact": 30000,
-          "margin_pct_estimate": 25.8,
-          "rationale": "Reduces discount from 30% to 22.5%, pushing margin back above the absolute 25% floor. The overage escalator aligns Clay's revenue to Northbeam's recovery — if mortgage volume rebounds they grow into higher spend organically, without requiring a renegotiation."
-        },
-        {
-          "label": "24-Month Term Lock at 25% Discount",
-          "description": "Offer a 25% discount ($300K/year) in exchange for a 24-month term commitment. Payment terms remain net-60 as a concession (no additional discount). Year 2 auto-escalates 5% to $315K. TCV = $615K. This gives Northbeam a lower annual number and certainty; Clay gains logo retention, double ARR predictability, and a ~$35K ACV improvement vs. the current proposal.",
-          "proposed_price": 300000,
-          "effective_discount_pct": 25,
-          "expected_acv_impact": 20000,
-          "margin_pct_estimate": 20,
-          "rationale": "The 24-month lock eliminates annual churn risk and gives the CSM a retention win to show. Year 2 escalator partially offsets Year 1 concession. Margin is still below 25% warn floor at $300K (margin ~20%) but ACV improvement vs. the current proposal reduces deal risk and is materially better than the proposed $280K — and Finance may accept this given the TCV improvement. Recommend pairing with a proactive adoption plan to justify the escalator."
-        },
-        {
-          "label": "Co-Marketing Credit in Lieu of Additional Discount",
-          "description": "Hold price at $320K (20% discount, at the warn threshold boundary) and offer a $20K co-marketing credit: Clay funds a joint case study, a fintech-sector webinar, and a Gartner Peer Insights incentive campaign spotlighting Northbeam as a flagship logo. Payment terms extended to net-60. This preserves margin while giving Northbeam visible ROI justification internally (their CRO can point to pipeline-generating marketing value, not just a vendor cost line).",
+          "label": "Right-Size Commit + 24-Month Lock-In",
+          "description": "Reset the annual commit to $320K (20% discount from list) in exchange for a 24-month term commitment. This acknowledges under-utilization without a full 30% haircut, and the extended term provides ACV durability. Retain the overage/usage-based upside above the new commit at $0.0008/unit. Keep net-60 payment terms as a concession to close.",
           "proposed_price": 320000,
           "effective_discount_pct": 20,
           "expected_acv_impact": 40000,
           "margin_pct_estimate": 25,
-          "rationale": "Holds the margin at exactly the 25% absolute floor while improving ACV by $40K vs. the current proposal. The $20K co-marketing spend is a below-the-line cost that doesn't hit the deal's margin calculation and can be funded from a marketing budget. Critically, this reframes the conversation from 'vendor discount' to 'strategic partnership' — important for a CRO who has publicly emphasized cost discipline and will want a story, not just a lower invoice."
+          "rationale": "Lands exactly at the absolute margin floor of 25%, satisfying the block_absolute guardrail. Swaps a pure price cut for a structural retention commitment — the customer gets cost relief and predictability; Clay gets two years of contracted revenue from a flagship logo. The 20% discount still requires Finance sign-off but avoids the block_absolute trigger."
+        },
+        {
+          "label": "Usage-Only Reset with Consumption Floor",
+          "description": "Convert the entire contract to a usage-based model with a $300K annual spend floor (25% discount) and an overage rate of $0.0008/unit. Include a built-in Year-2 escalator of 8% if consumption exceeds 80% of the floor in Year 1. This aligns pricing directly to Northbeam's realized value and eliminates the 'paying for unused credits' objection.",
+          "proposed_price": 300000,
+          "effective_discount_pct": 25,
+          "expected_acv_impact": 20000,
+          "margin_pct_estimate": 20,
+          "rationale": "Directly addresses the under-utilization complaint with a structure the customer can rationally defend internally ('we only pay for what we use'). The Year-2 escalator creates upside if Northbeam's mortgage volumes recover as rates ease. At $300K estimated margin is ~20% — still below the warn threshold but above the deepest churn scenario. Requires Finance approval on both the discount and the hybrid model conversion."
+        },
+        {
+          "label": "Discount-for-Value Exchange: Co-Marketing + Reduced Concession",
+          "description": "Hold the base renewal at $340K (15% discount) and offer a co-marketing credit of $20K in professional services (onboarding, feature adoption workshops targeting the 3 unadopted features) in lieu of additional cash discount. Pair with a public case study commitment and a named reference slot for the fintech vertical. Payment terms stay net-60.",
+          "proposed_price": 340000,
+          "effective_discount_pct": 15,
+          "expected_acv_impact": 60000,
+          "margin_pct_estimate": 29.4,
+          "rationale": "Protects margin above the 25% absolute floor while addressing root-cause churn risk (low feature adoption). The PS investment is a separate revenue line at potentially higher margin and directly drives product stickiness — reducing churn risk more effectively than a pure price cut. Co-marketing ROI from a flagship fintech logo offsets the PS cost. This is the strongest margin and retention story but requires the AE to reframe the negotiation from 'price' to 'value realization.'"
         }
       ],
       "ltv_estimate_under_usage_assumptions": null,
@@ -84,150 +84,149 @@
         "deal_coastline_2026q1_lost_procurement"
       ],
       "confidence": "medium",
-      "reasoning_summary": "The proposed 30% discount to $280K is the single most damaging element of this deal: under the working assumption that list price carries a 40% gross margin (COGS = $240K), the effective gross margin at $280K is only ~14.3% — well below the absolute 25% floor guardrail, which constitutes a hard block. Finance sign-off is also required since the discount sits exactly at the 30% mid-market ceiling. All three alternative structures are designed to push margin back to or above 25% while still offering Northbeam a credible concession narrative for their cost-discipline-focused CRO. The 40% margin-at-list assumption is a desk-level working figure and should be validated by the CFO before treating any of these margin estimates as binding."
+      "reasoning_summary": "The proposed 30% discount to $280K triggers the block_absolute gross margin guardrail — estimated margin is ~14.3%, well below the 25% floor — meaning this deal cannot proceed as structured. The discount also blows through the 20% mid-market soft ceiling (warn), though it sits exactly at the 30% Finance approval threshold and technically passes that specific operator check. All margin estimates are derived from a working assumption that list price carries a 40% gross margin (i.e., COGS = $240K); the CFO should validate actual COGS before treating the 14.3% figure as definitive. Given the customer's weak health score (42/100), a real competitive threat, and macro headwinds in mortgage origination, a pure price cut is the least defensible structure — the alternative structures above prioritize margin recovery, term commitment, and adoption-led retention."
     },
     "asc606": {
       "performance_obligations": [
         {
           "name": "Platform subscription (committed base)",
-          "description": "12-month subscription to the Northbeam platform at the renewed $280K commit level under a hybrid pricing model.",
+          "description": "Annual subscription to the Northbeam platform at a reduced $280K commit for the 12-month renewal term.",
           "is_distinct": true,
           "estimated_standalone_value": 280000,
           "expected_recognition_pattern": "ratable_over_term",
-          "rationale": "The subscription provides continuous access to the platform; the customer simultaneously receives and consumes benefits, so revenue is recognized ratably (ASC 606-10-25-27)."
+          "rationale": "Customer receives and consumes the benefit of the SaaS platform over the contract term; distinct under ASC 606-10-25-19."
         },
         {
-          "name": "Usage-based overage",
-          "description": "Per-unit overage billed at $0.0008 for usage above the committed base.",
+          "name": "Usage overage above commit",
+          "description": "Consumption-based charges at $0.0008/unit for usage exceeding the new $280K commit.",
           "is_distinct": true,
           "estimated_standalone_value": null,
           "expected_recognition_pattern": "usage_based",
-          "rationale": "Overage is a separately identifiable usage-based service. Per ASC 606-10-32-40 variable-consideration allocation exception, recognize as usage occurs."
+          "rationale": "Overage represents a separate stand-ready/usage right recognized as usage occurs under the series-of-distinct-services guidance and the variable consideration allocation exception (ASC 606-10-32-40)."
         }
       ],
       "variable_consideration_flags": [
         {
           "source": "usage_overage",
-          "treatment_required": "recognize_as_usage_occurs_per_606-10-32-40",
+          "treatment_required": "allocate_to_period_of_usage_exception",
           "estimation_difficulty": "medium",
-          "explanation": "Given customer only consumed 60% of prior commit, overage is unlikely but not impossible. Recognize when usage occurs; no need to estimate at inception under the variable-consideration allocation exception."
+          "explanation": "Overage at $0.0008/unit is variable. Given customer used only 60% of prior commit, overage is unlikely; recognize as incurred under the usage allocation exception rather than estimating upfront."
         },
         {
-          "source": "renewal_concession_discount",
+          "source": "commit_reduction_renewal",
           "treatment_required": "most_likely_amount",
           "estimation_difficulty": "low",
-          "explanation": "30% discount is fixed at signing on the committed base, but signals concession risk that could recur in future renewals."
-        },
-        {
-          "source": "payment_terms_net_60",
-          "treatment_required": "assess_significant_financing_component",
-          "estimation_difficulty": "low",
-          "explanation": "Net-60 terms on a 12-month deal generally fall under the one-year practical expedient (ASC 606-10-32-18); no financing component recognition expected, but document the assessment."
+          "explanation": "The 30% commit reduction is fixed in the renewal contract ($280K) and is not itself variable, but signals continued under-utilization risk for future renewals."
         }
       ],
       "contract_modification_risk": {
-        "is_at_risk": true,
-        "explanation": "Mid-term concession pattern + aggressive competitor pricing at 60% below incumbents creates real risk the customer returns mid-term seeking further reductions or restructure, which would be evaluated as a contract modification under ASC 606-10-25-10. No MFN or TFC clause is present, which limits but does not eliminate risk."
+        "is_at_risk": false,
+        "explanation": "This renewal is itself a new contract; no MFN, TFC, or expansion-pricing-lock clauses are present that would re-open the contract mid-term. Net-60 payment terms and overage shift do not create modification risk under ASC 606-10-25-10."
       },
       "recognized_revenue_schedule": [
         {
           "period": "Year 1 — Months 1-12",
           "amount": 280000,
-          "notes": "Ratable recognition of $280K committed base over 12-month term (~$23,333/month)."
+          "notes": "Ratable recognition of $280K committed subscription over 12-month term ($23,333/month)."
         },
         {
-          "period": "Year 1 — Overage",
+          "period": "Year 1 — Overage (as incurred)",
           "amount": 0,
-          "notes": "Overage recognized as incurred at $0.0008/unit; $0 estimated at inception given 60% historical utilization."
+          "notes": "Overage recognized only if/when usage exceeds commit; expected to be $0 given 60% historical utilization."
         }
       ],
       "red_flags": [
         {
           "severity": "warn",
-          "label": "Down-sell renewal at 30% discount",
-          "explanation": "30% price reduction with shift to usage-based overage and extended payment terms signals churn/concession risk; document business rationale and ensure standalone selling price (SSP) analysis still supports allocation."
+          "label": "Significant financing component risk (net-60)",
+          "explanation": "Extension to net-60 is generally below the one-year practical expedient threshold (ASC 606-10-32-18), so no financing component adjustment is required, but document the assessment."
         },
         {
           "severity": "warn",
-          "label": "Customer financial stress signals",
-          "explanation": "Health score 42, 8% layoffs, secondary raise below prior mark, and industry-wide softness raise collectibility considerations under ASC 606-10-25-1(e). Net-60 terms amplify exposure."
+          "label": "Material right / future concession precedent",
+          "explanation": "Granting a 30% renewal discount tied to under-utilization may create an implicit expectation of future concessions, potentially constituting a material right in subsequent renewals (ASC 606-10-55-42)."
         },
         {
           "severity": "info",
-          "label": "SSP recalibration",
-          "explanation": "Material discount off list ($400K → $280K) plus competitor pricing 60% below incumbents may pressure the company's SSP analysis for future allocations."
+          "label": "Customer credit risk",
+          "explanation": "Health score 42, recent layoffs, secondary down-round, and sector headwinds raise collectibility considerations under ASC 606-10-25-1(e); confirm collectibility threshold is met before contract inception."
         },
         {
           "severity": "info",
-          "label": "Practical expedient — financing component",
-          "explanation": "Net-60 on a 12-month contract is within the one-year practical expedient; document the conclusion."
+          "label": "Breakage / unused commit",
+          "explanation": "Historical 60% utilization suggests the new commit may again go partially unused; since commit is non-refundable and recognized ratably, no breakage estimate is needed, but disclose pattern."
         }
       ],
-      "confidence": "medium",
-      "reasoning_summary": "This is a straightforward 12-month hybrid renewal with a fixed committed base recognized ratably and usage-based overage recognized as consumed under the 606-10-32-40 allocation exception. Primary accounting concerns are collectibility (Step 1) given customer financial stress and net-60 terms, plus SSP/discount documentation given the 30% concession. Contract modification risk is elevated by competitor pressure even absent MFN/TFC clauses. This is an automated estimate; final determination requires CFO/auditor review."
+      "confidence": "high",
+      "reasoning_summary": "This is a straightforward 12-month renewal with a fixed $280K commit recognized ratably and a usage-based overage recognized as incurred under the allocation exception. Primary accounting considerations are the net-60 financing-component assessment and the precedent risk of a discount-driven concession that could be viewed as a material right in future renewals. Collectibility should be re-confirmed given customer health signals. This is an automated estimate; final determination requires CFO/auditor review."
     },
     "redline": {
       "flagged_clauses": [
         {
           "clause_type": "commit_reduction",
-          "customer_proposed_language": "Customer requests a 30% reduction in committed spend from $400K to $280K ACV, citing that they only consumed 60% of their prior-year commit.",
+          "customer_proposed_language": "Customer requests a 30% reduction to the committed baseline from $400K to $280K ACV for the FY26 renewal term, citing only 60% consumption of prior-year commit.",
           "risk_level": "high",
-          "risk_explanation": "Accepting a 30% commit reduction on a flat renewal sets a permanent new baseline: next renewal negotiation starts at $280K, not $400K, compressing future expansion headroom by $120K ACV. More critically, rewarding under-utilization with a price cut without addressing root-cause adoption failure (3 of 5 features unadopted) signals to the customer that non-use is a legitimate lever to pull at every renewal cycle. If Northbeam's health score stays at 42, the churn risk does not materially improve at $280K.",
-          "suggested_counter": "Clay agrees to reset the committed tier to $320,000 ACV (a 20% reduction from list), contingent on Customer's written adoption plan — co-signed by Customer's CRO and Clay's CSM — committing to activation of at least two (2) currently unadopted paid features within ninety (90) days of the renewal effective date. If the adoption milestones are not met within ninety (90) days, the committed tier automatically steps back up to $360,000 ACV for the remaining term. The $280,000 price point shall not constitute a precedent for future renewal pricing.",
-          "fallback_position": "Accept $300K ACV (25% reduction from list) with a no-precedent clause and a mutual success plan requiring documented QBR check-ins at 30/60/90 days post-renewal. Do not go to $280K without the adoption milestone mechanic.",
-          "precedent_notes": "Clay has granted commit reductions on renewals with documented under-utilization before, but typically caps the concession at 20% and ties it to a co-signed success plan; a 30% unconditional reduction has not been approved at this ACV."
+          "risk_explanation": "Accepting a 30% commit reduction sets a permanent new floor: next renewal negotiation anchors to $280K, not $400K, making full recovery to prior ACV structurally unlikely. Combined with 40% under-utilization, the reduction rewards non-adoption rather than driving engagement — and the CSM has not tied the concession to any usage improvement commitment or success plan milestone, so churn risk persists at the lower price.",
+          "suggested_counter": "Clay agrees to reduce the committed ACV to $310,000 (22% reduction vs. list) conditioned on: (a) Customer completing an agreed joint Success Plan within 30 days of execution targeting activation of no fewer than three (3) currently unadopted paid features by Month 6; (b) a mid-term checkpoint at Month 6 in which, if utilization reaches 80% of new commit, Customer is entitled to request a one-time overage credit of up to 5% of ACV; and (c) the renewal baseline for FY27 reverting to no less than $340,000 absent mutual written agreement. The 30% reduction to $280K is not acceptable as a unilateral concession without binding utilization commitments.",
+          "fallback_position": "Accept $280K commit only if Customer executes a binding Success Plan with named internal champions, a 6-month utilization checkpoint at 75% of new commit, and a contractual FY27 floor of $310K (i.e., no further reduction without cause). Do not accept $280K flat with no strings attached.",
+          "precedent_notes": "Clay has offered commit reductions on renewals before in documented at-risk situations, but typically capped at 20% and tied to a co-signed success plan; a 30% unconditioned reduction is outside prior precedent."
         },
         {
           "clause_type": "usage_based_overage",
-          "customer_proposed_language": "Customer requests that any usage above the new $280K commit be billed at a pure usage-based overage rate ($0.0008 per unit) rather than the prior hybrid structure, effectively removing any minimum overage commitment.",
+          "customer_proposed_language": "Customer requests that any consumption above the new $280K commit be billed at a pure usage-based rate ($0.0008/unit) rather than the prior hybrid model, with no minimum overage floor.",
           "risk_level": "medium",
-          "risk_explanation": "Shifting overage to pure usage-based pricing at $0.0008/unit eliminates any overage floor, which is acceptable if utilization stays low — but creates a ceiling problem if Northbeam recovers and usage spikes: they get unlimited burst at a rate Clay set under distressed conditions. If mortgage origination volume recovers (rates drop), Northbeam could generate significant overage at a below-market rate Clay cannot renegotiate until the next renewal. The rate should be indexed or subject to a rate-review clause.",
-          "suggested_counter": "Overage above the committed tier shall be billed at $0.0010 per unit (the standard overage rate), subject to a volume discount schedule mutually agreed in writing if Customer's monthly overage exceeds 20% of the committed tier for two (2) consecutive months. The overage rate shall be subject to standard annual price adjustment of up to 5% per contract year.",
-          "fallback_position": "Accept $0.0008/unit overage rate but cap total overage volume eligible at that rate to 25% above the committed tier; usage beyond that cap reverts to list overage pricing ($0.0010/unit). Include annual 5% rate escalation.",
-          "precedent_notes": null
+          "risk_explanation": "Switching to pure usage-based overage removes Clay's ability to capture predictable upside if Northbeam's origination volume recovers — the customer gets optionality on growth while Clay bears the downside of commit reduction. At $0.0008/unit with no floor, a customer in a macro-recovery environment could generate meaningful overage without any commitment, effectively giving them a free call option on expanded usage.",
+          "suggested_counter": "Overage above the committed baseline shall be billed at $0.0008 per unit; however, (a) overage is calculated on a quarterly basis with a minimum quarterly overage charge of $5,000 once overage threshold is crossed, and (b) if cumulative overage in any rolling 90-day period exceeds 25% of the quarterly committed baseline, Customer and Clay shall negotiate in good faith a revised commit tier within 30 days. Usage-based overage pricing shall not be used as the basis for any future renewal pricing benchmark.",
+          "fallback_position": "Accept usage-based overage at $0.0008/unit with no quarterly floor, but include explicit contract language stating that overage pricing is not precedent-setting for future committed tiers and may not be cited as a comparable in future renewal negotiations.",
+          "precedent_notes": "Hybrid-to-usage-based overage switches have been accepted in at-risk renewals; the precedent risk is the absence of a floor, which Clay has previously required."
         },
         {
           "clause_type": "payment_terms",
-          "customer_proposed_language": "Customer requests extension of payment terms from net-30 to net-60, citing internal cash management constraints.",
+          "customer_proposed_language": "Customer requests extension of payment terms from net-30 to net-60, citing cash flow constraints consistent with their cost-discipline posture.",
           "risk_level": "medium",
-          "risk_explanation": "Net-60 on a $280K ACV deal extends Clay's DSO by ~30 days, tying up approximately $23K in additional working capital per invoice cycle. More concerning given customer signals: Northbeam is on a runway-extension secondary (valued below prior Series C mark), has laid off 8% of staff, and its CRO is publicly flagging 'cost discipline.' Net-60 terms in this context carry elevated late-payment and default risk that net-30 partially mitigates by surfacing cash stress earlier.",
-          "suggested_counter": "Payment terms shall be net-45 (not net-60). Annual recurring fees shall be invoiced annually in advance. Customer shall provide a valid ACH or credit card authorization on file as a backup payment method. In the event any invoice is not paid within fifteen (15) days of the due date, Clay reserves the right to revert to net-30 terms for all subsequent invoices during the term.",
-          "fallback_position": "Accept net-60 only if Customer agrees to pay annually in advance (not quarterly), reducing Clay's exposure to a single annual invoice rather than four net-60 quarterly invoices. Alternatively, accept net-60 with a 1.5% per-month late fee beginning on day 61.",
-          "precedent_notes": "Clay has granted net-45 to mid-market fintech customers with health scores below 50 in prior renewals; net-60 has been granted only to enterprise customers ($1M+ ACV) with investment-grade credit profiles."
+          "risk_explanation": "Net-60 on a $280K ACV deal represents ~$23K in float per invoice cycle — manageable in isolation, but the customer's signals (down-round secondary, 8% RIF, declining origination volume) elevate counterparty credit risk. If Northbeam's runway deteriorates, net-60 increases Clay's exposure window for collection on each invoice by 30 days. Combined with the commit reduction, this is a cash-flow double-compression.",
+          "suggested_counter": "Clay agrees to net-45 payment terms (not net-60) on invoices issued after execution, provided Customer pays the first invoice (prorated to cover Month 1–3) within net-30 of the execution date as a good-faith payment. Annual invoicing (full year upfront) at a net-30 term shall be offered as an alternative in exchange for an additional 2% discount, which may be applied against the agreed ACV.",
+          "fallback_position": "Accept net-60 only if the full annual invoice is issued upfront (i.e., one invoice for $280K due within 60 days of execution), eliminating quarterly billing risk. Do not accept net-60 on a quarterly billing cadence.",
+          "precedent_notes": "Net-45 has been accepted as a compromise for at-risk mid-market renewals; net-60 on quarterly billing for a customer showing credit stress signals is outside standard Clay policy."
         }
       ],
-      "standard_clauses_affirmed": [],
+      "standard_clauses_affirmed": [
+        "Warranty: no non-standard warranty language surfaced; assumed standard 90-day SLA applies",
+        "Indemnification: no customer-proposed changes noted; mutual standard assumed",
+        "Data residency: no non-standard data residency clause surfaced; US-standard assumed",
+        "Term length: 12-month renewal term is standard"
+      ],
       "overall_redline_priority": "high",
-      "one_line_summary": "We can retain Northbeam, but we must hold the commit reduction to $300–320K (not $280K), tie the concession to a signed adoption plan, set a floor or escalator on the overage rate, and counter net-60 with net-45 or an annual-in-advance structure given their runway risk.",
+      "one_line_summary": "We can retain Northbeam, but the 30% commit cut must be conditioned on a binding success plan and FY27 floor — and net-60 should be countered with net-45 or upfront annual billing given their deteriorating credit signals.",
       "confidence": "high",
-      "reasoning_summary": "All three requested concessions are individually negotiable but together represent a compounding revenue risk: a $120K ACV baseline reset, an uncapped low-rate overage structure, and extended payment terms with a customer showing clear financial stress signals (down-round secondary, layoffs, CRO publicly focused on cost discipline). The headline risk is that accepting all three unconditionally removes Clay's leverage at every future interaction and rewards under-utilization without correcting it. The recommended position grants meaningful relief ($300–320K commit, usage-based overage with guardrails, net-45) in exchange for adoption accountability and tighter payment mechanics — preserving the logo while protecting Clay's economics."
+      "reasoning_summary": "All three customer-requested clauses carry compounding risk: the commit reduction sets a dangerous precedent floor with no utilization accountability, the usage-based overage switch hands Northbeam a free growth option, and net-60 extends collection exposure precisely when the customer's financial health signals (down-round secondary, 8% RIF, declining origination volume, CRO cost-discipline posture) are at their weakest. The YC competitor threat is real but narrow — a W26 startup unlikely has Northbeam's enterprise compliance, audit trail, and fintech-grade SLA history, which is Clay's primary negotiating leverage. Recommended path is a conditioned $310K counter with success plan milestones, net-45 or upfront billing, and a contractual FY27 floor to prevent further anchor erosion."
     },
     "approval": {
       "required_approvers": [
         {
           "role": "ae_manager",
           "rule_triggered": "Partnership / rev-share routes to CEO",
-          "rationale": "Default rule applies to all deals; AE Manager is the floor-level approver for any deal submission."
+          "rationale": "Default approval required for all deals; AE Manager (Marcus Reilly) is the first step in the approval chain."
         },
         {
           "role": "cfo",
           "rule_triggered": "Discount over 25% routes to CFO",
-          "rationale": "Proposed 30% discount exceeds the 25% threshold and triggers CFO sign-off; Pricing Agent confirms discount sits exactly at mid-market ceiling requiring Finance approval."
+          "rationale": "Proposed discount of 30% exceeds the 25% threshold, triggering mandatory CFO review; Pricing Agent confirms this sits exactly at the Finance approval threshold (30% = 30% operator check) but notes block_absolute margin guardrail (14.3% margin vs. 25% floor) means the deal structure itself cannot proceed without redesign."
         },
         {
           "role": "finance",
           "rule_triggered": "Non-standard payment terms route to Finance",
-          "rationale": "Net-60 payment terms (vs. standard net-30) shift cash timing and DSO; Redline Agent flagged elevated collectibility risk given customer's financial stress signals and runway-extension secondary."
+          "rationale": "Customer requested extension from net-30 to net-60, which is explicitly flagged in the non_standard_clauses and requires Finance review for cash-flow and collectibility impact given Northbeam's weak health score (42/100)."
         },
         {
           "role": "rev_ops",
           "rule_triggered": "ACV $100K–$500K requires RevOps",
-          "rationale": "Deal ACV of $280K falls within $100K–$500K band, triggering mandatory RevOps review for structure consistency and renewal baseline risk."
+          "rationale": "Deal ACV of $280K falls within the $100K–$500K band, requiring RevOps eye on structure consistency and renewal baseline anchoring risk."
         },
         {
           "role": "legal",
-          "rule_triggered": "MFN clause requires Legal",
-          "rationale": "Non-standard clauses include 'commit_reduction_30pct' and 'switch_to_usage_based_for_overage'; Redline Agent flagged 'commit_reduction' as high-risk precedent-setting language requiring legal review of no-precedent carve-outs."
+          "rule_triggered": "Redline priority 'high' and non-standard clauses flagged",
+          "rationale": "Redline Agent flagged three high/medium-risk clauses (commit_reduction_30pct, switch_to_usage_based_for_overage, payment_terms_net_60) with overall_redline_priority='high'; commit_reduction and payment_terms are explicitly present in non_standard_clauses, requiring Legal review of precedent risk and contract modification language."
         }
       ],
       "approval_chain": [
@@ -239,56 +238,57 @@
         },
         {
           "step": 2,
-          "approver_role": "cfo",
+          "approver_role": "rev_ops",
           "parallel_with": [
             "finance",
-            "legal",
-            "rev_ops"
+            "cfo",
+            "legal"
           ],
-          "can_veto": true
+          "can_veto": false
         },
         {
           "step": 2,
           "approver_role": "finance",
           "parallel_with": [
+            "rev_ops",
             "cfo",
-            "legal",
-            "rev_ops"
+            "legal"
           ],
           "can_veto": false
         },
         {
           "step": 2,
-          "approver_role": "legal",
+          "approver_role": "cfo",
           "parallel_with": [
-            "cfo",
+            "rev_ops",
             "finance",
-            "rev_ops"
+            "legal"
           ],
           "can_veto": true
         },
         {
           "step": 2,
-          "approver_role": "rev_ops",
+          "approver_role": "legal",
           "parallel_with": [
-            "cfo",
+            "rev_ops",
             "finance",
-            "legal"
+            "cfo"
           ],
-          "can_veto": false
+          "can_veto": true
         }
       ],
       "expected_cycle_time_business_days": 5,
       "blockers_to_address_first": [
-        "Pricing Agent flags gross margin of 14.3% is below absolute 25% floor (hard block). Deal as proposed is structurally non-viable; must reshape to 20%+ margin using Pricing Agent's alternative structures (e.g., $310K usage-floor commit, $300K 24-month lock, or $320K co-marketing trade).",
-        "Redline Agent rejects unconditional 30% commit reduction as precedent-setting. Counter-proposal must hold commit to $300K–$320K ACV tied to signed adoption plan (co-signed by Northbeam CRO + Clay CSM) or escalation mechanic (e.g., auto-step to $360K if adoption milestones missed).",
-        "Overage rate structure requires guardrail: cannot accept pure $0.0008/unit uncapped overage in distressed conditions. Must include annual 5% escalation, volume cap at 25% above commit, or rate-review trigger if monthly overage exceeds 20% of committed tier for 2+ consecutive months.",
-        "Net-60 payment terms flagged as high collectibility risk given Northbeam's health score (42/100), 8% staff reductions, Series C secondary below prior mark, and CRO cost-discipline focus. Redline Agent recommends counter to net-45 with annual-in-advance invoicing or 1.5% late-payment penalty. If net-60 accepted, require documented collectibility assessment by CFO before execution.",
-        "ASC 606 red flags require CFO/auditor review: contract modification risk elevated by competitive pressure; must document business rationale for 30% concession and perform SSP analysis validation given material discount off $400K list."
+        "CRITICAL: Pricing Agent block_absolute guardrail — proposed 30% discount yields ~14.3% gross margin, well below 25% absolute floor. Deal structure cannot proceed as quoted. AE must select one of Pricing Agent's alternative structures (Right-Size Commit to $320K at 20% discount + 24-month lock, Usage-Only Reset at $300K with consumption floor, or Value-Exchange at $340K + $20K PS investment) before submitting for approval.",
+        "CRITICAL: Redline Agent flagged commit_reduction_30pct as 'high risk' without binding success-plan milestones or FY27 floor. Legal must not approve $280K baseline as a unilateral concession — Redline Agent's suggested counter is $310K conditioned on Success Plan, 6-month checkpoint, and FY27 floor of $340K. Fallback is $280K only with Success Plan + 75% utilization checkpoint + FY27 floor of $310K.",
+        "CRITICAL: Payment terms net-60 on declining-health customer ($280K reduced ACV, 8% RIF, down-round secondary, declining mortgage volumes). Redline Agent recommends net-45 or upfront annual billing instead. Finance must confirm collectibility assessment and approve net-60 only if deal structure moves to upfront annual invoicing.",
+        "CRITICAL: Northbeam health score is 42/100 with material downside signals (declining origination volume, workforce reduction, secondary down-round). ASC 606 Agent flagged collectibility consideration (info severity); CFO must confirm that collectibility threshold is met before contract inception, particularly given the extended net-60 terms and reduced ACV.",
+        "HIGH: Redline Agent precedent warning — 30% unilateral commit reduction without utilization accountability rewards non-adoption and sets a dangerous anchor for FY27 renewal. Legal must enforce success-plan conditioning and explicit FY27 floor language to prevent further erosion.",
+        "MEDIUM: Usage-based overage switch ($0.0008/unit with no minimum floor) removes predictable upside and hands customer a free call option on growth. Redline Agent recommends minimum quarterly overage floor ($5K) and explicit language that overage is not precedent-setting for future committed tiers. Legal must negotiate this carve-out."
       ],
-      "one_line_summary": "AE Manager → CFO + Finance + Legal + RevOps (parallel, 5 business days). Deal is currently blocked on gross margin (14.3% vs. 25% floor), overage rate guardrails, and precedent-setting commit reduction language; must reshape pricing using Pricing Agent's $310K–$320K alternatives, tie concessions to adoption milestones or escalators, and counter net-60 terms with net-45 + annual invoicing or late-payment penalties before Legal and Finance will clear.",
+      "one_line_summary": "This deal cannot proceed as structured due to a block_absolute margin guardrail (14.3% vs. 25% floor); AE must restructure via Pricing Agent's alternatives before routing to approvals. If restructured, the chain is AE Manager → RevOps + Finance + CFO + Legal (parallel) over ~5 business days, conditional on Legal enforcement of success-plan milestones, FY27 floor, net-45 or upfront billing, and collectibility confirmation given Northbeam's deteriorating health (42/100 score, 8% RIF, down-round secondary, macro headwinds).",
       "confidence": "high",
-      "reasoning_summary": "All five triggered rules map to standard approver roles; the approval chain is the typical parallel-at-step-2 shape for mid-market deals with pricing + compliance + financial risk. The chain's confidence is high because every rule fired cleanly and the escalation follows canonical ordering. However, deal-approval confidence is low because Pricing Agent explicitly blocks the deal as proposed (14.3% margin vs. 25% floor), Redline Agent rejects the commit-reduction language as precedent-setting without adoption accountability, and ASC 606 flags elevated contract-modification risk given customer financial stress. The AE must materially reshape the deal (use Pricing Agent's alternative structures, add Redline-recommended adoption milestones/escalators, and re-negotiate payment terms) before the approval chain can proceed; without those blockers addressed, CFO and Legal will veto at step 2."
+      "reasoning_summary": "The deal is mechanically well-mapped to the approval matrix (five rules fire cleanly: discount >25%, ACV in $100K–$500K, non-standard payment terms, redline priority high, and default AE Manager step). However, the Pricing Agent's block_absolute guardrail is a hard stop — the proposed 30% discount to $280K yields only ~14.3% margin vs. the 25% floor, making this structure non-viable. The AE must choose one of three alternative structures before submission. If restructured (e.g., $310K–$320K with success-plan conditioning), the approval chain is standard (AE Manager → parallel Finance/CFO/RevOps/Legal over 5 days). Legal's role is elevated due to redline priority 'high' and three flagged clauses requiring conditioning: commit reduction must be tied to success plan and FY27 floor; usage-based overage needs a quarterly minimum and non-precedent language; net-60 should be countered to net-45 or upfront billing given Northbeam's material credit risk signals (health score 42, 8% RIF, down-round secondary, declining origination volumes in macro downturn)."
     },
     "comms": {
       "slack_post": {
@@ -298,7 +298,7 @@
             "type": "header",
             "text": {
               "type": "plain_text",
-              "text": "Deal Review: FY26 Renewal — Northbeam Mortgage",
+              "text": "Deal Review: FY26 Renewal — Commit Reduction Request · Northbeam Mortgage",
               "emoji": true
             }
           },
@@ -307,27 +307,27 @@
             "fields": [
               {
                 "type": "mrkdwn",
-                "text": "*ACV (Proposed)*\n$280,000"
+                "text": "*ACV*\n$280K (proposed) vs. $400K list"
               },
               {
                 "type": "mrkdwn",
-                "text": "*List Price*\n$400,000"
+                "text": "*Effective Discount*\n30% — exceeds mid-market soft ceiling (20%)"
               },
               {
                 "type": "mrkdwn",
-                "text": "*Effective Discount*\n30% (soft ceiling: 20%; hard ceiling: 30%)"
+                "text": "*Margin Estimate*\n~14.3% — BELOW 25% absolute floor (BLOCKER)"
               },
               {
                 "type": "mrkdwn",
-                "text": "*Gross Margin (Est.)*\n14.3% — below absolute floor of 25%"
+                "text": "*Term*\n12 months · Net-60 (non-standard)"
               },
               {
                 "type": "mrkdwn",
-                "text": "*Term*\n12 months · Net-60"
+                "text": "*Approval Chain*\nAE Manager → RevOps + Finance + CFO + Legal (parallel) · ~5 biz days"
               },
               {
                 "type": "mrkdwn",
-                "text": "*Approval Chain*\nAE Manager → CFO + Finance + Legal + RevOps (parallel, ~5 bus. days)"
+                "text": "*Close Date*\n2026-05-18"
               }
             ]
           },
@@ -338,7 +338,7 @@
             "type": "section",
             "text": {
               "type": "mrkdwn",
-              "text": "*What the deal team needs to know*\n\n• *Deal is hard-blocked as proposed.* Gross margin at $280K is 14.3% — well below the 25% absolute floor. The deal cannot proceed without repricing. Pricing Agent's preferred counter is a $310K usage-floor commit (22.5% discount, ~25.8% margin) or a $320K co-marketing trade (20% discount, 25% margin). Do not submit to approvers at the current price.\n\n• *All three customer requests compound the risk — none should be accepted unconditionally.* The 30% commit reduction sets a permanent lower baseline and rewards non-adoption (only 60% of commit used, 3 of 5 features untouched). The uncapped $0.0008/unit overage rate creates a ceiling problem if mortgage volumes recover. Net-60 is a material collectibility risk given Northbeam's health score (42/100), 8% layoffs, and a Series C secondary below prior mark. Redline recommends: hold commit to $300–320K tied to a co-signed adoption plan, add an overage rate escalator or volume cap, and counter net-60 with net-45 + annual-in-advance invoicing.\n\n• *External signals reinforce urgency but also caution.* Mortgage origination volume is down 14% YoY (three straight quarters), Northbeam's CRO has publicly flagged cost discipline, and a YC-backed competitor is pitching at 60% below incumbents. The logo is worth fighting for — but the concession must be structured to surface recovery upside (e.g., auto-escalator if utilization exceeds 120% of new floor) rather than locking in a distressed baseline with no upside for Clay."
+              "text": "*What the deal team needs to know*\n\n• *HARD STOP — deal cannot proceed as structured.* The proposed $280K / 30% discount yields ~14.3% gross margin, triggering the block_absolute guardrail (floor: 25%). AE must reprice before submission. Pricing Agent's recommended paths: Right-Size Commit to $320K + 24-month lock (25% margin, clears floor); Usage-Only Reset at $300K with consumption floor (~20% margin); or Value-Exchange at $340K + $20K PS investment (~29% margin). Best-margin path is the Value-Exchange.\n\n• *Commit reduction must be conditioned — not a unilateral concession.* Accepting $280K flat with no strings rewards non-adoption (customer used only 60% of prior commit, 3 of 5 features unadopted) and anchors FY27 to $280K. Redline Agent's counter: $310K conditioned on a binding Success Plan, 6-month utilization checkpoint at 75–80% of new commit, and a contractual FY27 floor of $310–340K. Legal must enforce this before countersigning.\n\n• *Net-60 payment terms carry elevated credit risk and require upfront billing or a counter to net-45.* Northbeam signals are deteriorating — 8% RIF (Mar 2026), down-round Series C secondary, declining origination volume for three straight quarters, and a health score of 42/100. Finance must confirm collectibility under ASC 606-10-25-1(e) and should require either upfront annual invoicing at net-60 or quarterly billing at net-45. Do not accept net-60 on quarterly billing."
             }
           },
           {
@@ -349,27 +349,23 @@
             "elements": [
               {
                 "type": "mrkdwn",
-                "text": "*AE:* Jamal Okafor · *Manager:* Marcus Reilly · *Segment:* Mid-Market · *Close Date:* May 18, 2026"
-              },
-              {
-                "type": "mrkdwn",
-                "text": "review filed by Kiln · agent-driven"
+                "text": "AE: Jamal Okafor · Manager: Marcus Reilly | review filed by Kiln · agent-driven"
               }
             ]
           }
         ],
-        "plaintext_fallback": "DEAL REVIEW: FY26 Renewal — Northbeam Mortgage | AE: Jamal Okafor\nProposed ACV: $280K (30% off $400K list) | Gross margin: 14.3% — HARD BLOCK (floor is 25%) | Net-60 payment terms.\nApproval chain: AE Manager → CFO + Finance + Legal + RevOps (parallel, ~5 business days) — but deal cannot be submitted until pricing is reshaped.\nTop issues: (1) Must reprice to $310–320K to clear margin floor; (2) Commit reduction must be tied to a co-signed adoption plan with escalator mechanic; (3) Counter net-60 with net-45 + annual-in-advance given customer financial stress (health score 42, layoffs, below-mark secondary).\nReview filed by Kiln · agent-driven."
+        "plaintext_fallback": "Deal Review: FY26 Renewal — Northbeam Mortgage | ACV: $280K (30% off $400K list) | Margin: ~14.3% — BELOW 25% absolute floor; deal cannot proceed as structured. AE must reprice (recommended path: $320K + 24-month lock or $340K + PS value exchange) before routing approvals. Commit reduction must be conditioned on a binding Success Plan and FY27 floor — no unilateral concession. Net-60 payment terms require Finance collectibility sign-off given Northbeam's deteriorating health (42/100, 8% RIF, down-round secondary). Approval chain: AE Manager → RevOps + Finance + CFO + Legal (parallel), ~5 business days. AE: Jamal Okafor."
       },
       "ae_email_draft": {
         "to": "Jamal Okafor",
-        "subject": "[Northbeam Renewal] Deal blocked — 3 things to fix before submission",
-        "body_markdown": "Jamal, the Northbeam renewal is currently **blocked** and cannot go to the approval chain as proposed — the 30% discount puts gross margin at ~14.3%, which is below our 25% absolute floor and is a hard stop.\n\nHere's what you need to address before resubmitting:\n\n1. **Reprice to $310K–$320K ACV.** The $280K number is a non-starter on margin. The Pricing team's preferred counter is $310K with a usage-floor commit + overage escalator, or $320K with a $20K co-marketing trade-off — both clear the margin floor. Do not go back to Northbeam at $280K.\n2. **Tie any commit reduction to a signed adoption plan.** Redline is flagging this as precedent-setting: 3 of 5 paid features are unused, and rewarding under-utilization without accountability kills our leverage at every future renewal. The counter must require a CRO-co-signed plan committing to activation of at least 2 features within 90 days, with an auto-step-up mechanism if milestones are missed.\n3. **Counter net-60 with net-45 + annual-in-advance invoicing.** Given Northbeam's health score (42), layoffs, and below-mark Series C secondary, Finance will not clear net-60 without a collectibility assessment on file. Offer net-45 with annual invoicing as the trade for accepting any payment term extension at all.\n\nOnce you reshape the deal, the approval chain is: **Marcus (AE Manager) → then CFO + Finance + Legal + RevOps in parallel** — budget 5 business days. CFO and Legal both hold veto rights, and they will use them on the current structure. Close date is May 18, so you need the reshaped deal in Marcus's queue by EOD May 7 at the absolute latest.",
+        "subject": "[Northbeam Mortgage] Pricing review complete — deal BLOCKED, 3 actions required before submission",
+        "body_markdown": "Jamal, the deal review is done and the $280K / 30% discount structure is a **hard block** — estimated gross margin comes in at ~14.3%, well below the 25% absolute floor, meaning this cannot go to approval as quoted.\n\nHere are the three things you need to do before this deal can move:\n\n1. **Reprice using one of the three Pricing Agent alternatives.** Best path is the Right-Size Commit at $320K (20% discount) with a 24-month lock-in — this lands exactly at the margin floor and gives you a retention story beyond a pure price cut. If the customer won't budge past $310K, that's the fallback *only* with a binding Success Plan, a 6-month utilization checkpoint (75% of new commit), and a contractual FY27 floor of $340K written in.\n2. **Counter net-60 with net-45 or upfront annual billing.** Northbeam had a down-round secondary, cut 8% of staff, and their CRO is on record hammering cost discipline — Finance will not approve net-60 on quarterly billing for this profile. Upfront annual invoice at net-30 is the cleanest path; net-45 is the compromise.\n3. **Get Legal's success-plan language drafted before you go back to the customer.** The commit reduction must be conditioned on named champions, feature adoption milestones (3 of 5 unadopted features active by Month 6), and the FY27 floor — do not let the CSM communicate an unconditional concession to Northbeam while this is in flight.\n\nOnce repriced and redlined, the approval chain is: **Marcus Reilly (AE Manager) → RevOps + Finance + CFO + Legal in parallel** — CFO and Legal both hold veto, and the expected cycle is ~5 business days. Your close date is May 18, so you have very little runway to waste on a structure that will get kicked back at step one.",
         "suggested_send_time": "within 4 business hours"
       },
       "customer_email_draft": {
         "to_role": "champion",
-        "subject": "Northbeam renewal — Clay's position on your three asks",
-        "body_markdown": "We understand the pressure you're navigating: three straight quarters of origination softness, a cost-discipline mandate from your CRO, and a competitor in the market with aggressive pricing. We want to keep this partnership intact and we've done real work internally to meet you meaningfully — here is where we land on each point.\n\nOn the commit level: we cannot go to $280K. At that price point the deal fails our internal margin floor and sets a baseline that works against both of us in future negotiations. Our counter is $310K–$320K ACV — a genuine 20–22.5% reduction from list — tied to a co-signed adoption plan committing to activation of at least two of the five currently unadopted paid features within 90 days; if those milestones are hit, the step-up mechanic does not trigger. This is the concession structure we can get through our CFO and Legal.\n\nOn overage pricing: we can keep the usage-based overage structure, but the rate needs to be $0.0010/unit (standard) with a volume discount available if your monthly overage exceeds 20% of the committed tier for two consecutive months; alternatively we can hold $0.0008/unit with a 25% cap above commit and a 5% annual escalator. A flat uncapped rate at $0.0008 set under today's conditions is not something we can lock in for 12 months without a guardrail.\n\nOn payment terms: we can move to net-45, and we'll pair that with annual invoicing upfront rather than quarterly — that structure actually gives your finance team a cleaner single line item for the year and removes the per-quarter cash drag. Net-60 with quarterly invoicing is not something Finance will approve given the current DSO exposure.\n\nThe no-precedent language will be explicit in the order form — this pricing does not establish a floor for future renewals. To keep the CRO's signature timeline on track, I'd like to get on a 30-minute call with you and your procurement lead by May 9th to align on the adoption plan structure so Legal can turn the redlined order form by May 12th. Can you confirm availability?",
+        "subject": "Northbeam FY26 Renewal — Clay's Position on Your Three Asks",
+        "body_markdown": "We understand the pressure you're facing: mortgage origination headwinds, a tighter cost environment, and a need to demonstrate spend discipline internally. We want to find a path that works for both sides and keeps this relationship intact for the long term.\n\nOn the commit reduction: we can't accept a flat 30% cut to $280K without any conditions — that structure doesn't hold up on our end financially, and frankly it doesn't address the root issue, which is that three of your five paid features are going unused. Our counter is a revised commit of $310K (a 22% reduction from list), conditioned on a joint Success Plan executed within 30 days of signing that targets activation of those three unadopted features by Month 6, and a contractual FY27 renewal floor of $340K to protect both sides from further anchor erosion.\n\nOn overage pricing: we're aligned on moving to usage-based billing above the commit at $0.0008/unit, with one modification — we need a minimum quarterly overage charge of $5K once the overage threshold is crossed, and explicit contract language confirming overage rates are not precedent-setting for future committed tiers.\n\nOn payment terms: we can meet you at net-45 rather than net-60; alternatively, if you invoice annually upfront, we'll hold net-30 and apply an additional 2% discount against the agreed ACV — that structure may also be easier for your team to defend internally as a cost-reduction win.\n\nThe YC competitor you're evaluating is early-stage and will have real gaps in fintech compliance, audit trail depth, and enterprise SLA coverage — we'd welcome a direct comparison conversation if that's useful before your CRO signs anything.\n\nYour CRO's timeline puts us at roughly May 18th; our internal approvals run about five business days once we have a signed term sheet, so we'd need alignment on these terms by May 12th to hit that window. Can we get 30 minutes this week to align on the Success Plan structure and close the gap on commit level?",
         "tone": "warm",
         "counter_positions_included": [
           "commit_reduction",
@@ -382,30 +378,30 @@
         "sections": [
           {
             "heading": "Headline",
-            "content_markdown": "Northbeam Mortgage (Series C fintech, $70M ARR est.) is requesting a 30% ACV reduction ($400K → $280K), a shift to pure usage-based overage, and net-60 payment terms at renewal. CSM recommends accepting all three to retain a flagship fintech logo facing an aggressive YC-backed competitor; deal-desk recommends a reshaped counter-proposal before any approval routing proceeds."
+            "content_markdown": "Northbeam Mortgage (flagship fintech logo, $400K prior ACV) is requesting a 30% commit reduction to $280K, a shift to usage-based overage, and net-60 payment terms on renewal. The deal as submitted **cannot proceed** — it triggers a block_absolute margin guardrail (14.3% estimated margin vs. 25% floor) and must be restructured before routing to approvals."
           },
           {
             "heading": "Pricing Summary",
-            "content_markdown": "| Item | Value |\n|---|---|\n| List Price | $400,000 |\n| Proposed Price | $280,000 |\n| Effective Discount | **30%** (mid-market soft ceiling: 20%; hard ceiling: 30%) |\n| Gross Margin @ $280K | **~14.3%** — below absolute floor of 25% (**hard block**) |\n| Payment Terms | Net-60 (standard: net-30) |\n\n**Alternative structures (all push margin ≥ 25%):**\n- **Option A — Usage-Floor Commit at $310K** (22.5% disc., ~25.8% margin): Hard floor + overage escalator if usage recovers >20% above floor. ✅ Clears margin floor.\n- **Option B — 24-Month Lock at $300K/yr** (25% disc., ~20% margin): Year 2 auto-steps to $315K; TCV = $615K. Eliminates churn risk but margin still slightly below floor — requires CFO discretion.\n- **Option C — $320K + $20K Co-Marketing Credit** (20% disc., ~25% margin): Holds margin at floor exactly; reframes concession as strategic partnership for cost-discipline-focused CRO. ✅ Recommended structure."
+            "content_markdown": "| Item | Value |\n|---|---|\n| List price | $400,000 |\n| Proposed price (as submitted) | $280,000 |\n| Effective discount | 30% |\n| Estimated gross margin | ~14.3% |\n| Margin floor (absolute) | 25% — **BLOCKED** |\n| Mid-market soft ceiling | 20% — **EXCEEDED** |\n\n**Alternative structures to unblock (select one before re-submitting):**\n- **Option A — Right-Size + 24-mo Lock:** $320K (20% discount), 24-month term, margin ~25%. Hits the floor exactly; preferred.\n- **Option B — Usage-Only Reset:** $300K floor (25% discount) + Year-2 escalator at 8% if >80% consumed, margin ~20%.\n- **Option C — Value Exchange:** $340K (15% discount) + $20K PS co-marketing credit targeting 3 unadopted features, margin ~29.4%. Strongest margin story.\n\nAll three alternatives still require Finance sign-off on discount."
           },
           {
             "heading": "Risk Findings",
-            "content_markdown": "**Redline (Overall Priority: HIGH)**\n- 🔴 **Commit reduction to $280K** permanently resets renewal baseline, rewards non-utilization without correcting 3/5 unadopted features, and sets a precedent Clay has never approved at this discount depth unconditionally. *Counter: hold to $300–$320K tied to a co-signed adoption plan (CRO + CSM); include auto-step-up to $360K if milestones missed in 90 days.*\n- 🟡 **Uncapped $0.0008/unit overage**: If mortgage volume recovers and usage spikes, Clay is locked into a below-market distressed rate. *Counter: $0.0010/unit standard rate, or cap eligible volume at 25% above commit with 5% annual escalation.*\n- 🟡 **Net-60 payment terms**: Customer is on a down-round secondary, has cut 8% of staff, and CRO publicly flagged cost discipline 8x on Q4 call — elevated default/late-pay risk. *Counter: net-45 + annual-in-advance invoicing, or net-60 with 1.5%/month late fee from day 61.*\n\n**ASC 606**\n- 🟡 **Collectibility concern (Step 1)**: Health score 42, layoffs, and below-mark secondary raise collectibility questions; net-60 amplifies exposure. CFO must document collectibility assessment before execution.\n- 🟡 **Contract modification risk elevated**: Competitor pricing 60% below incumbents creates real mid-term renegotiation risk even without MFN/TFC clause.\n- ℹ️ SSP recalibration may be needed given material discount off list; net-60 falls within 1-year practical expedient but must be documented.\n\n**Pricing Guardrails**\n- 🔴 **HARD BLOCK**: Gross margin 14.3% < 25% absolute floor — deal cannot proceed as proposed.\n- 🟡 Discount at exactly 30% mid-market ceiling — Finance sign-off mandatory regardless of reshape outcome."
+            "content_markdown": "**Redline — HIGH overall priority:**\n- **Commit reduction (High risk):** 30% unilateral cut with no utilization accountability sets a dangerous FY27 anchor at $280K. Counter: $310K conditioned on binding Success Plan, 6-month utilization checkpoint (75–80%), and contractual FY27 floor of $340K. Fallback: $280K only with Success Plan + FY27 floor of $310K.\n- **Usage-based overage (Medium risk):** No minimum floor hands Northbeam a free growth call option. Counter: $5K quarterly minimum overage floor + explicit non-precedent language for future renewal tiers.\n- **Net-60 payment terms (Medium risk):** $23K/invoice float on a customer showing material credit stress (8% RIF, down-round secondary, declining origination volumes). Counter: net-45, or accept net-60 only on upfront annual invoicing.\n\n**ASC 606 flags:**\n- **Net-60 financing component (Warn):** Below 1-year practical expedient threshold — no adjustment required, but assessment must be documented.\n- **Material right / concession precedent (Warn):** 30% utilization-linked discount may create implicit expectation of future concessions, potentially constituting a material right in subsequent renewals (ASC 606-10-55-42).\n- **Collectibility (Info):** Health score 42/100, recent layoffs, down-round secondary — CFO must confirm collectibility threshold is met before contract inception.\n- **Breakage (Info):** 60% historical utilization suggests partial commit underuse; no breakage estimate needed on non-refundable commit, but pattern should be disclosed.\n\n**Customer health signals (all negative):**\n- 8% workforce reduction (Mar 2026), focused on back-office and loan officers\n- Mortgage origination volume down 14% YoY for third consecutive quarter\n- Series C secondary closed below 2023 mark — effectively a down-round\n- CRO cited \"cost discipline\" 8x on Q4 investor call\n- Health score: 42/100; 3 of 5 paid features unadopted\n- YC W26 competitor pitching at ~60% below current pricing"
           },
           {
             "heading": "Approval Routing",
-            "content_markdown": "**Step 1 (Sequential):**\n- AE Manager: Marcus Reilly\n\n**Step 2 (Parallel — all four simultaneously):**\n| Approver | Trigger | Veto? |\n|---|---|---|\n| CFO | Discount ≥ 25% | ✅ Yes |\n| Finance | Non-standard payment terms (net-60) | No |\n| Legal | Non-standard clauses: commit reduction + usage-based overage (precedent risk) | ✅ Yes |\n| RevOps | ACV $100K–$500K band | No |\n\n**Estimated cycle time: 5 business days** — *contingent on blockers being resolved before submission; CFO and Legal will veto the deal as currently structured.*\n\n**Close date: May 18, 2026** — 9 business days from today (May 5). Cycle fits only if deal is reshaped and resubmitted immediately."
+            "content_markdown": "**Pre-condition (must complete before routing):** AE (Jamal Okafor) must select and re-quote using one of the three alternative structures above to clear the block_absolute margin guardrail.\n\n| Step | Approver | Role | Veto? |\n|---|---|---|---|\n| 1 | Marcus Reilly | AE Manager | No |\n| 2 (parallel) | RevOps | ACV $100K–$500K band | No |\n| 2 (parallel) | Finance | Non-standard payment terms + discount | No |\n| 2 (parallel) | CFO | Discount >25%, block_absolute margin, collectibility | **Yes** |\n| 2 (parallel) | Legal | Redline priority High, 3 flagged non-standard clauses | **Yes** |\n\n**Estimated cycle time:** ~5 business days after AE re-submits restructured deal.\n**Close date:** May 18, 2026 — 9 business days from today. Tight but executable if restructure is submitted by May 6."
           },
           {
             "heading": "Recommendation",
-            "content_markdown": "**🔴 HOLD — reshape required before routing.**\n\nDo not approve at $280K / net-60 / uncapped overage as proposed: the deal breaches the absolute gross margin floor (14.3% vs. 25%), sets a precedent-setting commit baseline without adoption accountability, and extends payment risk to a financially stressed customer. Counter with **Option C ($320K + co-marketing credit, net-45, adoption milestone mechanic)** or **Option A ($310K usage-floor commit with overage escalator)** — both clear the margin floor, give Northbeam a credible concession narrative for their cost-discipline CRO, and preserve Clay's renewal leverage. AE (Jamal Okafor) should reshape and resubmit by **May 6 EOD** to preserve the May 18 close window."
+            "content_markdown": "**HOLD — restructure required before approval routing.**\n\nThe deal as submitted is a hard block: 14.3% margin vs. 25% absolute floor. The recommended path is **Option A (Right-Size + 24-month Lock at $320K)**, conditioned on a binding Success Plan with feature-adoption milestones and a contractual FY27 floor — this retains a strategically important fintech logo, satisfies the margin floor, and converts a pure price cut into a structural retention commitment that reduces future anchor erosion risk."
           }
         ]
       },
       "reasoning_summary": "Calibrated customer email to warm tone given the deal context. AE email leads with verdict (ship-with-conditions (blockers must clear first)) and a numbered next-step list. One-pager and Slack post both headline the recommendation and surface 3 flagged redlines (3 countered in customer reply). Approval routing summary: ~5 business days through 5-step chain."
     }
   },
-  "synthesis": "Pricing blocks the deal as proposed: a 30% discount to $280K drives effective gross margin to ~14.3%, well below the 25% floor, so one of the alternative structures (commit at $300–320K with margin restored) is mandatory. ASC 606 treats this as a standard ratable + usage hybrid, but flags elevated collectibility and contract-modification risk given Northbeam's financial stress and net-60 terms, requiring SSP/discount documentation and CFO review. Redline rejects accepting all three concessions unconditionally — the $120K baseline reset, uncapped low-rate overage, and extended terms compound into a precedent-setting giveaway — and instead recommends $300–320K commit with usage guardrails, net-45, and adoption milestones. Approval routes ae_manager → cfo → finance → legal → rev_ops over ~5 business days, but CFO and Legal will veto at step 2 unless the pricing and redline blockers clear first, so the call is ship-with-conditions: re-scope to an alternative structure before pushing into the chain.",
+  "synthesis": "The proposed 30% discount to $280K breaches the block_absolute margin guardrail at ~14.3% vs. the 25% floor, making the deal non-viable as structured and forcing a counter in the $310K–$320K range. ASC 606 treatment is otherwise clean — ratable commit plus usage overage under the allocation exception — but net-60 raises a financing-component question and the discount creates material-right precedent risk for future renewals. All three redlined clauses (commit reduction, usage overage switch, net-60) compound risk against a customer with a 42 health score, 8% RIF, and a down-round secondary, so each must be conditioned with success-plan milestones, a quarterly minimum with non-precedent language, and net-45 or upfront billing. The approval chain maps cleanly through AE Manager → RevOps → Finance → CFO → Legal over five days, but cannot start until Pricing's hard stop is cleared. Recommendation: hold and re-scope to a conditioned $310K counter before routing.",
   "similar_deals": [
     {
       "deal_id": "deal_cantilever_2026_compliance",
@@ -453,7 +449,7 @@
       "name": "Northbeam Mortgage",
       "domain": "northbeammortgage.com"
     },
-    "fetched_at": "2026-05-05T16:29:43.692Z",
+    "fetched_at": "2026-05-05T17:21:20.969Z",
     "signals": [
       {
         "kind": "leadership",
@@ -503,6 +499,15 @@
     ],
     "note": null
   },
+  "slack_post_result": {
+    "status": "success",
+    "channel": "C0B154JFGKZ",
+    "thread_ts": "1778001772.651629",
+    "posted_at": "2026-05-05T17:22:52.747Z",
+    "permalink": "https://kiln-demo.slack.com/archives/C0B154JFGKZ/p1778001772651629",
+    "reason": null,
+    "error": null
+  },
   "timings": [
     {
       "id": "fetch_deal",
@@ -516,28 +521,28 @@
       "label": "Fetched deal: Northbeam Mortgage — FY26 Renewal — Commit Reduction Request",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 126
+      "elapsed_ms": 127
     },
     {
       "id": "step2_fanout",
       "label": "Fanning out: customer signals + similar past deals (parallel)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 126
+      "elapsed_ms": 128
     },
     {
       "id": "step2_signals",
       "label": "Querying Exa for Northbeam Mortgage signals (≤6mo)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 126
+      "elapsed_ms": 128
     },
     {
       "id": "step2_similar",
       "label": "Running k-NN over deal_embeddings (sqlite-vec)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 126
+      "elapsed_ms": 128
     },
     {
       "id": "step2_signals",
@@ -551,91 +556,91 @@
       "label": "Found 3 similar past deals (top: 65% match)",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 131
+      "elapsed_ms": 130
     },
     {
       "id": "step2_fanout",
       "label": "Step 2 complete (5 signals · 3 similar deals)",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 131
+      "elapsed_ms": 130
     },
     {
       "id": "step3_dispatch",
       "label": "Dispatching parallel review: Pricing + ASC 606 + Redline",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 131
+      "elapsed_ms": 130
     },
     {
       "id": "step3_await",
       "label": "Awaiting parallel review completion (0 of 3 returned)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 131
+      "elapsed_ms": 130
     },
     {
       "id": "fetch_deal",
       "label": "Fetching deal record from CRM",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 131
+      "elapsed_ms": 130
     },
     {
       "id": "fetch_deal",
       "label": "Fetched deal record from CRM",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 131
+      "elapsed_ms": 130
     },
     {
       "id": "load_guardrails",
       "label": "Loading active pricing guardrails for mid-market segment",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 131
+      "elapsed_ms": 130
     },
     {
       "id": "identify_obligations",
       "label": "Identifying performance obligations",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 131
+      "elapsed_ms": 130
     },
     {
       "id": "load_context",
       "label": "Loading deal context and customer signals",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 135
+      "elapsed_ms": 134
     },
     {
       "id": "load_context",
       "label": "Loaded deal context and customer signals",
       "status": "complete",
       "parent": "Redline Agent",
-      "elapsed_ms": 288
+      "elapsed_ms": 286
     },
     {
       "id": "scan_clauses",
       "label": "Scanning non-standard clauses",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 288
+      "elapsed_ms": 286
     },
     {
       "id": "load_guardrails",
       "label": "Loaded 5 guardrails for mid-market segment",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 332
+      "elapsed_ms": 331
     },
     {
       "id": "similar_deals",
       "label": "Identifying similar past deals via vector search",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 332
+      "elapsed_ms": 331
     },
     {
       "id": "similar_deals",
@@ -656,667 +661,681 @@
       "label": "Scanned non-standard clauses",
       "status": "complete",
       "parent": "Redline Agent",
-      "elapsed_ms": 3230
+      "elapsed_ms": 2754
     },
     {
       "id": "analyze_clauses",
       "label": "Analyzing flagged clauses (0)",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 3230
+      "elapsed_ms": 2754
     },
     {
       "id": "analyze_clauses",
       "label": "Analyzing flagged clauses (1)",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 3230
-    },
-    {
-      "id": "guardrail_eval",
-      "label": "Evaluating guardrails (0 of 5)",
-      "status": "running",
-      "parent": "Pricing Agent",
-      "elapsed_ms": 3713
+      "elapsed_ms": 2754
     },
     {
       "id": "identify_obligations",
       "label": "Identified performance obligations",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 4302
+      "elapsed_ms": 4069
     },
     {
       "id": "evaluate_distinctness",
       "label": "Evaluating distinctness (1)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 4302
+      "elapsed_ms": 4070
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (0 of 5)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 4186
     },
     {
       "id": "guardrail_eval",
       "label": "Evaluating guardrails (1 of 5)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 4570
+      "elapsed_ms": 4564
     },
     {
       "id": "guardrail_eval",
       "label": "Evaluating guardrails (2 of 5)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 6244
+      "elapsed_ms": 6089
     },
     {
       "id": "evaluate_distinctness",
       "label": "Evaluating distinctness (2)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 6636
-    },
-    {
-      "id": "guardrail_eval",
-      "label": "Evaluating guardrails (3 of 5)",
-      "status": "running",
-      "parent": "Pricing Agent",
-      "elapsed_ms": 7926
+      "elapsed_ms": 6759
     },
     {
       "id": "analyze_clauses",
       "label": "Analyzed 1 flagged clauses",
       "status": "complete",
       "parent": "Redline Agent",
-      "elapsed_ms": 8242
+      "elapsed_ms": 7330
     },
     {
       "id": "draft_counters",
       "label": "Drafting counter-positions for high-risk clauses",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 8242
+      "elapsed_ms": 7330
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (3 of 5)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 7993
     },
     {
       "id": "evaluate_distinctness",
       "label": "Evaluated 2 performance obligations",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 8738
+      "elapsed_ms": 8605
     },
     {
       "id": "analyze_variable_consideration",
       "label": "Analyzing variable consideration sources",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 8738
+      "elapsed_ms": 8605
     },
     {
       "id": "guardrail_eval",
       "label": "Evaluating guardrails (4 of 5)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 9652
+      "elapsed_ms": 9142
     },
     {
       "id": "guardrail_eval",
       "label": "Evaluating guardrails (5 of 5)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 11791
-    },
-    {
-      "id": "guardrail_eval",
-      "label": "Evaluated 5 guardrails",
-      "status": "complete",
-      "parent": "Pricing Agent",
-      "elapsed_ms": 13033
-    },
-    {
-      "id": "alternatives",
-      "label": "Generating alternative structures (0 of 3)",
-      "status": "running",
-      "parent": "Pricing Agent",
-      "elapsed_ms": 13033
+      "elapsed_ms": 11039
     },
     {
       "id": "draft_counters",
       "label": "Drafted counter-positions",
       "status": "complete",
       "parent": "Redline Agent",
-      "elapsed_ms": 13717
+      "elapsed_ms": 11925
     },
     {
       "id": "draft_fallbacks",
       "label": "Drafting fallback positions",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 13717
+      "elapsed_ms": 11926
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluated 5 guardrails",
+      "status": "complete",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 12264
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (0 of 3)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 12264
     },
     {
       "id": "analyze_variable_consideration",
       "label": "Analyzed variable consideration",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 14297
+      "elapsed_ms": 12421
     },
     {
       "id": "assess_modification_risk",
       "label": "Assessing contract modification risk",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 14297
+      "elapsed_ms": 12421
     },
     {
       "id": "assess_modification_risk",
       "label": "Assessed contract modification risk",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 16922
+      "elapsed_ms": 14690
     },
     {
       "id": "compute_recognition_schedule",
       "label": "Computing revenue recognition schedule",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 16922
+      "elapsed_ms": 14690
     },
     {
       "id": "compute_recognition_schedule",
       "label": "Computing recognition schedule (period 1)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 16922
-    },
-    {
-      "id": "alternatives",
-      "label": "Generating alternative structures (1 of 3)",
-      "status": "running",
-      "parent": "Pricing Agent",
-      "elapsed_ms": 17432
+      "elapsed_ms": 14690
     },
     {
       "id": "compute_recognition_schedule",
       "label": "Computing recognition schedule (period 2)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 18067
+      "elapsed_ms": 15654
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (1 of 3)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 16037
     },
     {
       "id": "compute_recognition_schedule",
       "label": "Computed recognition schedule (2 periods)",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 18969
+      "elapsed_ms": 16595
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (0)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 18969
+      "elapsed_ms": 16595
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (1)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 18969
+      "elapsed_ms": 16595
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (2)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 20768
-    },
-    {
-      "id": "alternatives",
-      "label": "Generating alternative structures (2 of 3)",
-      "status": "running",
-      "parent": "Pricing Agent",
-      "elapsed_ms": 23119
+      "elapsed_ms": 19142
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (3)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 23296
+      "elapsed_ms": 20024
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (2 of 3)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 21095
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (4)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 23810
+      "elapsed_ms": 21620
     },
     {
       "id": "flag_red_flags",
       "label": "Flagged 4 red flags",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 24961
+      "elapsed_ms": 23190
     },
     {
       "id": "finalizing",
       "label": "Finalizing recognition recommendation",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 28122
+      "elapsed_ms": 26101
     },
     {
       "id": "finalizing",
-      "label": "Finalized rev-rec analysis (medium confidence, 4 red flags)",
+      "label": "Finalized rev-rec analysis (high confidence, 4 red flags)",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 28244
+      "elapsed_ms": 26223
     },
     {
       "id": "step3_await",
       "label": "Awaiting parallel review completion (1 of 3 returned — ASC 606)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 28244
+      "elapsed_ms": 26223
     },
     {
       "id": "alternatives",
       "label": "Generating alternative structures (3 of 3)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 29944
-    },
-    {
-      "id": "draft_fallbacks",
-      "label": "Drafted fallback positions",
-      "status": "complete",
-      "parent": "Redline Agent",
-      "elapsed_ms": 32501
-    },
-    {
-      "id": "cross_reference_signals",
-      "label": "Cross-referencing customer position-of-strength signals",
-      "status": "running",
-      "parent": "Redline Agent",
-      "elapsed_ms": 32501
+      "elapsed_ms": 26464
     },
     {
       "id": "alternatives",
       "label": "Generated 3 alternative structures",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 33601
+      "elapsed_ms": 30305
+    },
+    {
+      "id": "draft_fallbacks",
+      "label": "Drafted fallback positions",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 33784
     },
     {
       "id": "cross_reference_signals",
-      "label": "Cross-referenced position-of-strength signals",
-      "status": "complete",
+      "label": "Cross-referencing customer position-of-strength signals",
+      "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 35273
+      "elapsed_ms": 33784
     },
     {
       "id": "reasoning",
       "label": "Reasoned about pricing economics",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 37552
+      "elapsed_ms": 34677
     },
     {
       "id": "margin_sensitivity",
       "label": "Computing margin sensitivity under the 40% list-price baseline",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 37552
+      "elapsed_ms": 34677
     },
     {
       "id": "margin_sensitivity",
       "label": "Computed margin sensitivity (14.3% est.)",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 37707
+      "elapsed_ms": 34830
     },
     {
       "id": "finalizing",
       "label": "Finalizing recommendation",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 37707
+      "elapsed_ms": 34830
     },
     {
       "id": "finalizing",
       "label": "Finalized recommendation (medium confidence)",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 37829
+      "elapsed_ms": 34953
     },
     {
       "id": "step3_await",
       "label": "Awaiting parallel review completion (2 of 3 returned — Pricing)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 37829
+      "elapsed_ms": 34953
+    },
+    {
+      "id": "cross_reference_signals",
+      "label": "Cross-referenced position-of-strength signals",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 37790
     },
     {
       "id": "finalizing",
       "label": "Finalizing redline recommendations",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 39132
+      "elapsed_ms": 42306
     },
     {
       "id": "finalizing",
       "label": "Finalized redline (3 flagged · priority: high)",
       "status": "complete",
       "parent": "Redline Agent",
-      "elapsed_ms": 39253
+      "elapsed_ms": 42428
     },
     {
       "id": "step3_await",
       "label": "Awaiting parallel review completion (3 of 3 returned — Redline)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 39253
+      "elapsed_ms": 42428
     },
     {
       "id": "step3_dispatch",
       "label": "Parallel review complete (3 of 3 returned)",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 39253
+      "elapsed_ms": 42428
     },
     {
       "id": "step3_await",
       "label": "All three parallel agents returned",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 39253
+      "elapsed_ms": 42428
     },
     {
       "id": "step4_routing",
       "label": "Routing approvals based on upstream outputs",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 39253
+      "elapsed_ms": 42428
     },
     {
       "id": "load_matrix",
       "label": "Loading active approval matrix (8 rules)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 39254
+      "elapsed_ms": 42429
     },
     {
       "id": "load_matrix",
       "label": "Loaded 8 active matrix rules",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 39375
+      "elapsed_ms": 42551
     },
     {
       "id": "evaluate_rules",
       "label": "Evaluating each matrix rule (0 of 8)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 39376
+      "elapsed_ms": 42551
     },
     {
       "id": "evaluate_rules",
       "label": "Evaluated 8 matrix rules",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 41906
+      "elapsed_ms": 44850
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (0)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 41906
+      "elapsed_ms": 44850
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (1)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 41906
+      "elapsed_ms": 44850
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (2)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 42643
+      "elapsed_ms": 45720
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (3)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 43410
+      "elapsed_ms": 47304
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (4)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 44272
+      "elapsed_ms": 48123
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (5)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 45101
+      "elapsed_ms": 48737
     },
     {
       "id": "identify_triggered",
       "label": "Identified 5 triggered rules",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 45966
+      "elapsed_ms": 49962
     },
     {
       "id": "build_chain",
       "label": "Building approval chain",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 45966
+      "elapsed_ms": 49962
     },
     {
       "id": "build_chain",
       "label": "Built approval chain",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 47763
+      "elapsed_ms": 51451
     },
     {
       "id": "compute_cycle_time",
       "label": "Computing expected cycle time",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 47763
+      "elapsed_ms": 51451
     },
     {
       "id": "compute_cycle_time",
       "label": "Computed expected cycle time",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 52763
+      "elapsed_ms": 58260
     },
     {
       "id": "finalizing",
       "label": "Finalizing routing decision",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 57312
+      "elapsed_ms": 63017
     },
     {
       "id": "finalizing",
       "label": "Finalized routing (5 steps · 5d cycle time)",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 57434
+      "elapsed_ms": 63139
     },
     {
       "id": "step4_routing",
       "label": "Routed approvals (5 steps)",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 57434
+      "elapsed_ms": 63139
     },
     {
       "id": "step5_comms",
       "label": "Generating communications based on full review",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 57434
+      "elapsed_ms": 63139
     },
     {
       "id": "analyze_context",
       "label": "Analyzing deal context and tone requirements",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 57435
+      "elapsed_ms": 63139
     },
     {
       "id": "analyze_context",
       "label": "Selected tone calibration based on deal context",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 57587
+      "elapsed_ms": 63292
     },
     {
       "id": "draft_slack_post",
       "label": "Drafting Slack post for #deal-desk",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 57587
+      "elapsed_ms": 63292
     },
     {
       "id": "draft_ae_email",
       "label": "Drafting AE email with structured action items",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 57587
+      "elapsed_ms": 63292
     },
     {
       "id": "draft_customer_email",
       "label": "Drafting customer reply with counter-positions",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 57587
+      "elapsed_ms": 63292
     },
     {
       "id": "build_one_pager",
       "label": "Building approval review one-pager",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 57587
+      "elapsed_ms": 63292
     },
     {
       "id": "draft_ae_email",
       "label": "Drafted AE email",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 73066
+      "elapsed_ms": 79710
     },
     {
       "id": "draft_customer_email",
       "label": "Drafted customer reply (warm tone)",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 74620
+      "elapsed_ms": 79810
     },
     {
       "id": "draft_slack_post",
       "label": "Drafted Slack post",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 80199
+      "elapsed_ms": 81856
     },
     {
       "id": "build_one_pager",
       "label": "Built approval review one-pager (5 sections)",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 92687
+      "elapsed_ms": 91497
     },
     {
       "id": "finalizing",
       "label": "Finalizing communication artifacts",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 92687
+      "elapsed_ms": 91497
     },
     {
       "id": "finalizing",
       "label": "Finalized 4 artifacts (Slack · AE email · customer email · one-pager)",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 92809
+      "elapsed_ms": 91620
     },
     {
       "id": "step5_comms",
       "label": "Generated all communication artifacts",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 92809
+      "elapsed_ms": 91620
     },
     {
       "id": "step6_synthesis",
       "label": "Synthesizing executive summary",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 92809
+      "elapsed_ms": 91620
+    },
+    {
+      "id": "step6_slack_post",
+      "label": "Posting deal review to #deal-desk",
+      "status": "running",
+      "parent": "Orchestrator",
+      "elapsed_ms": 91620
     },
     {
       "id": "step6_synthesis",
       "label": "Synthesized 4-sentence executive overview",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 101250
+      "elapsed_ms": 99387
+    },
+    {
+      "id": "step6_slack_post",
+      "label": "Posted to #deal-desk (1778001772.651629)",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 99387
     }
   ],
   "metadata": {
-    "duration_ms": 101250,
-    "total_input_tokens": 101690,
-    "total_output_tokens": 10145,
-    "total_cost_usd": 0.45027925,
-    "recorded_at": "2026-05-05T16:31:24.815Z",
+    "duration_ms": 99387,
+    "total_input_tokens": 103446,
+    "total_output_tokens": 10364,
+    "total_cost_usd": 0.40481835,
+    "recorded_at": "2026-05-05T17:23:00.228Z",
     "per_agent": {
       "pricing": {
-        "duration_ms": 37698,
+        "duration_ms": 34823,
         "input_tokens": 8583,
-        "output_tokens": 1787,
-        "cost_usd": 0.04437655
+        "output_tokens": 1773,
+        "cost_usd": 0.032573
       },
       "asc606": {
-        "duration_ms": 28113,
+        "duration_ms": 26093,
         "input_tokens": 10658,
-        "output_tokens": 1455,
-        "cost_usd": 0.060521500000000006
+        "output_tokens": 1352,
+        "cost_usd": 0.041352
       },
       "redline": {
-        "duration_ms": 39118,
+        "duration_ms": 42294,
         "input_tokens": 8150,
-        "output_tokens": 1563,
-        "cost_usd": 0.03918175
+        "output_tokens": 1705,
+        "cost_usd": 0.04132175
       },
       "approval": {
-        "duration_ms": 18180,
-        "input_tokens": 13610,
-        "output_tokens": 1493,
-        "cost_usd": 0.032323
+        "duration_ms": 20710,
+        "input_tokens": 13656,
+        "output_tokens": 1818,
+        "cost_usd": 0.027389950000000003
       },
       "comms": {
-        "duration_ms": 35374,
-        "input_tokens": 52965,
-        "output_tokens": 3491,
-        "cost_usd": 0.24814295
+        "duration_ms": 28481,
+        "input_tokens": 54535,
+        "output_tokens": 3380,
+        "cost_usd": 0.23594415
       },
       "synthesis": {
-        "duration_ms": 8441,
-        "input_tokens": 7724,
-        "output_tokens": 356,
-        "cost_usd": 0.0257335
+        "duration_ms": 7767,
+        "input_tokens": 7864,
+        "output_tokens": 336,
+        "cost_usd": 0.0262375
       }
     }
   }
