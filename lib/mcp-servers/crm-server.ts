@@ -1,8 +1,10 @@
 import { createSdkMcpServer, tool } from "@anthropic-ai/claude-agent-sdk";
 import { z } from "zod";
 import {
+  getApprovalMatrix,
   getDealById,
   getPricingGuardrails,
+  type ApprovalMatrixRule,
   type DealWithCustomer,
   type PricingGuardrail,
 } from "@/lib/db/queries";
@@ -71,10 +73,57 @@ const getPricingGuardrailsTool = tool(
   },
 );
 
+const getDealWithCustomerTool = tool(
+  "get_deal_with_customer",
+  "Same as get_deal but the response is explicitly the joined deal+customer record. Useful when an upstream agent (e.g. the orchestrator) wants to pass a single payload to all downstream sub-agents.",
+  { deal_id: z.string().describe("The deal ID to fetch.") },
+  async ({ deal_id }) => {
+    const deal = getDealById(deal_id);
+    if (!deal) {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify({ error: "deal_not_found", deal_id }),
+          },
+        ],
+        isError: true,
+      };
+    }
+    return {
+      content: [
+        { type: "text" as const, text: JSON.stringify(serializeDeal(deal)) },
+      ],
+    };
+  },
+);
+
+const getApprovalMatrixTool = tool(
+  "get_approval_matrix",
+  "Fetch the active approval matrix — the ordered list of rules the Approval Agent walks top-to-bottom to determine routing for a deal.",
+  {},
+  async () => {
+    const rules = getApprovalMatrix();
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify(rules.map(serializeMatrixRule)),
+        },
+      ],
+    };
+  },
+);
+
 export const crmMcpServer = createSdkMcpServer({
   name: "crm",
-  version: "0.1.0",
-  tools: [getDealTool, getPricingGuardrailsTool],
+  version: "0.2.0",
+  tools: [
+    getDealTool,
+    getDealWithCustomerTool,
+    getPricingGuardrailsTool,
+    getApprovalMatrixTool,
+  ],
 });
 
 // The fully-qualified tool names the Agent SDK exposes to the model.
@@ -82,7 +131,9 @@ export const crmMcpServer = createSdkMcpServer({
 // to auto-approve calls without permission prompts.
 export const CRM_TOOL_NAMES = [
   "mcp__crm__get_deal",
+  "mcp__crm__get_deal_with_customer",
   "mcp__crm__get_pricing_guardrails",
+  "mcp__crm__get_approval_matrix",
 ] as const;
 
 function serializeDeal(d: DealWithCustomer) {
@@ -122,6 +173,26 @@ function serializeDeal(d: DealWithCustomer) {
       arr_estimate: d.customer.arr_estimate,
       health_score: d.customer.health_score,
     },
+  };
+}
+
+function serializeMatrixRule(r: ApprovalMatrixRule) {
+  // Surface condition_json as parsed JSON so the agent doesn't have to
+  // double-parse a string. Falls back to the raw string if it's malformed.
+  let condition: unknown = r.condition_json;
+  try {
+    condition = JSON.parse(r.condition_json);
+  } catch {
+    /* keep as string */
+  }
+  return {
+    id: r.id,
+    rule_name: r.rule_name,
+    rule_priority: r.rule_priority,
+    required_approver_role: r.required_approver_role,
+    is_default: r.is_default === 1,
+    condition,
+    notes: r.notes,
   };
 }
 
