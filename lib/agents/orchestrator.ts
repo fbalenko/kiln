@@ -15,6 +15,7 @@ import {
 } from "./_shared";
 import {
   fetchCustomerSignals,
+  type CustomerSignal,
   type CustomerSignalsResult,
 } from "@/lib/tools/exa-search";
 import {
@@ -199,7 +200,12 @@ export async function runOrchestrator(
   });
 
   const customerSignalsPromise = fetchCustomerSignals({
-    customer: { name: deal.customer.name, domain: deal.customer.domain },
+    customer: {
+      name: deal.customer.name,
+      domain: deal.customer.domain,
+      is_real: deal.customer.is_real === 1,
+      simulated_signals: parseSimulatedSignals(deal.customer.simulated_signals),
+    },
   }).then((r) => {
     orchEmit({
       id: "step2_signals",
@@ -501,6 +507,19 @@ Tone: direct, factual, no marketing voice. No bullet points. No headings. Plain 
     costUsd: result.costUsd,
     durationMs: Date.now() - start,
   };
+}
+
+// customers.simulated_signals is a JSON-encoded CustomerSignal[]. Parse
+// defensively — a malformed value should fall through to the empty-result
+// branch rather than blow up the orchestrator.
+function parseSimulatedSignals(raw: string | null): CustomerSignal[] | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as CustomerSignal[]) : null;
+  } catch {
+    return null;
+  }
 }
 
 function formatMoney(n: number): string {

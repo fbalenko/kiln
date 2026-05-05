@@ -9,28 +9,20 @@
       "margin_pct_estimate": 0,
       "guardrail_evaluations": [
         {
-          "rule_name": "PLG/self-serve discount requires RevOps sign-off",
-          "passed": true,
-          "severity": "block_without_approval",
-          "actual_value": 0,
-          "threshold_value": 25,
-          "explanation": "This deal has no list price or proposed price — it is a rev-share partnership with $0 subscription fee, so the computed discount is 0%, well within the 25% PLG gate. However, the standard PLG discount guardrail is structurally inapplicable to a rev-share model; RevOps routing has already occurred per the AE's notes."
-        },
-        {
           "rule_name": "PLG/self-serve discount soft ceiling",
           "passed": true,
           "severity": "warn",
           "actual_value": 0,
           "threshold_value": 15,
-          "explanation": "With no subscription price to discount, this rule does not fire on its face. The real economic exposure is the white-label access and feature pre-release — both of which carry opportunity cost not captured by a discount_pct metric."
+          "explanation": "This deal carries no list price or proposed price — it is a rev-share partnership with no subscription discount. The discount_pct guardrail is technically inapplicable, but the deal structure bypasses standard pricing entirely, which warrants the same RevOps scrutiny this rule was designed to enforce."
         },
         {
-          "rule_name": "Gross margin absolute floor",
-          "passed": false,
-          "severity": "block_absolute",
+          "rule_name": "PLG/self-serve discount requires RevOps sign-off",
+          "passed": true,
+          "severity": "block_without_approval",
           "actual_value": 0,
           "threshold_value": 25,
-          "explanation": "Because the proposed price is $0 for Clay's platform access, there is no subscription revenue line from which to calculate a margin — the margin_pct on the base contract is effectively undefined (0%). The deal is economically a rev-share arrangement; until those rev-share payments materialize and exceed COGS attributable to white-label infrastructure, this structure cannot be certified as margin-positive against the 25% floor. This rule technically fires and requires CFO/exec resolution before close."
+          "explanation": "No monetary discount is being granted, so the numeric threshold is not breached. However, the AE has already routed this to RevOps per policy, which is the correct path — this rule's intent is satisfied even though the mechanism is non-standard."
         },
         {
           "rule_name": "Gross margin floor (warn)",
@@ -38,207 +30,221 @@
           "severity": "warn",
           "actual_value": 0,
           "threshold_value": 40,
-          "explanation": "Same structural issue as the absolute floor — no fixed revenue means computed margin starts at 0% and grows only as rev-share is remitted. Yellow flag in force until a minimum guaranteed payment floor is contractually established."
+          "explanation": "Because there is no baseline subscription fee, Clay's margin on the initial deal is 0% until rev-share remittances begin arriving. The estimated $400K–$1.2M annual rev-share contribution has no corresponding COGS baseline to benchmark against standard margin rules, making a conventional margin calculation meaningless — the guardrail fires on 0% actual."
+        },
+        {
+          "rule_name": "Gross margin absolute floor",
+          "passed": false,
+          "severity": "block_absolute",
+          "actual_value": 0,
+          "threshold_value": 25,
+          "explanation": "With list_price and proposed_price both at $0, the computed margin is 0% — below the 25% absolute floor. This is a structural artifact of a rev-share deal, not a true margin violation, but the guardrail formally fires and requires CFO/leadership sign-off before the deal can proceed. The deal must be re-framed with an expected-margin treatment of the rev-share economics before it clears this gate."
         }
       ],
       "alternative_structures": [
         {
-          "label": "Minimum Guarantee + Rev-Share Blend",
-          "description": "Introduce a $120K/yr minimum annual platform fee (payable quarterly, non-refundable) that acts as a margin floor, offset against rev-share obligations above a $480K gross threshold. Reverberate still participates in full upside above the offset threshold; Clay locks in a known margin floor from day one.",
+          "label": "Hybrid: Minimum Subscription Base + Reduced Rev Share",
+          "description": "Introduce a $60K/yr baseline subscription fee for white-label rights (covering Clay's infrastructure/support COGS floor), and reduce the rev-share rate from 25% to 18%. Reverberate gets a lower rev-share drag as volumes scale; Clay gets predictable, margin-positive base revenue that satisfies the absolute margin floor guardrail.",
+          "proposed_price": 60000,
+          "effective_discount_pct": 0,
+          "expected_acv_impact": 60000,
+          "margin_pct_estimate": 40,
+          "rationale": "A $60K floor priced at approximately 40% margin (using the standard 40% list-margin assumption) transforms the deal from a pure contingency play into a hybrid that passes both margin guardrails. The rev-share upside is preserved while Clay is not entirely dependent on Reverberate's billing execution. Reverberate benefits from a lower rev-share rate (18% vs 25%), improving their unit economics per client as ACV scales."
+        },
+        {
+          "label": "Full Rev Share with Escrow Reserve and Audit Rights",
+          "description": "Keep the 25% rev-share structure but require: (a) Reverberate holds a $75K rolling escrow for rev-share obligations, replenished quarterly; (b) Clay has quarterly audit rights over Reverberate Engine subscription billings; (c) the agreement includes a minimum annual guarantee of $200K in rev-share remittance, or the white-label license reverts to standard licensing terms. No upfront subscription fee.",
+          "proposed_price": 0,
+          "effective_discount_pct": 0,
+          "expected_acv_impact": 200000,
+          "margin_pct_estimate": 35,
+          "rationale": "The minimum annual guarantee of $200K de-risks Clay's margin exposure — the deal cannot close at 0% revenue. The escrow and audit rights reduce counterparty and reporting risk, which is the primary structural weakness of a pure rev-share. Reverberate retains the full 25% rev-share economics they requested. Margin estimate of ~35% is approximate, based on rev-share revenue having lower direct COGS than a seat-based subscription (no seat provisioning overhead), but remains uncertain pending CFO review."
+        },
+        {
+          "label": "White-Label License Fee + Co-Marketing Value Exchange (No Rev Share)",
+          "description": "Replace the rev-share entirely with a flat annual white-label license fee of $120K/yr on a 24-month term. In exchange, Clay provides expanded co-marketing commitments: joint GTM content, featured partner placement, and joint pipeline referrals from Reverberate's 8 top-50 client relationships. Reverberate keeps all subscription revenue from Reverberate Engine clients.",
           "proposed_price": 120000,
           "effective_discount_pct": 0,
           "expected_acv_impact": 120000,
           "margin_pct_estimate": 40,
-          "rationale": "A $120K floor at assumed 40% list margin covers Clay's COGS carry for the white-label infrastructure. Reverberate benefits because the floor reduces their variable rev-share obligation once they hit scale — net cost to them at $800K gross is only $120K fixed + ~$80K variable vs. $200K all-variable. This clears the block_absolute margin guardrail with a verifiable revenue line."
-        },
-        {
-          "label": "Tiered Rev-Share with Usage-Based Escalator",
-          "description": "Replace the flat 25% rev-share with a tiered structure: 20% on first $500K of Reverberate Engine ARR, 28% on $500K–$1M, 33% above $1M. No subscription fee. This rewards Clay more as Reverberate scales while giving Reverberate a lower cost of entry.",
-          "proposed_price": 0,
-          "effective_discount_pct": 0,
-          "expected_acv_impact": 40000,
-          "margin_pct_estimate": 0,
-          "rationale": "At the $800K midpoint scenario, tiered rev-share yields ~$214K vs. $200K under flat 25% — a ~7% ACV uplift. More importantly, it aligns incentives: Reverberate's unit economics improve at lower tiers, making customer adoption easier, and Clay's take rate grows as the partnership proves out. Still carries margin uncertainty (no guaranteed floor), so this should be paired with a minimum guaranteed quarterly true-up payment."
-        },
-        {
-          "label": "Platform Access Fee + Co-Marketing as Currency",
-          "description": "Charge a $75K/yr white-label platform access fee in exchange for reducing the rev-share rate to 18%. Bundle in a formal co-marketing commitment: 4 joint case studies/yr, logo placement, and a GTM-ops webinar series. Early access window shrinks from 30 to 14 days but is formalized in contract. Effectively monetizes brand and distribution value explicitly.",
-          "proposed_price": 75000,
-          "effective_discount_pct": 0,
-          "expected_acv_impact": 75000,
-          "margin_pct_estimate": 40,
-          "rationale": "The $75K platform fee is booked as subscription revenue at ~40% margin, immediately resolving the block_absolute guardrail. Reverberate's total cost of partnership at $800K gross rev-share scenario drops to $75K + $144K = $219K vs. $200K under the original proposal — a modest premium they'd accept in exchange for the formalized co-marketing rights and reduced variable rate. Clay gains guaranteed revenue, margin compliance, and 4 documented case studies with top-50 customers annually."
+          "rationale": "A flat license fee of $120K/yr is fully predictable, passes all margin guardrails at the standard 40% assumption, and removes Clay's dependency on Reverberate's rev-share remittance accuracy. Reverberate's upside is uncapped — they retain 100% of Reverberate Engine billings — which is compelling at their growth trajectory. The trade-off is Clay foregoes the $400K–$1.2M rev-share upside scenario, but captures a cleaner, auditable revenue line. Best fit if Reverberate's volumes prove hard to audit or if legal complexity of rev-share is a concern."
         }
       ],
       "ltv_estimate_under_usage_assumptions": null,
       "similar_deal_references": [],
       "confidence": "low",
-      "reasoning_summary": "This deal has no list price, no proposed price, and no subscription fee — standard discount and margin guardrails cannot be evaluated against numeric thresholds in the conventional sense, producing a computed effective_discount_pct of 0% and a margin_pct_estimate of 0%. The gross margin absolute floor (block_absolute, ≥25%) technically fires because there is no verified subscription revenue line; this must be resolved at the CFO/exec level before close. All margin estimates in the alternative structures assume the standard working assumption that list price carries a 40% gross margin — the CFO should validate COGS attributable to white-label infrastructure before approving any structure. No precedent deals were directly applicable (highest similarity was 62%, all priced subscription deals), so alternative structures are constructed from first principles around the rev-share economics."
+      "reasoning_summary": "This deal is structurally non-standard: list_price and proposed_price are both $0, making all standard discount and margin guardrails formally non-applicable or technically firing at 0%. The gross margin absolute floor guardrail (block_absolute) fires on the 0% computed margin and must be resolved before the deal proceeds — the appropriate resolution is either a reframed structure (see alternatives) or explicit CFO override acknowledging rev-share economics. All margin estimates in this output use the working assumption that list price carries a 40% gross margin, per standing instruction; the CFO should substitute actual COGS figures for the white-label infrastructure cost before signing off. The most immediate risk is precedent: approving a pure rev-share at $0 baseline for a PLG customer could be cited by other agencies seeking similar terms, so deal governance and MFN language should be reviewed by legal."
     },
     "asc606": {
       "performance_obligations": [
         {
           "name": "White-label license to Clay tables and waterfalls (Reverberate Engine)",
-          "description": "Right for Reverberate to package and resell Clay's tables/waterfalls technology under their own 'Reverberate Engine' brand to end clients.",
+          "description": "Grant of rights to Reverberate to package and resell Clay's tables/waterfalls functionality under the Reverberate Engine brand to its clients over the 24-month term.",
           "is_distinct": true,
           "estimated_standalone_value": null,
           "expected_recognition_pattern": "usage_based",
-          "rationale": "The underlying functional IP is distinct and separately identifiable; because consideration is a sales-based royalty (25% rev share) on the licensee's subscription sales, ASC 606-10-55-65 sales/usage-based royalty exception applies — recognize as the underlying sales occur."
+          "rationale": "The license is distinct (capable of being used on its own and separately identifiable from co-marketing/early access). Because consideration is a 25% rev share tied to end-customer subscription usage, recognition follows the sales/usage-based royalty exception (ASC 606-10-55-65)."
         },
         {
-          "name": "Co-marketing rights and case studies with client attribution",
-          "description": "Right to jointly market and publish case studies referencing Reverberate's clients.",
+          "name": "Co-marketing rights with client-attributed case studies",
+          "description": "Mutual marketing rights including the ability to publish case studies referencing Reverberate's clients.",
           "is_distinct": false,
           "estimated_standalone_value": null,
           "expected_recognition_pattern": "ratable_over_term",
-          "rationale": "Co-marketing is promotional and likely not a separately identifiable promise to the customer; if deemed distinct, it would be ratable over the 24-month term, but more likely accounted for as a marketing arrangement (ASC 606-10-25-19 not met for separate identifiability)."
+          "rationale": "Co-marketing is bundled with the partnership and unlikely separately identifiable from the white-label license; no incremental fee is exchanged. Treat as a marketing benefit, not a separate PO unless determined to be a material right."
         },
         {
           "name": "Early access to new Clay features (30-day advance)",
-          "description": "Reverberate receives access to new features 30 days before public launch.",
-          "is_distinct": false,
+          "description": "Reverberate receives access to new Clay features 30 days before public GA.",
+          "is_distinct": true,
           "estimated_standalone_value": null,
           "expected_recognition_pattern": "ratable_over_term",
-          "rationale": "Early access is an attribute of the underlying license rather than a separate promise; not separately identifiable from the white-label IP grant under ASC 606-10-25-21."
+          "rationale": "Early access is an ongoing stand-ready obligation distinct from the white-label rights. Because no separately stated fee exists, allocation will rely on ESP; revenue recognized ratably over the 24-month term."
         }
       ],
       "variable_consideration_flags": [
         {
           "source": "rev_share_25pct",
-          "treatment_required": "sales_based_royalty_exception_recognize_as_underlying_sales_occur",
+          "treatment_required": "sales_or_usage_based_royalty_exception (ASC 606-10-55-65)",
           "estimation_difficulty": "high",
-          "explanation": "100% of consideration is a 25% sales-based royalty on Reverberate Engine subscription revenue. Under ASC 606-10-55-65, royalties on licenses of IP are recognized when the subsequent sale occurs — no upfront estimation/constraint analysis is required, but period-by-period reporting from Reverberate is essential."
-        },
-        {
-          "source": "co_marketing_with_client_attribution",
-          "treatment_required": "evaluate_as_potential_consideration_payable_or_marketing_expense",
-          "estimation_difficulty": "medium",
-          "explanation": "Joint marketing where Clay receives attribution to Reverberate's clients could be viewed as a marketing benefit; needs assessment of whether any cash/credits flow either direction and whether it is a distinct service per ASC 606-10-32-26."
+          "explanation": "All consideration is contingent on Reverberate's downstream subscription sales. Under the royalty exception for licenses of IP, recognize as the underlying sales/usage occurs; no estimation/constraint required upfront. However, total contract value cannot be fixed and is expected to range $400K–$1.2M/yr."
         },
         {
           "source": "white_label_branding",
-          "treatment_required": "assess_principal_vs_agent",
-          "estimation_difficulty": "high",
-          "explanation": "Because end customers contract with Reverberate (not Clay) and Clay receives only a 25% share, Clay is likely the agent/licensor rather than principal for end-customer revenue. Only the 25% royalty is Clay's revenue (ASC 606-10-55-36 through 55-40)."
+          "treatment_required": "allocation_via_estimated_standalone_price",
+          "estimation_difficulty": "medium",
+          "explanation": "Because the white-label license is bundled with early-access and co-marketing, allocation across POs requires ESP. Some allocation may shift consideration away from the royalty-eligible PO."
+        },
+        {
+          "source": "co_marketing_with_client_attribution",
+          "treatment_required": "assess_as_distinct_or_marketing_expense",
+          "estimation_difficulty": "medium",
+          "explanation": "If Clay provides case studies/co-marketing as a service, this could be a separate PO; otherwise it's a marketing arrangement outside the scope of the customer contract. Judgment required."
+        },
+        {
+          "source": "early_access_30d_advance",
+          "treatment_required": "ratable_recognition_with_ESP_allocation",
+          "estimation_difficulty": "medium",
+          "explanation": "Stand-ready obligation requires ESP estimation since no separate fee is charged. Allocation reduces the portion of consideration eligible for the royalty exception."
         }
       ],
       "contract_modification_risk": {
         "is_at_risk": true,
-        "explanation": "Early-access feature scope and the IP licensed under 'tables and waterfalls' will evolve over the 24-month term; material changes to the IP scope, rev-share %, or addition of new product lines would constitute a contract modification under ASC 606-10-25-10. Termination or renegotiation rights tied to the partnership's commercial performance also create modification risk."
+        "explanation": "The arrangement is a partnership without fixed consideration; any change in rev-share rate, scope of white-labeled features, or addition of new Clay products into the bundle would likely constitute a contract modification under ASC 606-10-25-10. Additionally, if Reverberate's clients overlap with existing Clay direct customers, principal-vs-agent and potential consideration-payable-to-customer questions (ASC 606-10-32-25) may re-open the analysis."
       },
       "recognized_revenue_schedule": [
         {
           "period": "Year 1",
           "amount": 800000,
-          "notes": "Midpoint estimate of $400K–$1.2M annual royalty range; recognized as Reverberate's end-client subscription sales occur (sales-based royalty exception). Actuals will vary."
+          "notes": "Midpoint estimate of $400K–$1.2M rev-share range; recognized as Reverberate's end-customer subscriptions occur (royalty exception). Actual will vary with downstream sales."
         },
         {
           "period": "Year 2",
           "amount": 800000,
-          "notes": "Midpoint estimate; recognized as underlying sales occur. No upfront royalty estimation required under ASC 606-10-55-65."
+          "notes": "Midpoint estimate; recognized as underlying sales occur. A portion may be re-allocated to the early-access PO and recognized ratably."
         }
       ],
       "red_flags": [
         {
           "severity": "block_without_approval",
-          "label": "No baseline fee — 100% variable consideration",
-          "explanation": "TCV/ACV are $0 with all economics dependent on Reverberate's downstream sales. CFO and auditor should pre-clear revenue treatment, principal-vs-agent conclusion, and disclosure approach before signing."
+          "label": "No fixed transaction price — entirely rev-share",
+          "explanation": "Deal has $0 ACV/TCV in CRM; all economics depend on Reverberate's downstream sales. Requires CFO sign-off on revenue accounting model and disclosure treatment before signing."
         },
         {
           "severity": "warn",
           "label": "Principal vs. agent determination",
-          "explanation": "White-label structure where end customers contract with Reverberate suggests Clay is licensor/agent for gross subscription revenue; only the 25% rev share should hit Clay's top line. Needs formal memo."
+          "explanation": "Need to determine whether Clay is principal or agent for end-customer subscriptions sold under the Reverberate Engine brand (ASC 606-10-55-36). Affects gross-vs-net presentation."
         },
         {
           "severity": "warn",
-          "label": "Royalty reporting and audit rights",
-          "explanation": "Quarterly net-45 remittance with no audit-rights clause noted creates risk of under-reported royalties and revenue cutoff issues at quarter-end."
+          "label": "Channel conflict / consideration payable to a customer",
+          "explanation": "Reverberate has 8 of Clay's top-50 customers as their clients. If those clients migrate to Reverberate Engine, the 25% rev share could be viewed as consideration payable to a customer (ASC 606-10-32-25), reducing direct-contract revenue."
         },
         {
           "severity": "warn",
-          "label": "Channel conflict / cannibalization",
-          "explanation": "8 of Clay's top-50 customers are Reverberate clients; white-label could cannibalize direct ARR, affecting standalone selling price analysis and any future bundled deals with the same end customers."
+          "label": "Early-access feature obligation",
+          "explanation": "30-day advance access is an ongoing stand-ready obligation that must be separately allocated using ESP and recognized ratably, complicating the otherwise royalty-based model."
         },
         {
           "severity": "info",
-          "label": "Co-marketing and early-access promises",
-          "explanation": "Need to confirm these are marketing/relationship terms rather than distinct performance obligations to avoid inadvertent allocation of consideration."
+          "label": "Co-marketing / case study rights",
+          "explanation": "Confirm whether case-study delivery constitutes a distinct service obligation or falls outside the contract scope."
+        },
+        {
+          "severity": "info",
+          "label": "Approval matrix gap",
+          "explanation": "Standard pricing approval matrix does not contemplate partnership/rev-share deals; partnership-deal governance and legal review required."
         }
       ],
       "confidence": "low",
-      "reasoning_summary": "This is a pure sales-based royalty white-label partnership with no fixed consideration, triggering the ASC 606-10-55-65 royalty exception and a non-trivial principal-vs-agent analysis. Multiple non-cash promises (co-marketing, early access) require distinctness assessment, and the 24-month term combined with evolving IP scope creates contract modification risk. This is an automated estimate; final determination requires CFO/auditor review."
+      "reasoning_summary": "This is a partnership contract with no fixed consideration; revenue is a 25% rev share on Reverberate's downstream subscription sales, which qualifies for the sales/usage-based royalty exception under ASC 606-10-55-65. However, the bundle includes co-marketing and 30-day early-access rights that may be distinct POs requiring ESP allocation, and there are material principal-vs-agent and consideration-payable-to-a-customer questions given client overlap. Multiple interacting variable-consideration sources and modification risks drive low confidence. This is an automated estimate; final determination requires CFO/auditor review."
     },
     "redline": {
       "flagged_clauses": [
         {
           "clause_type": "white_label",
-          "customer_proposed_language": "Reverberate would white-label Clay tables and waterfalls under their own branded product 'Reverberate Engine', presenting Clay's core infrastructure as their own product to end clients.",
+          "customer_proposed_language": "Reverberate proposes to white-label Clay tables and waterfalls under their own branded product 'Reverberate Engine,' sold directly to their end clients with no visible Clay attribution.",
           "risk_level": "high",
-          "risk_explanation": "An unrestricted white-label grant allows Reverberate to obscure Clay's brand entirely, undermining Clay's direct sales motion with 8 top-50 customers who are Reverberate clients and may never know they're on Clay. This also sets a precedent for agency resellers to commoditize Clay's product surface under third-party brands, eroding pricing power and brand equity. If Reverberate is ever acquired or pivots, the white-label license travels with them absent explicit restrictions.",
-          "suggested_counter": "White-label rights shall be limited to: (a) the specific Clay features enumerated in Exhibit A (Tables and Waterfalls only, no API or data layer access), (b) use solely within active client engagements managed by Reverberate Growth during the Term, (c) subject to Clay's then-current brand-attribution guidelines requiring 'Powered by Clay' attribution in-product at no smaller than 10pt font in the product UI, and (d) non-transferable and non-sublicensable. Reverberate may not represent to any end client that the underlying technology is proprietary to Reverberate. Clay reserves the right to audit compliance with attribution requirements upon 10 business days' written notice.",
-          "fallback_position": "Accept removal of mandatory 'Powered by Clay' in-product attribution in exchange for (i) Clay logo placement in Reverberate Engine marketing materials and sales collateral, and (ii) explicit contractual prohibition on Reverberate representing the technology as self-built or proprietary.",
-          "precedent_notes": "Clay has not previously executed a white-label partnership agreement; this is a novel deal structure requiring legal and executive sign-off."
+          "risk_explanation": "A full white-label grant gives Reverberate sublicensing rights to Clay's core product surface with zero brand association. This erodes Clay's direct distribution in mid-market RevOps, which is Clay's primary PLG growth segment. If Reverberate's clients never know they're using Clay, Clay cannot convert those end-users to direct subscribers at term-end or at churn. Worse, a white-label clause without scope limits can be construed as a perpetual, transferable IP license — which is a block-level risk if the company is ever acquired.",
+          "suggested_counter": "White-label rights are granted solely to Reverberate Growth, Inc. for use within the 'Reverberate Engine' service offering, and are (a) non-transferable, (b) non-sublicensable beyond Reverberate's direct end clients, (c) limited to Clay's tables and waterfall workflow surfaces as of the Effective Date and any surfaces explicitly added by written amendment, and (d) subject to Clay's right to display a 'Powered by Clay' attribution mark in a location and format mutually agreed in writing within 30 days of signing. White-label rights terminate automatically and immediately upon expiration or termination of this Agreement.",
+          "fallback_position": "If Reverberate rejects 'Powered by Clay' attribution, accept removal of visible in-product attribution in exchange for: (1) Clay named as the infrastructure provider in Reverberate Engine's public documentation and pitch decks, and (2) a right-of-first-refusal for Reverberate's end clients to convert to direct Clay subscriptions at term end at a pre-agreed rate.",
+          "precedent_notes": "Clay has not previously executed a white-label partnership of this scope; referral and co-sell agreements exist but do not include product reskinning rights."
         },
         {
           "clause_type": "rev_share",
-          "customer_proposed_language": "Reverberate proposes a 25% revenue share on all Reverberate Engine subscriptions paid by their clients, with no baseline subscription fee, estimated at $400K–$1.2M annual contribution to Clay.",
+          "customer_proposed_language": "Reverberate proposes a 25% revenue share on all Reverberate Engine subscriptions paid by their clients, remitted quarterly at net-45 from end-of-quarter close, with no baseline subscription fee from Reverberate to Clay.",
           "risk_level": "high",
-          "risk_explanation": "A rev-share-only structure with no floor creates zero guaranteed revenue: if Reverberate fails to convert clients, underreports, or churns, Clay receives nothing despite having extended white-label rights and early access. The wide range ($400K–$1.2M) signals weak financial modeling. Net-45 from quarter close means Clay is effectively extending 135-day credit on Q1 revenue. With no audit right, reported subscription numbers are unverifiable.",
-          "suggested_counter": "Revenue share shall be calculated as 25% of Gross Reverberate Engine Subscription Revenue actually collected by Reverberate from end clients, subject to: (a) a minimum annual guarantee of $150,000 USD payable regardless of actual subscription revenue ('Annual Floor'), pro-rated for partial years; (b) Reverberate providing Clay with a quarterly revenue attestation certified by Reverberate's CFO or equivalent within 30 days of quarter close; (c) Clay retaining the right to audit Reverberate's subscription revenue records no more than once per calendar year upon 15 business days' notice; and (d) remittance due net-30 from end-of-quarter close. If cumulative rev-share payments fail to meet the Annual Floor by December 31 of each contract year, Reverberate shall remit the shortfall within 30 days.",
-          "fallback_position": "Accept no Annual Floor if Reverberate agrees to (i) net-30 remittance, (ii) certified quarterly attestations, and (iii) annual audit rights. Minimum: audit rights and certified attestations are non-negotiable.",
-          "precedent_notes": "No prior rev-share deal exists at Clay; standard deals are subscription-only. This structure is novel and requires Finance and Legal approval."
-        },
-        {
-          "clause_type": "early_access",
-          "customer_proposed_language": "Reverberate requests early access to all new Clay features 30 days before public launch.",
-          "risk_level": "medium",
-          "risk_explanation": "Broad 30-day advance access to all new features creates an obligation that can delay Clay's go-to-market sequencing: if Reverberate's early access is contractually required, Clay cannot do a staged rollout, beta-partner prioritization, or a surprise launch for any feature during the 24-month term. It also exposes pre-release product to Reverberate clients who are not under NDA with Clay, creating competitive intelligence risk.",
-          "suggested_counter": "Clay shall use commercially reasonable efforts to provide Reverberate with early access to features designated by Clay as 'Partner Preview' releases, no fewer than 14 calendar days prior to general availability. Early access is subject to: (a) Clay's sole discretion on which features qualify for Partner Preview designation; (b) Reverberate executing Clay's standard Beta Access NDA prior to each Preview release; and (c) exclusion of features subject to third-party embargo, security patches, regulatory requirements, or features developed jointly with other customers. Clay makes no warranty as to feature completeness or stability during Partner Preview periods.",
-          "fallback_position": "Accept 30-day advance access limited to features Clay affirmatively designates as 'Partner Preview,' with NDA requirement and explicit carve-outs for security, regulatory, and embargoed features.",
-          "precedent_notes": "Clay offers beta access to select customers but no contractual advance-access SLA has been documented in prior agreements."
+          "risk_explanation": "A pure rev-share with no floor means Clay's revenue is entirely contingent on Reverberate's commercial success, billing accuracy, and good-faith reporting — with no audit right or minimum guarantee. At $400K–$1.2M estimated annual contribution, a 12-month gap between billing and audit discovery could represent $100K–$300K in undetected underpayment. Additionally, 25% with no ACV floor means Clay earns the same rate on a $500/mo client as a $50K/mo client, which under-monetizes the high-end and cannot be corrected mid-term without a renegotiation.",
+          "suggested_counter": "Revenue share is set at 25% of Reverberate Engine gross subscription revenue attributable to Clay-powered features, subject to: (a) a minimum annual guarantee of $150,000 USD payable in equal quarterly installments regardless of actual rev-share accrual ('Minimum Guarantee'); (b) Clay's right, no more than once per calendar year, to audit Reverberate's relevant billing records upon 15 days written notice, at Clay's expense unless an underpayment of >5% is discovered, in which case audit costs are borne by Reverberate; (c) late payment interest of 1.5% per month on any amount not remitted within 15 days of the net-45 due date; and (d) Clay's right to renegotiate the rev-share rate if Reverberate Engine ACV exceeds $3M in any trailing 12-month period.",
+          "fallback_position": "If Reverberate rejects the Minimum Guarantee, accept a tiered rev-share with no floor: 20% on Reverberate Engine ACV up to $1M/yr, 27% on ACV $1M–$3M/yr, 30% above $3M/yr — retaining audit rights and late-payment interest as non-negotiable.",
+          "precedent_notes": "Clay has structured tiered rev-share in at least one integration partnership context, but no white-label-specific precedent with a minimum guarantee is on file."
         },
         {
           "clause_type": "co_marketing",
-          "customer_proposed_language": "Reverberate requests co-marketing rights including the ability to publish case studies that attribute client outcomes to Reverberate Engine, without explicit Clay approval workflow described.",
+          "customer_proposed_language": "Reverberate requests co-marketing rights including the ability to publish case studies featuring their end clients, with attribution to Reverberate as the author of the engagement outcome (not Clay).",
           "risk_level": "medium",
-          "risk_explanation": "Co-marketing rights without an approval gate allow Reverberate to publish case studies referencing Clay's underlying technology (or omitting it) in ways that could misrepresent product capabilities, violate Clay's agreements with the referenced end clients, or create liability if performance claims are exaggerated. Since the end clients are also Clay's top-50 customers, unauthorized case study publication could damage those direct relationships.",
-          "suggested_counter": "Each co-marketing asset, including case studies, blog posts, and social content, that references Clay technology, the Reverberate Engine partnership, or outcomes attributable to Clay's platform shall require Clay's written approval no fewer than 5 business days prior to publication. Clay's approval shall not be unreasonably withheld. Reverberate shall obtain written consent from each referenced end client prior to submission to Clay for approval. Case studies shall include 'Powered by Clay' attribution unless Clay expressly waives this requirement in writing for a specific asset.",
-          "fallback_position": "Accept a 3-business-day approval turnaround with deemed-approval after 5 business days of silence, provided end-client consent is confirmed in writing before submission.",
-          "precedent_notes": null
+          "risk_explanation": "Co-marketing rights that attribute all client outcomes to Reverberate without mention of Clay actively suppress Clay's brand awareness in the segment these clients represent. Given that Reverberate's founder has already published content arguing for 'vendor-agnostic' agency partnerships, there is a real risk that public case studies actively obscure Clay's role, training Reverberate's audience to see the agency — not the underlying tool — as the source of value. This weakens Clay's direct sales motion into mid-market RevOps over the 24-month term.",
+          "suggested_counter": "Co-marketing rights are granted on a mutual, non-exclusive basis. Case studies and joint content may be published by either party subject to: (a) mutual written approval of each piece of content no less than 5 business days before publication; (b) any case study referencing Clay-powered workflows must include a 'Powered by Clay' notation in the body of the content; (c) neither party shall publish content that disparages or positions the other as a commodity input; and (d) Clay reserves the right to reference this partnership and Reverberate's client outcomes (in aggregate, without naming end clients) in Clay's own marketing materials with Reverberate's prior written consent, not to be unreasonably withheld.",
+          "fallback_position": "If Reverberate rejects mandatory 'Powered by Clay' notation in case study body copy, accept footnote-level attribution ('Built on Clay infrastructure') in exchange for Clay's right to list Reverberate as a named partner on Clay's website and in investor materials.",
+          "precedent_notes": "Clay has required 'Powered by Clay' attribution in at least one OEM-adjacent integration agreement; agency-specific co-marketing precedent is limited."
+        },
+        {
+          "clause_type": "early_access",
+          "customer_proposed_language": "Reverberate requests early access to new Clay features 30 days before public launch.",
+          "risk_level": "medium",
+          "risk_explanation": "Granting a 30-day early access window to a white-label partner means Reverberate can build, train clients on, and market Clay features before Clay's own GTM team has launched them publicly. If Reverberate's clients are in Clay's direct ICP, Reverberate could pre-empt Clay's own PLG launch narrative and lock clients into Reverberate Engine workflows before Clay's direct sales team can engage. It also creates an implied obligation that could conflict with Clay's product roadmap security and NDA posture with enterprise clients.",
+          "suggested_counter": "Clay shall use commercially reasonable efforts to provide Reverberate with early access to new platform features designated by Clay as 'Partner Preview' features no less than 14 calendar days prior to general availability. Early access is (a) limited to Reverberate's internal team for testing and workflow development only — not client-facing deployment — until general availability; (b) subject to a mutual NDA covering all pre-GA features; (c) expressly excluded for features under regulatory review, features gated to specific customer tiers, and features Clay designates as confidential for competitive reasons; and (d) not a guarantee of feature parity or roadmap commitment.",
+          "fallback_position": "If Reverberate insists on 30-day client-facing early access, limit it to features Clay has already announced publicly (e.g., at a conference or on the blog) but not yet shipped — ensuring no competitive intelligence leakage — while retaining the NDA and carve-outs above.",
+          "precedent_notes": "Clay has offered 14-day beta access to select integration partners under NDA; 30-day client-facing early access has not previously been granted."
         }
       ],
       "standard_clauses_affirmed": [],
       "overall_redline_priority": "block",
-      "one_line_summary": "We cannot execute this partnership as proposed — we need a minimum revenue floor with audit rights on the rev-share, 'Powered by Clay' attribution embedded in the white-label grant, scoped early access limited to Clay-designated Partner Preview features only, and a co-marketing approval gate before any case study goes live.",
+      "one_line_summary": "We can structure this partnership, but we must (1) scope and limit the white-label grant with 'Powered by Clay' attribution, (2) add a $150K annual minimum guarantee plus audit rights to the rev-share, (3) restrict early access to internal-only pre-GA use under NDA, and (4) require mutual approval and Clay attribution on all co-marketing before this can ship.",
       "confidence": "medium",
-      "reasoning_summary": "This is a structurally novel deal for Clay — a white-label partnership with rev-share-only economics, no baseline fee, and broad early-access obligations across a 24-month term. The headline risk is the combination of an unrestricted white-label grant (which could invisibilize Clay's brand with 8 top-50 customers) and a rev-share structure with no floor or audit right (zero revenue guarantee on a $0 ACV contract). Early access as drafted creates a contractual obligation that could constrain every Clay product launch for two years. All four non-standard clauses require legal and executive sign-off; none can be accepted as proposed. Exa signals returned no material intelligence on Reverberate Growth specifically, so leverage assessment relies entirely on AE context: Reverberate is a rebuild risk converted to distribution leverage, which supports a firm but collaborative counter rather than a walk posture."
+      "reasoning_summary": "This deal is a novel partnership archetype for Clay — no existing white-label precedent applies cleanly, and the combination of a full white-label grant with zero floor revenue and client-facing early access creates compounding brand suppression and revenue exposure in Clay's core PLG segment. The white-label clause as proposed is the primary block: without scope limits, non-transferability, and attribution, it functions as a perpetual, sublicensable IP license that survives any Reverberate acquisition. The rev-share structure's lack of a minimum guarantee and audit rights is a secondary block given the deal's estimated $400K–$1.2M annual contribution range. Counters proposed are novel but grounded in analogous OEM and integration partnership structures Clay has used; legal sign-off is required before any counter is sent."
     },
     "approval": {
       "required_approvers": [
         {
           "role": "ceo",
           "rule_triggered": "Partnership / rev-share routes to CEO",
-          "rationale": "Deal type is partnership with rev-share economics; partnership deals fall outside the standard pricing matrix and require CEO + Strategic Partnership Review per matrix rule."
+          "rationale": "This is a partnership deal (deal_type = 'partnership'), which is explicitly flagged as falling outside the standard pricing matrix and requiring CEO + Strategic Partnership Review approval per the default rule."
         },
         {
           "role": "legal",
-          "rule_triggered": "Partnership / rev-share routes to CEO (legal required for flagged clauses)",
-          "rationale": "Redline Agent flagged four high/medium-risk non-standard clauses (white_label, rev_share, early_access, co_marketing) at block priority; Legal must negotiate scoped white-label grant, audit rights, and approval gates before execution."
+          "rule_triggered": "White-label, rev-share, co-marketing, and early-access clauses require Legal review",
+          "rationale": "The deal contains multiple non-standard clauses (white_label_branding, rev_share_25pct, co_marketing_with_client_attribution, early_access_30d_advance) flagged by the Redline Agent as 'block'-level risk. Legal must scope the white-label grant, add minimum guarantees and audit rights to rev-share, restrict early access to NDA-protected internal use, and ensure Clay attribution in co-marketing before the deal can proceed."
         },
         {
           "role": "cfo",
-          "rule_triggered": "Partnership / rev-share routes to CEO (CFO required for margin block)",
-          "rationale": "Pricing Agent flagged gross margin absolute floor as block_absolute because proposed_price is $0 and all consideration is variable rev-share; CFO must pre-clear revenue treatment, principal-vs-agent conclusion, and ASC 606 disclosure before close. ASC 606 Agent also flagged 'no baseline fee — 100% variable consideration' at block_without_approval severity."
+          "rule_triggered": "Rev-share economics and zero-margin structure require CFO sign-off",
+          "rationale": "The Pricing Agent flagged a 'block_absolute' guardrail violation: gross margin is 0% due to zero list price and zero proposed price. The ASC 606 Agent flagged 'block_without_approval' on the variable-consideration treatment. The deal must either be reframed with a minimum subscription base or explicitly approved by CFO with acknowledgment of rev-share accounting and audit risk."
         },
         {
           "role": "rev_ops",
-          "rule_triggered": "Partnership / rev-share routes to CEO (RevOps required per customer routing note)",
-          "rationale": "AE notes indicate deal was 'routed to us by RevOps' — RevOps has already engaged and must remain in approval chain to confirm deal structure, customer segment alignment (PLG/self-serve), and partnership precedent implications."
-        },
-        {
-          "role": "ae_manager",
-          "rule_triggered": "Standard approval chain initiation",
-          "rationale": "AE Manager (Sarah Goldstein) is the deal owner's manager and must be first step in approval chain regardless of deal type."
+          "rule_triggered": "Non-standard partnership structure with contingent economics requires RevOps governance",
+          "rationale": "The deal bypasses standard pricing guardrails and is flagged by Pricing as non-standard revenue structure. RevOps must review partnership governance, audit rights, and reporting cadence to ensure compliance with Clay's vendor-management and financial-reporting standards."
         }
       ],
       "approval_chain": [
@@ -247,15 +253,6 @@
           "approver_role": "ae_manager",
           "parallel_with": [],
           "can_veto": false
-        },
-        {
-          "step": 2,
-          "approver_role": "legal",
-          "parallel_with": [
-            "cfo",
-            "rev_ops"
-          ],
-          "can_veto": true
         },
         {
           "step": 2,
@@ -268,10 +265,19 @@
         },
         {
           "step": 2,
+          "approver_role": "legal",
+          "parallel_with": [
+            "cfo",
+            "rev_ops"
+          ],
+          "can_veto": true
+        },
+        {
+          "step": 2,
           "approver_role": "rev_ops",
           "parallel_with": [
-            "legal",
-            "cfo"
+            "cfo",
+            "legal"
           ],
           "can_veto": false
         },
@@ -284,17 +290,18 @@
       ],
       "expected_cycle_time_business_days": 12,
       "blockers_to_address_first": [
-        "Legal must redline white-label clause to scope IP to Tables/Waterfalls only, add 'Powered by Clay' attribution requirement, and prohibit Reverberate from claiming IP as proprietary.",
-        "CFO/Accounting must issue a memo confirming ASC 606 revenue treatment (sales-based royalty exception), principal-vs-agent determination, and COGS attribution methodology for white-label infrastructure before close.",
-        "Finance must redline rev-share to add minimum annual guarantee (recommended $120K–$150K floor) and mandatory audit rights; at minimum, quarterly CFO-certified attestations and annual audit rights are non-negotiable per Redline Agent.",
-        "Legal must scope early access to Clay-designated Partner Preview features only (14 days minimum, not 30 days), require NDA for each preview release, and carve out security/regulatory/embargoed features.",
-        "Legal must add co-marketing approval gate: Clay written approval required 5 business days prior to publication of any case study, blog, or social content; end-client consent required before submission.",
-        "Pricing Agent's margin block_absolute must be cleared: either introduce a minimum guaranteed fee ($120K–$150K platform access fee recommended by Pricing Agent) or accept tiered rev-share with minimum quarterly true-up payments to achieve 25%+ margin floor.",
-        "AE must obtain Reverberate's written acknowledgment of the 8 overlapping top-50 customers and confirm channel conflict mitigation strategy (e.g., co-sell vs. exclusivity gates) with RevOps and CEO before routing."
+        "CFO must sign off on the zero-margin, 100% rev-share structure (block_absolute guardrail) — either approve the reframed alternative structures (e.g., $60K baseline + 18% rev-share or $150K minimum guarantee + audit rights) or provide explicit executive override acknowledging rev-share accounting complexity and audit risk.",
+        "Legal must resolve the white-label clause scope: non-transferability, non-sublicensability, attribution requirement ('Powered by Clay'), and termination-on-exit language must be in place before any counter is sent to Reverberate.",
+        "Legal must add minimum annual guarantee ($150K suggested) and audit rights (no more than once per calendar year, 15-day notice, 5% underpayment threshold for cost reallocation) to the rev-share structure.",
+        "Legal must restrict early-access obligation to Reverberate's internal team under NDA, excluding client-facing deployment until general availability.",
+        "Legal must require mutual written approval and 'Powered by Clay' attribution (body or footnote) for all case studies and co-marketing materials.",
+        "ASC 606 and CFO must jointly determine principal-vs-agent classification and confirm revenue-recognition treatment (royalty exception vs. allocation/ratable) before signing.",
+        "CFO/RevOps must establish audit and reporting cadence to monitor Reverberate's downstream billing and rev-share remittance; Q-by-Q reconciliation and annual true-up language must be in the final agreement.",
+        "Pricing/Finance must re-model the deal under one of the three Pricing Agent alternatives (hybrid minimum + reduced rev-share, escrow + minimum guarantee, or flat license fee) to satisfy guardrails or obtain CFO exception."
       ],
-      "one_line_summary": "This routes to AE Manager → Legal + CFO + RevOps (parallel) → CEO. Expect ~12 business days. Deal cannot proceed until Legal negotiates white-label scope + attribution, CFO clears rev-share floor + revenue treatment, Finance secures audit rights + attestations, and Pricing resolves margin block with a guaranteed fee or tiered rev-share; all four redline clauses are blockers in their current form.",
-      "confidence": "high",
-      "reasoning_summary": "The deal_type is 'partnership' which triggers the matrix's default 'Partnership / rev-share routes to CEO' rule; this is a structural rule that overrides standard pricing/discount gates. Pricing, ASC 606, and Redline agents all flagged independent block-severity issues: margin_absolute floor (Pricing), no baseline fee with 100% variable consideration (ASC 606), and four high/medium-risk non-standard clauses (Redline). The approval chain is standard for executive-level partnership deals with legal and financial complexity: AE Manager first, then Legal+CFO+RevOps in parallel (Legal has veto over IP scope and contract terms; CFO has veto over revenue/margin treatment and rev-share floor; RevOps advises on segment fit and precedent), then CEO for final strategic/brand decision. The 12-day estimate accounts for parallel review at step 2 (max 5 days for Legal/CFO/RevOps) plus CEO review (2 days), plus a 5-day contingency for redline iteration. Confidence is high because the matrix rule is unambiguous (deal_type='partnership' → default route to CEO) and all downstream blockers are explicitly documented by upstream agents."
+      "one_line_summary": "This partnership routes to AE Manager → CFO + Legal + RevOps (parallel) → CEO. Expect 10–12 business days. Must resolve white-label scope + attribution, add $150K minimum guarantee + audit rights to rev-share, restrict early access to NDA-protected internal use, and get CFO sign-off on zero-margin structure before Legal sends counters.",
+      "confidence": "low",
+      "reasoning_summary": "This is a novel partnership archetype for Clay with no clean standard-matrix mapping. The deal_type = 'partnership' triggers the default CEO rule, and the combination of block-level Redline findings (white-label scope, rev-share floor, early-access risk, co-marketing attribution), a block_absolute margin guardrail, and block_without_approval ASC 606 variable-consideration flag means every gating function (Legal, CFO, RevOps) must sign off before CEO can approve. The approval chain is unusually parallel at step 2 because all three functions have independent veto rights and none can meaningfully proceed until the others clear their blockers — Legal's redline counters inform CFO's margin analysis, CFO's guardrail decision informs RevOps' governance model, and RevOps' audit controls inform Legal's contract terms. Confidence is low because the deal lies outside Clay's precedent set and requires multiple cross-functional consensus gates."
     },
     "comms": {
       "slack_post": {
@@ -305,14 +312,14 @@
             "text": {
               "type": "plain_text",
               "text": "Deal Review: Reverberate Engine White-Label Partnership",
-              "emoji": true
+              "emoji": false
             }
           },
           {
             "type": "section",
             "text": {
               "type": "mrkdwn",
-              "text": "*Customer:* Reverberate Growth (GTM Agency, PLG/Self-Serve)\n*ACV:* $0 subscription | Est. $400K–$1.2M/yr rev-share (25% of Reverberate Engine ARR)\n*TCV:* $0 contracted | Est. $800K–$2.4M over 24-month term (midpoint)\n*Effective Discount:* N/A — rev-share-only structure, no list price\n*Margin:* 0% computed (block_absolute fired); margin-positive only after rev-share remittances exceed white-label COGS — requires CFO clearance\n*Approval Chain:* AE Manager (Sarah Goldstein) → Legal + CFO + RevOps (parallel, ~5 days) → CEO | Est. 12 business days"
+              "text": "*Customer:* Reverberate Growth (`reverberategrowth.com`) · PLG/Self-Serve · GTM Agency · #18 Top-50 Agency\n*ACV:* $0 (pure rev-share) · *Est. Annual Rev-Share Contribution:* $400K–$1.2M · *Term:* 24 months\n*Effective Discount:* N/A · *Margin (current structure):* 0% — block_absolute guardrail triggered\n*Approval Chain:* AE Manager → CFO + Legal + RevOps (parallel, all veto-eligible) → CEO · *Est. Cycle Time:* 10–12 business days"
             }
           },
           {
@@ -322,7 +329,7 @@
             "type": "section",
             "text": {
               "type": "mrkdwn",
-              "text": "*What the deal team needs to know:*\n\n• *This deal is blocked and cannot proceed as proposed.* All four non-standard clauses (white-label grant, rev-share terms, early access, co-marketing) require redlines before execution. Minimum non-negotiables: scoped white-label to Tables/Waterfalls only with \"Powered by Clay\" attribution, a minimum annual revenue floor ($120K–$150K recommended) with CFO-certified quarterly attestations and annual audit rights, and a co-marketing approval gate. Legal and Finance must issue redlines before routing to CEO.\n\n• *The gross margin absolute floor (≥25%) is triggered.* With $0 subscription revenue, computed margin is 0% — a block_absolute condition. CFO must pre-clear the ASC 606 revenue treatment (sales-based royalty exception under 606-10-55-65), the principal-vs-agent determination (Clay is likely licensor/agent, not principal — only 25% rev-share hits Clay's top line), and COGS attribution for white-label infrastructure before close. Pricing Agent's recommended fix: introduce a $120K/yr minimum platform fee.\n\n• *8 of Clay's top-50 customers are Reverberate clients — channel conflict must be addressed first.* An unrestricted white-label grant could invisibilize Clay's brand across a material portion of the install base and cannibalize direct ARR. AE Devon Wright must obtain Reverberate's written acknowledgment of the overlap and confirm a channel conflict mitigation strategy with RevOps and CEO before the deal is routed up the approval chain."
+              "text": "*What the deal team needs to know:*\n\n• *White-label grant is the primary block.* As proposed, the clause is effectively a perpetual, transferable IP license with zero Clay attribution — Legal must add non-transferability, non-sublicensability, scope limits to current surfaces, and 'Powered by Clay' attribution before any counter goes to Reverberate. No counter should be sent until Legal clears this.\n\n• *Zero-margin structure triggers a CFO block before this can proceed.* The gross margin absolute floor guardrail fires at 0% (deal has $0 list price, $0 proposed price). CFO must either approve one of the three Pricing Agent alternatives — hybrid $60K baseline + 18% rev-share, $150K minimum guarantee + escrow + audit rights, or flat $120K/yr license — or provide an explicit executive override with an acknowledged rev-share accounting treatment. ASC 606 principal-vs-agent classification also requires joint CFO/auditor determination.\n\n• *Precedent risk is material and should be flagged to CEO proactively.* Approving a pure rev-share at $0 baseline for a PLG customer with white-label + early-access + co-marketing rights creates a template other agencies can cite. Legal and RevOps should confirm MFN posture and partnership governance guardrails are in place before CEO review so this deal doesn't set an unconstrained precedent."
             }
           },
           {
@@ -333,23 +340,23 @@
             "elements": [
               {
                 "type": "mrkdwn",
-                "text": "*AE Owner:* Devon Wright  |  *AE Manager:* Sarah Goldstein  |  *Close Target:* 2026-06-01  |  review filed by Kiln · agent-driven"
+                "text": "*AE Owner:* Devon Wright · *AE Manager:* Sarah Goldstein · *Close Target:* 2026-06-01 · review filed by Kiln · agent-driven"
               }
             ]
           }
         ],
-        "plaintext_fallback": "DEAL REVIEW: Reverberate Engine White-Label Partnership | Customer: Reverberate Growth (PLG/Self-Serve GTM Agency)\nACV: $0 contracted; est. $400K–$1.2M/yr via 25% rev-share. No subscription fee. Gross margin block_absolute fired — CFO must clear revenue treatment and minimum fee structure before close.\nApproval chain: AE Manager (Sarah Goldstein) → Legal + CFO + RevOps (parallel) → CEO. Est. 12 business days.\nTop blockers: (1) All 4 non-standard clauses blocked — Legal must redline white-label scope/attribution, rev-share floor + audit rights, early access carve-outs, and co-marketing approval gate. (2) CFO must issue ASC 606 memo (principal-vs-agent, royalty exception) and clear margin floor. (3) Channel conflict across 8 shared top-50 customers must be resolved before routing.\nAE Owner: Devon Wright | review filed by Kiln · agent-driven"
+        "plaintext_fallback": "DEAL REVIEW: Reverberate Engine White-Label Partnership (Reverberate Growth)\nStructure: 0 ACV / pure 25% rev-share; est. $400K–$1.2M/yr contribution; 24-month term. No baseline fee.\nApproval chain: AE Manager → CFO + Legal + RevOps (parallel) → CEO. Est. 10–12 business days.\nTop blockers: (1) White-label clause is a block — Legal must scope grant + add Clay attribution before any counter is sent. (2) 0% margin triggers CFO block_absolute — must reframe structure or obtain executive override. (3) Precedent risk is high — CEO and Legal should align on MFN/governance guardrails before approval.\nAE Owner: Devon Wright | Review filed by Kiln · agent-driven."
       },
       "ae_email_draft": {
         "to": "Devon Wright",
         "subject": "[Reverberate] Deal-desk review complete — 3 blockers before this can move",
-        "body_markdown": "Devon, the deal-desk review is done and this deal is **blocked from routing** until three things are resolved on your end.\n\n1. **Get Reverberate to accept a minimum annual guarantee.** The $0 ACV / pure rev-share structure trips a hard margin floor. Finance's recommended floor is $120K–$150K/yr; bring this to Reverberate as a commercial ask before Legal opens the redline.\n2. **Flag the 8 overlapping top-50 customers to RevOps and get a channel-conflict position in writing.** CEO will ask about this on first look — have the answer ready before you route.\n3. **Do not send any contract draft to Reverberate yet.** All four non-standard clauses (white-label scope, rev-share, early access, co-marketing) are redlined at block priority; Legal owns the next version of the paper.\n\nOnce those three items are addressed, route the deal as follows: **Sarah Goldstein (your manager) → Legal + CFO + RevOps in parallel → CEO**. Budget ~12 business days for the full cycle and expect Legal and CFO each hold veto rights at step 2.",
+        "body_markdown": "Devon, the deal-desk review is done and this deal is **blocked from submission** until three things are resolved — none of which you can close yourself, but you need to drive them.\n\n1. **Get CFO on the calendar this week.** The zero-margin structure triggers a `block_absolute` guardrail. CFO must either approve one of the reframed alternatives (recommended: $60K baseline + 18% rev-share, or $150K annual minimum guarantee + audit rights) or provide an explicit executive override before Legal can draft counters.\n2. **Loop in Legal now — do not send any counter to Reverberate yet.** The white-label clause as proposed is a perpetual, potentially transferable IP license. Legal must scope it (non-transferable, non-sublicensable, 'Powered by Clay' attribution, auto-terminates on exit) and add audit rights + minimum guarantee language to the rev-share before anything goes to Reverberate.\n3. **Flag the channel-conflict risk to your manager Sarah before step 2 approvals kick off.** Eight of Reverberate's clients are in Clay's top-50 direct customer base; CFO and Legal both need to know this upfront for the principal-vs-agent ASC 606 determination.\n\n**Approval chain you're walking into:** Sarah (AE Manager, Step 1) → CFO + Legal + RevOps in parallel (Step 2, all three have independent veto rights) → CEO (Step 3). Budget 10–12 business days once blockers are cleared — the June 1 close date is at risk if CFO isn't engaged by end of this week.",
         "suggested_send_time": "within 4 business hours"
       },
       "customer_email_draft": {
         "to_role": "champion",
-        "subject": "Reverberate Engine Partnership — Clay's Position on the Four Open Points",
-        "body_markdown": "We appreciate the thoughtfulness behind the Reverberate Engine proposal, and we genuinely see the mutual upside here — your distribution reach and our infrastructure are a natural fit. That said, our internal review has surfaced four areas where we need to land in a different place before we can move this forward.\n\nOn the **white-label grant**: we can support white-labeling Tables and Waterfalls for active Reverberate client engagements, but we need 'Powered by Clay' attribution in-product and an explicit prohibition on representing the underlying technology as proprietary to Reverberate. We're open to discussing attribution placement, but this is a firm requirement.\n\nOn the **rev-share structure**: a $0 floor with no audit rights isn't a structure we can execute — our Finance team requires either a minimum annual guarantee (we're proposing $120K–$150K, creditable against rev-share above a gross threshold) or, at minimum, quarterly CFO-certified revenue attestations plus annual audit rights. The net-45 remittance window should move to net-30.\n\nOn **early access**: we can commit to Partner Preview access no fewer than 14 days before general availability for features Clay designates for partner release, with a mutual NDA governing each preview — but we can't contractually obligate 30-day advance access across all features, as that would constrain our launch sequencing for the full 24-month term.\n\nOn **co-marketing**: we're excited about joint case studies and are prepared to move quickly on approvals (5 business days, with deemed approval after silence), but each asset referencing Clay technology or client outcomes will need written end-client consent and Clay sign-off before publication.\n\nThis deal requires CEO, CFO, and Legal approval on our side, which we're actively routing — our expected internal cycle is approximately 12 business days. To keep your June 1 target in reach, the most useful next step is a 45-minute call with your founder, Devon, and our Head of Legal to align on the white-label scope and rev-share floor before we exchange a redlined term sheet.",
+        "subject": "Reverberate Engine Partnership — Clay's Position on Structure and Key Terms",
+        "body_markdown": "We appreciate the Reverberate team bringing this forward formally, and we understand the ambition behind the Reverberate Engine proposition — productizing what you've built on Clay for your client base is a natural next step, and the strategic alignment here is real. That said, because this structure sits entirely outside our standard pricing and approval matrix, we need to be transparent that several of the proposed terms require material changes before we can move toward a signed agreement.\n\nOn the **white-label grant**: we can support white-labeling Clay tables and waterfalls within the Reverberate Engine offering, but the license as proposed needs to be explicitly scoped — non-transferable, non-sublicensable beyond your direct end clients, limited to the surfaces in scope at signing, and subject to a 'Powered by Clay' attribution mark in a mutually agreed format. We're open to discussing where and how that attribution surfaces, but some form of it is a requirement.\n\nOn the **rev-share structure**: 25% of Reverberate Engine gross subscription revenue is a workable rate, but a pure rev-share with no floor and no audit rights isn't something we can approve at the estimated $400K–$1.2M annual contribution range. We need either a minimum annual guarantee of $150K with quarterly installments and Clay audit rights no more than once per year, or we move to a hybrid structure with a modest baseline subscription fee and a reduced rev-share rate — our teams are prepared to model both with you.\n\nOn **early access**: we can offer 14-day advance access to features designated for partner preview, but it must be restricted to Reverberate's internal team under mutual NDA until general availability — not client-facing deployment — and excludes features under regulatory review or competitive confidentiality holds.\n\nOn **co-marketing**: we support joint content and case studies with mutual written approval on each piece, and any content referencing Clay-powered workflows must include Clay attribution in body copy or footnote — the specific format is negotiable.\n\nThis deal requires CEO, CFO, and Legal sign-off on our side, and we expect that process to take 10–12 business days once we align on the structural parameters above. To keep your June 1 target in view, we'd like to schedule a working session with your founder and our deal team this week to close the gap on the rev-share floor and attribution questions before we route internally — can you confirm availability?",
         "tone": "collaborative",
         "counter_positions_included": [
           "white_label",
@@ -363,30 +370,30 @@
         "sections": [
           {
             "heading": "Headline",
-            "content_markdown": "Reverberate Growth, a top-50 GTM agency, proposes a 24-month white-label partnership: they resell Clay tables and waterfalls as \"Reverberate Engine\" to their clients, paying Clay a **25% rev share** (est. $400K–$1.2M/yr) with **no baseline subscription fee**. ACV/TCV are $0 on contract; all economics are variable. Deal converts a potential rebuild-and-compete risk into a distribution channel covering 8 of Clay's own top-50 customers."
+            "content_markdown": "Reverberate Growth (top-18 GTM agency, $12M ARR, 80 employees) proposes a 24-month white-label partnership: Clay's tables and waterfalls are resold under their 'Reverberate Engine' brand, with Clay earning a 25% revenue share (est. $400K–$1.2M/yr) and no baseline subscription fee. AE Devon Wright has no authority over partnership deals; routed to deal-desk by RevOps."
           },
           {
             "heading": "Pricing Summary",
-            "content_markdown": "| Metric | Value |\n|---|---|\n| List / Proposed Price | $0 (rev-share only) |\n| Effective Discount | N/A — no priced contract |\n| Estimated Annual Rev-Share | $400K–$1.2M (midpoint ~$800K) |\n| Guaranteed Revenue | **$0** — 100% variable |\n| Computed Margin | **0%** (block_absolute fired) |\n\n**Margin guardrail status:** Gross margin absolute floor (≥25%) is a **hard block** — no fixed revenue line exists to certify margin compliance. CFO must resolve before close.\n\n**Recommended alternative structures (from Pricing Agent):**\n- **Option A — Minimum Guarantee + Rev-Share Blend:** $120K/yr non-refundable platform fee offset against rev-share above $480K gross threshold → clears margin block at ~40% on the floor.\n- **Option B — Tiered Rev-Share (20% / 28% / 33%):** No floor; ~7% ACV uplift at midpoint but margin uncertainty persists — must pair with a minimum quarterly true-up.\n- **Option C — $75K Platform Access Fee + 18% Rev-Share:** Immediately books subscription revenue at ~40% margin; Reverberate's total cost at $800K gross is ~$219K vs. $200K today — modest premium offset by formalized co-marketing rights."
+            "content_markdown": "- **List / proposed price:** $0 (no subscription fee)\n- **Effective discount:** N/A — pure rev-share structure\n- **Estimated annual rev-share contribution:** $400K–$1.2M (midpoint ~$800K)\n- **Margin:** Formally 0% at signing; triggers **block_absolute** guardrail (floor: 25%)\n- **Recommended alternative structures (pick one before closing):**\n  1. **Hybrid:** $60K/yr baseline + 18% rev-share → ~40% margin, clears all guardrails\n  2. **Escrow + Minimum Guarantee:** Keep 25% rev-share; add $75K rolling escrow, $200K annual guarantee, annual audit rights → ~35% margin\n  3. **Flat License Fee:** $120K/yr, no rev-share → 40% margin, cleanest audit trail, forfeits upside"
           },
           {
             "heading": "Risk Findings",
-            "content_markdown": "**Redline — Overall Priority: BLOCK (4 flagged clauses)**\n\n| Clause | Risk | Status |\n|---|---|---|\n| White-label grant | HIGH — unrestricted; Clay brand invisible to 8 top-50 customers; non-transferability absent; sets reseller commoditization precedent | Must redline: scope to Tables/Waterfalls only, add \"Powered by Clay\" in-product attribution, prohibit Reverberate from claiming IP as proprietary, add audit right |\n| Rev-share (25%, no floor) | HIGH — zero guaranteed revenue; no audit rights; effectively 135-day credit on Q1 revenue; unverifiable subscription numbers | Must add: $120K–$150K annual floor, CFO-certified quarterly attestations, annual audit right, net-30 remittance |\n| Early access (30-day blanket) | MEDIUM — contractual obligation constrains every Clay product launch for 24 months; exposes pre-release product without NDA | Redline to: Clay-designated \"Partner Preview\" only, ≥14 days, NDA per release, carve-outs for security/regulatory/embargoed features |\n| Co-marketing (no approval gate) | MEDIUM — Reverberate can publish case studies referencing top-50 clients without Clay review, risking relationship damage and misrepresentation | Add: 5-day written approval gate, end-client consent required before submission, \"Powered by Clay\" attribution |\n\n**ASC 606 Red Flags**\n\n- 🔴 **BLOCK:** 100% variable consideration ($0 fixed) — CFO and auditor must pre-clear revenue treatment, principal-vs-agent conclusion (Clay is likely licensor/agent; only 25% rev-share hits Clay's top line), and disclosure approach before signing.\n- 🟡 **WARN:** Principal-vs-agent determination requires formal accounting memo — end customers contract with Reverberate, not Clay.\n- 🟡 **WARN:** No audit-rights clause → quarterly remittance unverifiable; revenue cutoff risk at quarter-end.\n- 🟡 **WARN:** Channel conflict — white-label could cannibalize direct ARR from 8 overlapping top-50 customers; affects standalone selling price analysis.\n- 🔵 **INFO:** Co-marketing and early-access promises require distinctness assessment to confirm they are not separate performance obligations under ASC 606-10-25-19."
+            "content_markdown": "**Redline — BLOCK**\n- **White-label grant (high):** As proposed, this is effectively a perpetual, transferable IP sublicense with no Clay attribution and no scope limit. Survives acquisition of Reverberate. Counter required: non-transferable, non-sublicensable, scoped to current surfaces, + *'Powered by Clay'* attribution mark.\n- **Rev-share structure (high):** No floor, no audit rights, no minimum guarantee. Up to $300K/yr underpayment exposure. Counter required: $150K annual minimum guarantee + annual audit right (5% underpayment threshold triggers cost shift).\n- **Early access — 30 days (medium):** Client-facing pre-GA deployment lets Reverberate pre-empt Clay's own PLG launch narrative. Counter required: restrict to Reverberate internal/testing only under mutual NDA; cap at 14 days or limit to publicly announced-but-unshipped features.\n- **Co-marketing attribution (medium):** All case study credit flows to Reverberate; Clay brand suppressed in its own PLG segment. Counter required: mutual approval gate, 'Powered by Clay' in body or footnote of all joint content.\n\n**ASC 606 — BLOCK (requires CFO sign-off before signing)**\n- 100% variable consideration (royalty exception applies per ASC 606-10-55-65); CRM shows $0 ACV/TCV — revenue recognition model must be documented and approved.\n- **Principal vs. agent** determination needed: affects gross-vs-net presentation. 8 Reverberate clients overlap with Clay's top-50 direct customers — 25% rev-share on those accounts may constitute *consideration payable to a customer* (ASC 606-10-32-25), reducing direct-contract revenue.\n- Early-access PO requires separate ESP allocation and ratable recognition, complicating the royalty-exception model.\n- Contract modification risk is elevated: any feature scope change or rate change reopens the 606 analysis.\n\n**Pricing Guardrails**\n- `gross_margin_absolute_floor` → **BLOCK** (0% actual vs. 25% threshold) — structural artifact of $0 price, but must be resolved via CFO exception or alternative structure.\n- `gross_margin_warn` → WARN (0% vs. 40% target)."
           },
           {
             "heading": "Approval Routing",
-            "content_markdown": "| Step | Approver | Veto? | Notes |\n|---|---|---|---|\n| 1 | **AE Manager** — Sarah Goldstein | No | Initiating step; must also confirm channel conflict mitigation strategy with RevOps |\n| 2 (parallel) | **Legal** | ✅ Yes | Negotiate all 4 redlined clauses; white-label scope and attribution are non-negotiable minimums |\n| 2 (parallel) | **CFO** | ✅ Yes | Issue ASC 606 memo (sales-based royalty exception + principal-vs-agent); clear margin block_absolute; approve rev-share floor structure |\n| 2 (parallel) | **RevOps** | No | Confirm PLG/self-serve segment fit, partnership precedent implications, deal structure sign-off |\n| 3 | **CEO** | ✅ Yes | Final strategic/brand decision; partnership deals default to CEO per approval matrix |\n\n**Estimated cycle time: ~12 business days** (5 days parallel Legal/CFO/RevOps review + 2 days CEO + 5 days redline iteration buffer)\n\n**Deal cannot route to Step 2 until:** AE confirms written acknowledgment of 8 overlapping top-50 customers and channel conflict mitigation strategy."
+            "content_markdown": "| Step | Approver | Veto? | Notes |\n|------|----------|-------|-------|\n| 1 | AE Manager — Sarah Goldstein | No | Intake confirmation |\n| 2 (parallel) | **CFO** | ✅ Yes | Zero-margin guardrail exception; 606 revenue model sign-off |\n| 2 (parallel) | **Legal** | ✅ Yes | White-label scope, attribution, minimum guarantee, audit rights, early-access NDA |\n| 2 (parallel) | **RevOps** | No | Partnership governance, reporting cadence, audit controls |\n| 3 | **CEO** | ✅ Yes | Final approval; partnership deals require CEO per policy |\n\n**Estimated cycle time: 10–12 business days** (gated by parallel CFO + Legal alignment before CEO can engage)\n\n**Must clear before Legal sends counters:**\n1. CFO selects alternative pricing structure (or grants explicit 0-margin override)\n2. Legal scopes white-label grant (non-transferable, attributed, surface-limited)\n3. CFO + Legal jointly confirm ASC 606 principal-vs-agent classification\n4. RevOps establishes quarterly reconciliation and annual true-up framework"
           },
           {
             "heading": "Recommendation",
-            "content_markdown": "**🟡 SHIP WITH CONDITIONS**\n\nThe partnership has genuine strategic merit — converting a rebuild risk into distribution leverage across 8 top-50 customers — but the deal **cannot be executed as proposed**: all four redline clauses are blockers, the gross margin absolute floor is a hard block, and ASC 606 revenue treatment requires CFO pre-clearance; the minimum conditions to proceed are a guaranteed revenue floor ($120K–$150K/yr platform fee or equivalent), scoped white-label with \"Powered by Clay\" attribution, audit rights on rev-share remittance, and a co-marketing approval gate — ship once these are contractually secured."
+            "content_markdown": "**Ship with conditions** — the strategic opportunity is real (distribution leverage into 8 top-50 Clay customers, $800K midpoint annual rev-share, rebuild risk converted to partnership), but the deal cannot proceed as proposed: the white-label clause is an unscoped IP license, the rev-share has no floor or audit rights, and the 0% margin structure triggers a hard CFO block — all three must be resolved before counters go out."
           }
         ]
       },
       "reasoning_summary": "Calibrated customer email to collaborative tone given the deal context. AE email leads with verdict (ship-with-conditions (blockers must clear first)) and a numbered next-step list. One-pager and Slack post both headline the recommendation and surface 4 flagged redlines (4 countered in customer reply). Approval routing summary: ~12 business days through 5-step chain."
     }
   },
-  "synthesis": "Pricing cannot be evaluated against standard guardrails because the deal carries $0 ACV and no subscription line, but the gross-margin absolute floor technically fires and CFO must validate white-label COGS before any structure is approved. ASC 606 treatment hinges on the sales-based royalty exception with 100% variable consideration, plus a live principal-vs-agent question and contract-modification risk over the 24-month term — final call requires CFO and auditor sign-off. Redline is the loudest blocker: an unrestricted white-label grant risks invisibilizing Clay's brand with up to 8 top-50 customers, and the rev-share has no floor or audit right, so all four non-standard clauses must be countered before close. Approval routes through the partnership rule directly to CEO via AE Manager → Legal/CFO/RevOps (parallel) → CEO, an estimated 12 business days. Recommendation is ship-with-conditions on a collaborative tone — counter the four redlines firmly, secure a rev-share floor and audit right, and do not accept as drafted.",
+  "synthesis": "Pricing fires a block_absolute guardrail on 0% margin because list and proposed prices are both $0, so the rev-share economics need explicit CFO override against actual white-label COGS before this can move. ASC 606 treatment leans on the sales/usage royalty exception, but six red flags — distinct co-marketing and early-access POs, principal-vs-agent, and consideration-payable-to-a-customer — keep contract modification risk live and require auditor review. Redline is a hard block: the white-label grant lacks scope limits, non-transferability, and attribution, and the rev-share has no minimum guarantee or audit rights against an estimated $400K–$1.2M annual range. Approval requires parallel CFO, Legal, and RevOps clearance before CEO sign-off, a ~12 business day cycle with low confidence given no precedent. Recommendation: hold and re-scope — do not ship until white-label scope, rev-share floor with audit rights, and CFO margin override are resolved, then proceed with the collaborative customer tone already drafted.",
   "similar_deals": [
     {
       "deal_id": "deal_slate_2026_upgrade",
@@ -429,57 +436,57 @@
     }
   ],
   "customer_signals": {
-    "source": "exa",
+    "source": "simulated",
     "customer": {
       "name": "Reverberate Growth",
       "domain": "reverberategrowth.com"
     },
-    "fetched_at": "2026-05-05T15:32:33.804Z",
+    "fetched_at": "2026-05-05T16:29:47.862Z",
     "signals": [
       {
         "kind": "product",
-        "headline": "Reverberate 2026 - Shout Out Loud",
-        "source_domain": "shoutoutloud.org.uk",
-        "url": "https://www.shoutoutloud.org.uk/project/reverberate-2026/",
-        "published_date": "2026-04-16T13:57:20.000Z",
-        "summary": "Summary: - Reverberate 2026 (Shout Out Loud) is now open for applications, inviting grassroots groups to create small, locally-based heritage projects that engage young people in re-discovering, re-imagining, and re-creating stories connec…",
-        "score": 50
+        "headline": "Reverberate Growth crosses 50 active mid-market clients, formalizes 'Reverberate Engine' practice",
+        "source_domain": "modernsalesops.com",
+        "url": "",
+        "published_date": "2026-04-08T13:00:00.000Z",
+        "summary": "GTM agency Reverberate Growth announced its 50th active client and the formal launch of 'Reverberate Engine,' a productized service line that bundles outbound and enrichment workflows for mid-market RevOps teams.",
+        "score": 81
       },
       {
         "kind": "leadership",
-        "headline": "Tim Chachibaia | REVERB",
-        "source_domain": "reverbico.com",
-        "url": "https://reverbico.com/leader/tim-chachibaia/",
-        "published_date": "2026-03-31T14:25:18.000Z",
-        "summary": "Summary: Tim Chachibaia is the Director of Growth at TheBestReputation (a fast-growing online reputation management firm). In the interview-style content, he explains his role overseeing brand growth, content, social media, paid placements…",
-        "score": 50
+        "headline": "Reverberate founder publishes 2026 GTM Operator Playbook, 14k subscribers in two weeks",
+        "source_domain": "modernsalesops.com",
+        "url": "",
+        "published_date": "2026-03-19T10:30:00.000Z",
+        "summary": "Reverberate Growth's founder released the '2026 GTM Operator Playbook,' a long-form essay on agency-led RevOps that gained 14,000 subscribers in its first two weeks. The post argues for vendor-agnostic agency partnerships over single-vendor lock-in.",
+        "score": 76
+      },
+      {
+        "kind": "other",
+        "headline": "Reverberate Growth named #18 on annual 'Top 50 GTM Agencies' list",
+        "source_domain": "salesopstoday.com",
+        "url": "",
+        "published_date": "2026-01-14T11:00:00.000Z",
+        "summary": "Reverberate Growth ranked #18 on the annual 'Top 50 GTM Agencies' list (up from #34 the prior year), with judges citing strong client outcomes in enrichment-heavy outbound and waterfall enrichment design.",
+        "score": 73
       },
       {
         "kind": "product",
-        "headline": "Introducing Reeve: Your AI Growth Team — Reeve Blog",
-        "source_domain": "meetreeve.com",
-        "url": "https://www.meetreeve.com/blog/introducing-reeve",
-        "published_date": "2026-03-04T13:35:31.000Z",
-        "summary": "Summary: - Reeve positions itself as an AI-powered growth team, not just a collection of tools. It aims to unify disparate growth functions (ads, analytics, email, support, social) into one cohesive, action-driving system. - Core problem a…",
-        "score": 50
-      },
-      {
-        "kind": "product",
-        "headline": "RightRev Launches Governed AI Platform for End-to-End Revenue Accounting Automation",
-        "source_domain": "prnewswire.com",
-        "url": "https://www.prnewswire.com/news-releases/rightrev-launches-governed-ai-platform-for-end-to-end-revenue-accounting-automation-302703376.html",
-        "published_date": "2026-03-04T13:00:00.000Z",
-        "summary": "Summary: RightRev announces the launch of Revi, its governed AI platform for end-to-end revenue accounting automation. Revi is an AI-powered, audit-ready engine designed to streamline revenue recognition across contracts, pricing, usage, b…",
-        "score": 50
+        "headline": "GTM agencies announce vendor partnerships at 2026 RevOps Summit",
+        "source_domain": "modernsalesops.com",
+        "url": "",
+        "published_date": "2026-02-27T14:00:00.000Z",
+        "summary": "At the RevOps Summit, several top-50 GTM agencies — including Reverberate — were named in vendor co-launch sessions. Industry observers describe a shift toward agency-vendor revenue-share partnerships rather than referral fees.",
+        "score": 70
       },
       {
         "kind": "leadership",
-        "headline": "Verve Group expands Executive Team positioning the Company for further growth - Inderes",
-        "source_domain": "inderes.fi",
-        "url": "https://www.inderes.fi/releases/verve-group-expands-executive-team-positioning-the-company-for-further-growth",
-        "published_date": "2026-03-04T12:31:24.000Z",
-        "summary": "Verve Group announces a major refresh of its executive leadership and subsequent leadership transition to accelerate growth and scale the unified platform. Key points: - New executive lineup: - Christian Duus, CFO - Sameer Sondhi, CRO - Mi…",
-        "score": 50
+        "headline": "Reverberate hires former PLG-vendor head of partnerships",
+        "source_domain": "salesopstoday.com",
+        "url": "",
+        "published_date": "2025-12-02T09:00:00.000Z",
+        "summary": "Reverberate Growth hired a former head of partnerships from a major PLG vendor to lead its new 'Strategic Vendor Partnerships' practice — explicitly framed as a path to revenue-share deals with infrastructure providers.",
+        "score": 69
       }
     ],
     "note": null
@@ -497,814 +504,814 @@
       "label": "Fetched deal: Reverberate Growth — Reverberate Engine White-Label Partnership",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 127
+      "elapsed_ms": 126
     },
     {
       "id": "step2_fanout",
       "label": "Fanning out: customer signals + similar past deals (parallel)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 127
+      "elapsed_ms": 126
     },
     {
       "id": "step2_signals",
       "label": "Querying Exa for Reverberate Growth signals (≤6mo)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 127
+      "elapsed_ms": 126
     },
     {
       "id": "step2_similar",
       "label": "Running k-NN over deal_embeddings (sqlite-vec)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 127
-    },
-    {
-      "id": "step2_similar",
-      "label": "Found 3 similar past deals (top: 62% match)",
-      "status": "complete",
-      "parent": "Orchestrator",
-      "elapsed_ms": 144
+      "elapsed_ms": 126
     },
     {
       "id": "step2_signals",
       "label": "Found 5 recent signals for Reverberate Growth",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 9904
+      "elapsed_ms": 130
+    },
+    {
+      "id": "step2_similar",
+      "label": "Found 3 similar past deals (top: 62% match)",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 130
     },
     {
       "id": "step2_fanout",
       "label": "Step 2 complete (5 signals · 3 similar deals)",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 9904
+      "elapsed_ms": 130
     },
     {
       "id": "step3_dispatch",
       "label": "Dispatching parallel review: Pricing + ASC 606 + Redline",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 9904
+      "elapsed_ms": 131
     },
     {
       "id": "step3_await",
       "label": "Awaiting parallel review completion (0 of 3 returned)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 9904
+      "elapsed_ms": 131
     },
     {
       "id": "fetch_deal",
       "label": "Fetching deal record from CRM",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 9904
+      "elapsed_ms": 131
     },
     {
       "id": "fetch_deal",
       "label": "Fetched deal record from CRM",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 9905
+      "elapsed_ms": 131
     },
     {
       "id": "load_guardrails",
       "label": "Loading active pricing guardrails for PLG segment",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 9905
+      "elapsed_ms": 131
     },
     {
       "id": "identify_obligations",
       "label": "Identifying performance obligations",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 9905
+      "elapsed_ms": 131
     },
     {
       "id": "load_context",
       "label": "Loading deal context and customer signals",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 9916
+      "elapsed_ms": 135
     },
     {
       "id": "load_context",
       "label": "Loaded deal context and customer signals",
       "status": "complete",
       "parent": "Redline Agent",
-      "elapsed_ms": 10068
+      "elapsed_ms": 287
     },
     {
       "id": "scan_clauses",
       "label": "Scanning non-standard clauses",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 10068
+      "elapsed_ms": 287
     },
     {
       "id": "load_guardrails",
       "label": "Loaded 4 guardrails for PLG segment",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 10107
+      "elapsed_ms": 333
     },
     {
       "id": "similar_deals",
       "label": "Identifying similar past deals via vector search",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 10107
+      "elapsed_ms": 333
     },
     {
       "id": "similar_deals",
       "label": "Loaded 3 similar deals as precedent",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 10329
+      "elapsed_ms": 555
     },
     {
       "id": "reasoning",
       "label": "Reasoning about pricing economics",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 10329
+      "elapsed_ms": 555
     },
     {
       "id": "scan_clauses",
       "label": "Scanned non-standard clauses",
       "status": "complete",
       "parent": "Redline Agent",
-      "elapsed_ms": 12990
+      "elapsed_ms": 2882
     },
     {
       "id": "analyze_clauses",
       "label": "Analyzing flagged clauses (0)",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 12990
+      "elapsed_ms": 2882
     },
     {
       "id": "analyze_clauses",
       "label": "Analyzing flagged clauses (1)",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 12990
-    },
-    {
-      "id": "guardrail_eval",
-      "label": "Evaluating guardrails (0 of 4)",
-      "status": "running",
-      "parent": "Pricing Agent",
-      "elapsed_ms": 13384
+      "elapsed_ms": 2882
     },
     {
       "id": "identify_obligations",
       "label": "Identified performance obligations",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 14011
+      "elapsed_ms": 4152
     },
     {
       "id": "evaluate_distinctness",
       "label": "Evaluating distinctness (1)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 14011
+      "elapsed_ms": 4152
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (0 of 4)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 5684
     },
     {
       "id": "guardrail_eval",
       "label": "Evaluating guardrails (1 of 4)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 14146
-    },
-    {
-      "id": "guardrail_eval",
-      "label": "Evaluating guardrails (2 of 4)",
-      "status": "running",
-      "parent": "Pricing Agent",
-      "elapsed_ms": 16428
-    },
-    {
-      "id": "analyze_clauses",
-      "label": "Analyzed 1 flagged clauses",
-      "status": "complete",
-      "parent": "Redline Agent",
-      "elapsed_ms": 16842
-    },
-    {
-      "id": "draft_counters",
-      "label": "Drafting counter-positions for high-risk clauses",
-      "status": "running",
-      "parent": "Redline Agent",
-      "elapsed_ms": 16842
+      "elapsed_ms": 6099
     },
     {
       "id": "evaluate_distinctness",
       "label": "Evaluating distinctness (2)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 17817
+      "elapsed_ms": 8007
+    },
+    {
+      "id": "analyze_clauses",
+      "label": "Analyzed 1 flagged clauses",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 8033
+    },
+    {
+      "id": "draft_counters",
+      "label": "Drafting counter-positions for high-risk clauses",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 8034
     },
     {
       "id": "guardrail_eval",
-      "label": "Evaluating guardrails (3 of 4)",
+      "label": "Evaluating guardrails (2 of 4)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 18333
+      "elapsed_ms": 8593
     },
     {
       "id": "evaluate_distinctness",
       "label": "Evaluating distinctness (3)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 20532
+      "elapsed_ms": 10293
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (3 of 4)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 10661
     },
     {
       "id": "draft_counters",
       "label": "Drafted counter-positions",
       "status": "complete",
       "parent": "Redline Agent",
-      "elapsed_ms": 21032
+      "elapsed_ms": 12054
     },
     {
       "id": "draft_fallbacks",
       "label": "Drafting fallback positions",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 21032
+      "elapsed_ms": 12054
     },
     {
       "id": "evaluate_distinctness",
       "label": "Evaluated 3 performance obligations",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 21763
+      "elapsed_ms": 12199
     },
     {
       "id": "analyze_variable_consideration",
       "label": "Analyzing variable consideration sources",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 21763
+      "elapsed_ms": 12199
     },
     {
       "id": "guardrail_eval",
       "label": "Evaluating guardrails (4 of 4)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 21808
+      "elapsed_ms": 13514
     },
     {
       "id": "guardrail_eval",
       "label": "Evaluated 4 guardrails",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 23508
+      "elapsed_ms": 15925
     },
     {
       "id": "alternatives",
       "label": "Generating alternative structures (0 of 3)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 23508
+      "elapsed_ms": 15925
     },
     {
       "id": "alternatives",
       "label": "Generating alternative structures (1 of 3)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 26046
+      "elapsed_ms": 19715
     },
     {
       "id": "analyze_variable_consideration",
       "label": "Analyzed variable consideration",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 29058
+      "elapsed_ms": 19914
     },
     {
       "id": "assess_modification_risk",
       "label": "Assessing contract modification risk",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 29058
-    },
-    {
-      "id": "alternatives",
-      "label": "Generating alternative structures (2 of 3)",
-      "status": "running",
-      "parent": "Pricing Agent",
-      "elapsed_ms": 30711
+      "elapsed_ms": 19914
     },
     {
       "id": "assess_modification_risk",
       "label": "Assessed contract modification risk",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 31393
+      "elapsed_ms": 23055
     },
     {
       "id": "compute_recognition_schedule",
       "label": "Computing revenue recognition schedule",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 31393
+      "elapsed_ms": 23055
     },
     {
       "id": "compute_recognition_schedule",
       "label": "Computing recognition schedule (period 1)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 31393
+      "elapsed_ms": 23055
     },
     {
       "id": "compute_recognition_schedule",
       "label": "Computing recognition schedule (period 2)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 32915
+      "elapsed_ms": 24199
     },
     {
       "id": "compute_recognition_schedule",
       "label": "Computed recognition schedule (2 periods)",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 33353
+      "elapsed_ms": 24962
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (0)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 33353
+      "elapsed_ms": 24963
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (1)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 33353
+      "elapsed_ms": 24963
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (2 of 3)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 25472
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (2)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 35251
-    },
-    {
-      "id": "alternatives",
-      "label": "Generating alternative structures (3 of 3)",
-      "status": "running",
-      "parent": "Pricing Agent",
-      "elapsed_ms": 36424
+      "elapsed_ms": 27249
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (3)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 36772
+      "elapsed_ms": 28389
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (4)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 37941
+      "elapsed_ms": 30390
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (5)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 39891
+      "elapsed_ms": 31154
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (3 of 3)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 31556
+    },
+    {
+      "id": "flag_red_flags",
+      "label": "Flagging red flags (6)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 31916
+    },
+    {
+      "id": "flag_red_flags",
+      "label": "Flagged 6 red flags",
+      "status": "complete",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 33059
     },
     {
       "id": "alternatives",
       "label": "Generated 3 alternative structures",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 39891
-    },
-    {
-      "id": "flag_red_flags",
-      "label": "Flagged 5 red flags",
-      "status": "complete",
-      "parent": "ASC 606 Agent",
-      "elapsed_ms": 40963
+      "elapsed_ms": 35561
     },
     {
       "id": "finalizing",
       "label": "Finalizing recognition recommendation",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 43417
+      "elapsed_ms": 36708
     },
     {
       "id": "finalizing",
-      "label": "Finalized rev-rec analysis (low confidence, 5 red flags)",
+      "label": "Finalized rev-rec analysis (low confidence, 6 red flags)",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 43539
+      "elapsed_ms": 36831
     },
     {
       "id": "step3_await",
       "label": "Awaiting parallel review completion (1 of 3 returned — ASC 606)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 43539
+      "elapsed_ms": 36831
     },
     {
       "id": "reasoning",
       "label": "Reasoned about pricing economics",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 43774
+      "elapsed_ms": 41240
     },
     {
       "id": "margin_sensitivity",
       "label": "Computing margin sensitivity under the 40% list-price baseline",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 43774
+      "elapsed_ms": 41240
     },
     {
       "id": "margin_sensitivity",
       "label": "Computed margin sensitivity (0.0% est.)",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 43928
+      "elapsed_ms": 41395
     },
     {
       "id": "finalizing",
       "label": "Finalizing recommendation",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 43928
+      "elapsed_ms": 41395
     },
     {
       "id": "finalizing",
       "label": "Finalized recommendation (low confidence)",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 44050
+      "elapsed_ms": 41518
     },
     {
       "id": "step3_await",
       "label": "Awaiting parallel review completion (2 of 3 returned — Pricing)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 44051
+      "elapsed_ms": 41518
     },
     {
       "id": "draft_fallbacks",
       "label": "Drafted fallback positions",
       "status": "complete",
       "parent": "Redline Agent",
-      "elapsed_ms": 48798
+      "elapsed_ms": 47677
     },
     {
       "id": "cross_reference_signals",
       "label": "Cross-referencing customer position-of-strength signals",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 48798
+      "elapsed_ms": 47677
     },
     {
       "id": "cross_reference_signals",
       "label": "Cross-referenced position-of-strength signals",
       "status": "complete",
       "parent": "Redline Agent",
-      "elapsed_ms": 49785
+      "elapsed_ms": 50822
     },
     {
       "id": "finalizing",
       "label": "Finalizing redline recommendations",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 55697
+      "elapsed_ms": 55174
     },
     {
       "id": "finalizing",
       "label": "Finalized redline (4 flagged · priority: block)",
       "status": "complete",
       "parent": "Redline Agent",
-      "elapsed_ms": 55819
+      "elapsed_ms": 55295
     },
     {
       "id": "step3_await",
       "label": "Awaiting parallel review completion (3 of 3 returned — Redline)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 55819
+      "elapsed_ms": 55295
     },
     {
       "id": "step3_dispatch",
       "label": "Parallel review complete (3 of 3 returned)",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 55819
+      "elapsed_ms": 55295
     },
     {
       "id": "step3_await",
       "label": "All three parallel agents returned",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 55819
+      "elapsed_ms": 55295
     },
     {
       "id": "step4_routing",
       "label": "Routing approvals based on upstream outputs",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 55819
+      "elapsed_ms": 55295
     },
     {
       "id": "load_matrix",
       "label": "Loading active approval matrix (8 rules)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 55820
+      "elapsed_ms": 55296
     },
     {
       "id": "load_matrix",
       "label": "Loaded 8 active matrix rules",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 55941
+      "elapsed_ms": 55417
     },
     {
       "id": "evaluate_rules",
       "label": "Evaluating each matrix rule (0 of 8)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 55941
+      "elapsed_ms": 55417
     },
     {
       "id": "evaluate_rules",
       "label": "Evaluated 8 matrix rules",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 58748
+      "elapsed_ms": 57650
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (0)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 58748
+      "elapsed_ms": 57650
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (1)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 58748
+      "elapsed_ms": 57650
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (2)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 59651
+      "elapsed_ms": 58484
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (3)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 60647
+      "elapsed_ms": 60209
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (4)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 62212
+      "elapsed_ms": 61923
     },
     {
       "id": "identify_triggered",
-      "label": "Identifying triggered rules (5)",
-      "status": "running",
-      "parent": "Approval Agent",
-      "elapsed_ms": 63441
-    },
-    {
-      "id": "identify_triggered",
-      "label": "Identified 5 triggered rules",
+      "label": "Identified 4 triggered rules",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 64007
+      "elapsed_ms": 62808
     },
     {
       "id": "build_chain",
       "label": "Building approval chain",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 64007
+      "elapsed_ms": 62808
     },
     {
       "id": "build_chain",
       "label": "Built approval chain",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 65386
+      "elapsed_ms": 64242
     },
     {
       "id": "compute_cycle_time",
       "label": "Computing expected cycle time",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 65386
+      "elapsed_ms": 64242
     },
     {
       "id": "compute_cycle_time",
       "label": "Computed expected cycle time",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 69993
+      "elapsed_ms": 69345
     },
     {
       "id": "finalizing",
       "label": "Finalizing routing decision",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 75038
+      "elapsed_ms": 73059
     },
     {
       "id": "finalizing",
       "label": "Finalized routing (5 steps · 12d cycle time)",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 75160
+      "elapsed_ms": 73182
     },
     {
       "id": "step4_routing",
       "label": "Routed approvals (5 steps)",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 75160
+      "elapsed_ms": 73182
     },
     {
       "id": "step5_comms",
       "label": "Generating communications based on full review",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 75160
+      "elapsed_ms": 73182
     },
     {
       "id": "analyze_context",
       "label": "Analyzing deal context and tone requirements",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 75160
+      "elapsed_ms": 73182
     },
     {
       "id": "analyze_context",
       "label": "Selected tone calibration based on deal context",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 75313
+      "elapsed_ms": 73335
     },
     {
       "id": "draft_slack_post",
       "label": "Drafting Slack post for #deal-desk",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 75313
+      "elapsed_ms": 73335
     },
     {
       "id": "draft_ae_email",
       "label": "Drafting AE email with structured action items",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 75313
+      "elapsed_ms": 73335
     },
     {
       "id": "draft_customer_email",
       "label": "Drafting customer reply with counter-positions",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 75313
+      "elapsed_ms": 73335
     },
     {
       "id": "build_one_pager",
       "label": "Building approval review one-pager",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 75313
+      "elapsed_ms": 73335
     },
     {
       "id": "draft_ae_email",
       "label": "Drafted AE email",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 86593
+      "elapsed_ms": 86007
     },
     {
       "id": "draft_customer_email",
       "label": "Drafted customer reply (collaborative tone)",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 91780
+      "elapsed_ms": 91993
     },
     {
       "id": "draft_slack_post",
       "label": "Drafted Slack post",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 95446
+      "elapsed_ms": 94692
     },
     {
       "id": "build_one_pager",
       "label": "Built approval review one-pager (5 sections)",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 109806
+      "elapsed_ms": 107288
     },
     {
       "id": "finalizing",
       "label": "Finalizing communication artifacts",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 109806
+      "elapsed_ms": 107288
     },
     {
       "id": "finalizing",
       "label": "Finalized 4 artifacts (Slack · AE email · customer email · one-pager)",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 109929
+      "elapsed_ms": 107411
     },
     {
       "id": "step5_comms",
       "label": "Generated all communication artifacts",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 109929
+      "elapsed_ms": 107411
     },
     {
       "id": "step6_synthesis",
       "label": "Synthesizing executive summary",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 109929
+      "elapsed_ms": 107411
     },
     {
       "id": "step6_synthesis",
       "label": "Synthesized 4-sentence executive overview",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 118569
+      "elapsed_ms": 116104
     }
   ],
   "metadata": {
-    "duration_ms": 118569,
-    "total_input_tokens": 100104,
-    "total_output_tokens": 11045,
-    "total_cost_usd": 0.4140042,
-    "recorded_at": "2026-05-05T15:34:22.469Z",
+    "duration_ms": 116104,
+    "total_input_tokens": 108151,
+    "total_output_tokens": 11483,
+    "total_cost_usd": 0.4789212,
+    "recorded_at": "2026-05-05T16:31:43.840Z",
     "per_agent": {
       "pricing": {
-        "duration_ms": 34146,
-        "input_tokens": 7689,
-        "output_tokens": 1675,
-        "cost_usd": 0.0299358
+        "duration_ms": 41387,
+        "input_tokens": 8403,
+        "output_tokens": 1780,
+        "cost_usd": 0.043406549999999995
       },
       "asc606": {
-        "duration_ms": 33634,
-        "input_tokens": 9560,
-        "output_tokens": 2003,
-        "cost_usd": 0.056303
+        "duration_ms": 36700,
+        "input_tokens": 10609,
+        "output_tokens": 2232,
+        "cost_usd": 0.07959425
       },
       "redline": {
-        "duration_ms": 45903,
-        "input_tokens": 7565,
-        "output_tokens": 2031,
-        "cost_usd": 0.04341299999999999
+        "duration_ms": 55160,
+        "input_tokens": 8137,
+        "output_tokens": 2351,
+        "cost_usd": 0.05094
       },
       "approval": {
-        "duration_ms": 19340,
-        "input_tokens": 13574,
-        "output_tokens": 1531,
-        "cost_usd": 0.025780450000000003
+        "duration_ms": 17886,
+        "input_tokens": 14871,
+        "output_tokens": 1517,
+        "cost_usd": 0.0286187
       },
       "comms": {
-        "duration_ms": 34769,
-        "input_tokens": 53809,
-        "output_tokens": 3451,
-        "cost_usd": 0.23288419999999999
+        "duration_ms": 34229,
+        "input_tokens": 58277,
+        "output_tokens": 3255,
+        "cost_usd": 0.2511972
       },
       "synthesis": {
-        "duration_ms": 8640,
-        "input_tokens": 7907,
-        "output_tokens": 354,
-        "cost_usd": 0.02568775
+        "duration_ms": 8693,
+        "input_tokens": 7854,
+        "output_tokens": 348,
+        "cost_usd": 0.025164499999999996
       }
     }
   }

@@ -24,7 +24,13 @@ export interface CustomerSignal {
 }
 
 export interface CustomerSignalsResult {
-  source: "exa" | "exa_unavailable";
+  // exa             — live Exa results for a real customer
+  // exa_unavailable — Exa key missing or skipped; empty signals
+  // simulated       — fictional customer; hand-authored signals served
+  //                   instead of Exa to avoid name-collision results
+  // empty_unknown   — fictional customer with no simulated_signals (e.g.
+  //                   visitor-submitted unknown company); empty by design
+  source: "exa" | "exa_unavailable" | "simulated" | "empty_unknown";
   customer: { name: string; domain: string };
   fetched_at: string;
   signals: CustomerSignal[];
@@ -60,7 +66,17 @@ function getExaClient(): Exa | null {
 }
 
 export interface FetchCustomerSignalsArgs {
-  customer: { name: string; domain: string };
+  customer: {
+    name: string;
+    domain: string;
+    // Drives the real-vs-simulated branch. Defaults to true (= treat as a
+    // real lookup) for callers who don't pass it — that matches the
+    // visitor-submitted-deal flow where we always go to Exa.
+    is_real?: boolean;
+    // Hand-authored signals served instead of Exa when is_real === false.
+    // Coming from `customers.simulated_signals` (JSON-decoded).
+    simulated_signals?: CustomerSignal[] | null;
+  };
   // Allow callers to override the topic queries — visitor-submitted deals
   // can pick narrower queries. Defaults match the docs spec.
   topics?: ReadonlyArray<{ kind: SignalKind; query: string }>;
@@ -70,6 +86,43 @@ export async function fetchCustomerSignals(
   args: FetchCustomerSignalsArgs,
 ): Promise<CustomerSignalsResult> {
   const { customer } = args;
+  const isRealLookup = customer.is_real !== false; // default true
+
+  // ---- Fictional customer branch ----
+  // Real Exa returns unrelated public results for invented company names
+  // (Tessera Therapeutics for Tessera Health, etc). Serve hand-authored
+  // signals instead, tagged as "simulated" so the UI badges them clearly.
+  // If a fictional customer has no authored signals (e.g. visitor submits
+  // an unknown company in Phase 7), return an empty result — never
+  // fabricate, never auto-generate.
+  if (!isRealLookup) {
+    const fixture = customer.simulated_signals;
+    if (fixture && fixture.length > 0) {
+      const trimmed = fixture
+        .slice()
+        .sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score;
+          return (b.published_date ?? "").localeCompare(a.published_date ?? "");
+        })
+        .slice(0, MAX_SIGNALS_RETURNED);
+      return {
+        source: "simulated",
+        customer: { name: customer.name, domain: customer.domain },
+        fetched_at: new Date().toISOString(),
+        signals: trimmed,
+        note: null,
+      };
+    }
+    return {
+      source: "empty_unknown",
+      customer: { name: customer.name, domain: customer.domain },
+      fetched_at: new Date().toISOString(),
+      signals: [],
+      note: "No public signals available for this customer.",
+    };
+  }
+
+  // ---- Real customer branch (live Exa with 24h cache) ----
   const cacheKey = customer.domain.toLowerCase();
   const cache = getCache();
   const cached = cache.get(cacheKey);
@@ -81,7 +134,7 @@ export async function fetchCustomerSignals(
   if (!client) {
     const result: CustomerSignalsResult = {
       source: "exa_unavailable",
-      customer,
+      customer: { name: customer.name, domain: customer.domain },
       fetched_at: new Date().toISOString(),
       signals: [],
       note: "Exa API key not configured. Skipping customer signals.",
@@ -159,7 +212,7 @@ export async function fetchCustomerSignals(
 
   const result: CustomerSignalsResult = {
     source: "exa",
-    customer,
+    customer: { name: customer.name, domain: customer.domain },
     fetched_at: new Date().toISOString(),
     signals: trimmed,
     note:

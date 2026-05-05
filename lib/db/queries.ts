@@ -12,6 +12,9 @@ export type Customer = {
   arr_estimate: number | null;
   health_score: number | null;
   is_real: number;
+  // JSON array of simulated signals (matches CustomerSignal[]). Only set for
+  // fictional customers we hand-author signals for. Real customers ignore this.
+  simulated_signals: string | null;
   created_at: string;
 };
 
@@ -103,6 +106,7 @@ export function listDeals(): DealWithCustomer[] {
         c.arr_estimate AS c_arr_estimate,
         c.health_score AS c_health_score,
         c.is_real AS c_is_real,
+        c.simulated_signals AS c_simulated_signals,
         c.created_at AS c_created_at,
         s.display_order AS s_display_order,
         s.is_recommended AS s_is_recommended,
@@ -141,6 +145,7 @@ export function getDealById(id: string): DealWithCustomer | null {
         c.arr_estimate AS c_arr_estimate,
         c.health_score AS c_health_score,
         c.is_real AS c_is_real,
+        c.simulated_signals AS c_simulated_signals,
         c.created_at AS c_created_at,
         s.display_order AS s_display_order,
         s.is_recommended AS s_is_recommended,
@@ -199,6 +204,7 @@ function reshapeDealRow(row: Record<string, unknown>): DealWithCustomer {
     arr_estimate: row.c_arr_estimate as number | null,
     health_score: row.c_health_score as number | null,
     is_real: row.c_is_real as number,
+    simulated_signals: row.c_simulated_signals as string | null,
     created_at: row.c_created_at as string,
   };
 

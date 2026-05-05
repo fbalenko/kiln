@@ -1,4 +1,5 @@
 import type { DB } from "@/lib/db/client";
+import type { CustomerSignal } from "@/lib/tools/exa-search";
 
 export type CustomerSeed = {
   id: string;
@@ -12,7 +13,211 @@ export type CustomerSeed = {
   arr_estimate: number | null;
   health_score: number | null;
   is_real: 0 | 1;
+  // Hand-authored signals served instead of Exa for fictional customers.
+  // Real customers leave this undefined and always hit Exa live.
+  // Per the simulated-signals design: url is set to "" so the UI never
+  // accidentally links out to a fabricated source — rows render non-clickable
+  // and the panel header carries an explicit "Simulated · Demo data" badge.
+  simulated_signals?: CustomerSignal[];
 };
+
+// ---------------------------------------------------------------------------
+// Hand-authored simulated signals for fictional hero customers. Served by
+// fetchCustomerSignals() instead of Exa when customer.is_real === 0.
+//
+// Why: Exa returns real public results for our invented company names —
+// "Tessera" hits Tessera Therapeutics (biotech), "Northbeam" hits a
+// completely unrelated marketing-attribution startup, "Reverberate" hits
+// fitness-class brands. Those are misleading in a deal-desk demo. We replace
+// them with plausible-but-explicitly-labeled signals matched to the deal
+// narrative for each scenario.
+//
+// Honesty: every signal renders behind a "Simulated · Demo data" badge in
+// the UI; rows are non-clickable; URLs are deliberately blank so nothing
+// links out to a fabricated source.
+//
+// Today is 2026-05-05; published_date stays inside the rolling 6-month
+// window so the recency filter behaves identically to live Exa results.
+// ---------------------------------------------------------------------------
+
+const tesseraHealthSignals: CustomerSignal[] = [
+  {
+    kind: "leadership",
+    headline: "Tessera Health names new Chief Revenue Officer to lead consolidation push",
+    source_domain: "healthtechnews.com",
+    url: "",
+    published_date: "2026-03-12T14:00:00.000Z",
+    summary:
+      "Tessera Health announced the appointment of a new CRO (formerly VP Sales at a rival healthtech provider), tasked with consolidating sales tooling and accelerating mid-market enterprise expansion through 2026.",
+    score: 78,
+  },
+  {
+    kind: "product",
+    headline: "Tessera Health expands HIPAA-attested integration suite for hospital networks",
+    source_domain: "healthtechnews.com",
+    url: "",
+    published_date: "2026-04-02T09:30:00.000Z",
+    summary:
+      "Tessera released expanded HIPAA-attested integrations targeting Epic, Cerner, and Meditech-shaped buyers. The release is positioned as evidence of compliance maturity ahead of Tessera's enterprise upmarket push.",
+    score: 72,
+  },
+  {
+    kind: "other",
+    headline: "Healthtech RevOps leaders cite stack consolidation as #1 2026 priority — survey",
+    source_domain: "modernhealthtech.co",
+    url: "",
+    published_date: "2026-02-18T11:00:00.000Z",
+    summary:
+      "Industry survey finds 64% of mid-market healthtech RevOps leaders plan to consolidate three or more sales-engagement tools in 2026, citing renewal pressure and security-review fatigue.",
+    score: 66,
+  },
+  {
+    kind: "other",
+    headline: "Tessera Health crosses 1,200 employees, posts second consecutive profitable quarter",
+    source_domain: "healthtechnews.com",
+    url: "",
+    published_date: "2026-01-23T16:45:00.000Z",
+    summary:
+      "Q4 2025 earnings update notes a 1,200-person headcount and a second straight profitable quarter, alongside a stated 2026 priority of vendor consolidation across go-to-market infrastructure.",
+    score: 70,
+  },
+  {
+    kind: "leadership",
+    headline: "Tessera Health adds VP RevOps from data-platform vendor",
+    source_domain: "modernhealthtech.co",
+    url: "",
+    published_date: "2025-12-09T13:15:00.000Z",
+    summary:
+      "Tessera hired a VP RevOps from a data-platform vendor; her stated 90-day plan reportedly includes a sales-tooling RFP focused on prospecting, enrichment, and outbound orchestration.",
+    score: 68,
+  },
+  {
+    kind: "funding",
+    headline: "Healthtech mid-market vendors face tighter Series D bar amid 2026 capital reset",
+    source_domain: "modernhealthtech.co",
+    url: "",
+    published_date: "2026-02-05T10:00:00.000Z",
+    summary:
+      "Investor commentary suggests Series C healthtech operators (incl. Tessera-shaped 1,000-1,500 person mid-market players) face stricter capital efficiency expectations heading into late-2026 Series D rounds.",
+    score: 60,
+  },
+];
+
+const northbeamMortgageSignals: CustomerSignal[] = [
+  {
+    kind: "other",
+    headline: "Mortgage origination volume falls for third straight quarter as rates hold high",
+    source_domain: "fintechfutures.com",
+    url: "",
+    published_date: "2026-04-18T08:30:00.000Z",
+    summary:
+      "Industry data shows mortgage origination volume down 14% YoY in Q1 2026 as the Fed holds rates above 5%. Mid-market lenders cite a third straight quarter of demand softness.",
+    score: 74,
+  },
+  {
+    kind: "leadership",
+    headline: "Northbeam Mortgage trims 8% of staff in operations and loan-officer roles",
+    source_domain: "fintechfutures.com",
+    url: "",
+    published_date: "2026-03-04T12:00:00.000Z",
+    summary:
+      "Northbeam Mortgage confirmed an 8% workforce reduction primarily affecting back-office operations and loan-officer roles, citing the prolonged rate environment and a need to extend runway through 2027.",
+    score: 82,
+  },
+  {
+    kind: "product",
+    headline: "YC-backed mortgage-origination startup launches at 60% below incumbents",
+    source_domain: "techcrunch.com",
+    url: "",
+    published_date: "2026-02-22T15:30:00.000Z",
+    summary:
+      "A Y Combinator W26 fintech launched a mortgage-origination platform priced at roughly 60% below incumbents like Northbeam and Better, targeting mid-market regional lenders with an AI-first underwriting workflow.",
+    score: 79,
+  },
+  {
+    kind: "leadership",
+    headline: "Northbeam Mortgage CRO emphasizes 'cost discipline' on Q4 investor call",
+    source_domain: "fintechfutures.com",
+    url: "",
+    published_date: "2026-01-30T17:00:00.000Z",
+    summary:
+      "On the Q4 2025 investor call, Northbeam's CRO highlighted 'unit economics' and 'cost discipline' eight times, signaling tighter scrutiny on every renewal and procurement contract through fiscal 2026.",
+    score: 71,
+  },
+  {
+    kind: "other",
+    headline: "Regional banks cut software spend 12% YoY, vendor consolidation accelerates",
+    source_domain: "fintechfutures.com",
+    url: "",
+    published_date: "2025-12-15T09:45:00.000Z",
+    summary:
+      "Regional bank and non-bank lender SaaS spend fell 12% YoY through late 2025, with vendor consolidation accelerating across data, marketing, and origination tooling — Northbeam-class lenders are central to the trend.",
+    score: 64,
+  },
+  {
+    kind: "funding",
+    headline: "Northbeam Mortgage extends Series C runway with $40M secondary",
+    source_domain: "fintechfutures.com",
+    url: "",
+    published_date: "2025-11-19T11:30:00.000Z",
+    summary:
+      "Northbeam closed a $40M structured secondary led by an existing investor, framed as runway extension rather than a primary raise. The transaction valued the company below its 2023 Series C mark.",
+    score: 67,
+  },
+];
+
+const reverberateGrowthSignals: CustomerSignal[] = [
+  {
+    kind: "product",
+    headline: "Reverberate Growth crosses 50 active mid-market clients, formalizes 'Reverberate Engine' practice",
+    source_domain: "modernsalesops.com",
+    url: "",
+    published_date: "2026-04-08T13:00:00.000Z",
+    summary:
+      "GTM agency Reverberate Growth announced its 50th active client and the formal launch of 'Reverberate Engine,' a productized service line that bundles outbound and enrichment workflows for mid-market RevOps teams.",
+    score: 81,
+  },
+  {
+    kind: "leadership",
+    headline: "Reverberate founder publishes 2026 GTM Operator Playbook, 14k subscribers in two weeks",
+    source_domain: "modernsalesops.com",
+    url: "",
+    published_date: "2026-03-19T10:30:00.000Z",
+    summary:
+      "Reverberate Growth's founder released the '2026 GTM Operator Playbook,' a long-form essay on agency-led RevOps that gained 14,000 subscribers in its first two weeks. The post argues for vendor-agnostic agency partnerships over single-vendor lock-in.",
+    score: 76,
+  },
+  {
+    kind: "product",
+    headline: "GTM agencies announce vendor partnerships at 2026 RevOps Summit",
+    source_domain: "modernsalesops.com",
+    url: "",
+    published_date: "2026-02-27T14:00:00.000Z",
+    summary:
+      "At the RevOps Summit, several top-50 GTM agencies — including Reverberate — were named in vendor co-launch sessions. Industry observers describe a shift toward agency-vendor revenue-share partnerships rather than referral fees.",
+    score: 70,
+  },
+  {
+    kind: "other",
+    headline: "Reverberate Growth named #18 on annual 'Top 50 GTM Agencies' list",
+    source_domain: "salesopstoday.com",
+    url: "",
+    published_date: "2026-01-14T11:00:00.000Z",
+    summary:
+      "Reverberate Growth ranked #18 on the annual 'Top 50 GTM Agencies' list (up from #34 the prior year), with judges citing strong client outcomes in enrichment-heavy outbound and waterfall enrichment design.",
+    score: 73,
+  },
+  {
+    kind: "leadership",
+    headline: "Reverberate hires former PLG-vendor head of partnerships",
+    source_domain: "salesopstoday.com",
+    url: "",
+    published_date: "2025-12-02T09:00:00.000Z",
+    summary:
+      "Reverberate Growth hired a former head of partnerships from a major PLG vendor to lead its new 'Strategic Vendor Partnerships' practice — explicitly framed as a path to revenue-share deals with infrastructure providers.",
+    score: 69,
+  },
+];
 
 // 6 real public companies that match Clay's ICP. These give the pipeline
 // view immediate credibility — a deal-desk hire scanning the list should
@@ -220,6 +425,7 @@ const fictionalMidMarket: CustomerSeed[] = [
     arr_estimate: 95_000_000,
     health_score: 58,
     is_real: 0,
+    simulated_signals: tesseraHealthSignals,
   },
   {
     id: "cust_northbeam_mortgage",
@@ -233,6 +439,7 @@ const fictionalMidMarket: CustomerSeed[] = [
     arr_estimate: 70_000_000,
     health_score: 42,
     is_real: 0,
+    simulated_signals: northbeamMortgageSignals,
   },
   {
     id: "cust_pebblebrook_logistics",
@@ -379,6 +586,7 @@ const fictionalPlg: CustomerSeed[] = [
     arr_estimate: 12_000_000,
     health_score: 88,
     is_real: 0,
+    simulated_signals: reverberateGrowthSignals,
   },
   {
     id: "cust_hightide_devtools",
@@ -562,15 +770,22 @@ export function seedCustomers(db: DB): number {
   const insert = db.prepare(`
     INSERT OR REPLACE INTO customers (
       id, name, domain, segment, employee_count, industry, hq_country,
-      funding_stage, arr_estimate, health_score, is_real
+      funding_stage, arr_estimate, health_score, is_real, simulated_signals
     ) VALUES (
       @id, @name, @domain, @segment, @employee_count, @industry, @hq_country,
-      @funding_stage, @arr_estimate, @health_score, @is_real
+      @funding_stage, @arr_estimate, @health_score, @is_real, @simulated_signals
     )
   `);
 
   const insertAll = db.transaction((rows: CustomerSeed[]) => {
-    for (const row of rows) insert.run(row);
+    for (const row of rows) {
+      insert.run({
+        ...row,
+        simulated_signals: row.simulated_signals
+          ? JSON.stringify(row.simulated_signals)
+          : null,
+      });
+    }
   });
 
   insertAll(customers);

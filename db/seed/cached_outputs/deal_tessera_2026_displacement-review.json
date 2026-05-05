@@ -14,7 +14,7 @@
           "severity": "warn",
           "actual_value": 33.3,
           "threshold_value": 20,
-          "explanation": "The effective discount of 33.3% exceeds the mid-market soft ceiling of 20%. This is a yellow flag — the AE should be prepared to justify the competitive context in any approval conversation."
+          "explanation": "The effective discount of 33.3% exceeds the mid-market soft ceiling of 20%. This is a yellow flag that should prompt the AE to justify the concession size in writing before the deal advances."
         },
         {
           "rule_name": "Mid-market discount requires Finance sign-off",
@@ -22,7 +22,7 @@
           "severity": "block_without_approval",
           "actual_value": 33.3,
           "threshold_value": 30,
-          "explanation": "At 33.3% discount, this deal exceeds the 30% mid-market Finance sign-off threshold and cannot proceed without explicit Finance approval. The deal must be re-routed before closing."
+          "explanation": "At 33.3%, the discount exceeds the 30% mid-market Finance approval threshold. This deal cannot proceed to signature without explicit Finance sign-off — the AE must escalate immediately given the 10-day close window."
         },
         {
           "rule_name": "Mid-market ramp length requires sign-off",
@@ -30,7 +30,7 @@
           "severity": "block_without_approval",
           "actual_value": 12,
           "threshold_value": 3,
-          "explanation": "The ramp schedule spans 12 months (months 1–12), far exceeding the 3-month mid-market limit. This hides significant discount in the ramp structure and triggers mandatory Finance approval for ASC 606 and revenue recognition reasons."
+          "explanation": "The ramp schedule spans 12 months (months 1–12), far exceeding the 3-month mid-market threshold. Finance approval is required; this structure also raises ASC 606 revenue recognition complexity that accounting will need to review."
         },
         {
           "rule_name": "Gross margin floor (warn)",
@@ -38,7 +38,7 @@
           "severity": "warn",
           "actual_value": 10,
           "threshold_value": 40,
-          "explanation": "Estimated gross margin of ~10% is well below the 40% warn threshold. Even under conservative assumptions, this deal is a major margin outlier — concessions need to be restructured."
+          "explanation": "Estimated gross margin at the proposed price is approximately 10%, well below the 40% warn threshold. The deal is deeply margin-compressed even before accounting for the $40K waived implementation services."
         },
         {
           "rule_name": "Gross margin absolute floor",
@@ -46,217 +46,232 @@
           "severity": "block_absolute",
           "actual_value": 10,
           "threshold_value": 25,
-          "explanation": "At ~10% estimated gross margin, this deal violates the absolute 25% floor and cannot be approved in its current form. All concessions must be reshaped before re-quoting — this is a hard block."
+          "explanation": "At ~10% gross margin, this deal violates the absolute 25% margin floor and must be restructured before it can be re-quoted. This is a hard stop — no approval path exists at current economics; concessions must be reshaped."
         }
       ],
       "alternative_structures": [
         {
-          "label": "Option A: 36-Month Commit + Reduced Discount, Drop Free Period",
-          "description": "Extend term to 36 months at a 22% list discount ($280,800 ACV). Eliminate the 6-month free period entirely — replace it with a 90-day onboarding credit ($18K one-time) applied to invoice. Remove the 90-day termination-for-convenience clause. Lock expansion pricing through 2027 as requested. Implementation services waived as goodwill given 3-year commit.",
-          "proposed_price": 280800,
-          "effective_discount_pct": 22,
-          "expected_acv_impact": 40800,
-          "margin_pct_estimate": 40,
-          "rationale": "The 6-month free period is the single biggest margin killer — it effectively creates a 50%+ discount in Year 1. A 36-month commit justifies a 22% discount (still above the soft ceiling but defensible with Finance), brings margin back to list-equivalent level, and gives Tessera the consolidation story and pricing certainty they want. The AE trades the out clause for term security."
-        },
-        {
-          "label": "Option B: Ramp-to-Full with Year-2 Escalator, No Free Period",
-          "description": "Structured as a 24-month deal at $260,000 ACV (28% discount). Replace the 6-month free period with a true ramp: months 1–3 at 50% of ACV ($130K annualized), months 4–6 at 75% ($195K annualized), months 7–24 at full ACV ($260K). Year 2 includes a built-in 8% escalator ($280,800). Remove the 90-day out clause. Implementation services waived. Expansion pricing locked through 2027.",
-          "proposed_price": 260000,
-          "effective_discount_pct": 27.8,
-          "expected_acv_impact": 20000,
-          "margin_pct_estimate": 30,
-          "rationale": "This mirrors how Tessera's RevOps team will actually ramp users post-consolidation — a phased ramp is honest and reduces sticker shock, while the Year-2 escalator builds in revenue recovery. Margin is above the absolute floor, discount is at the block-without-approval threshold (requires Finance sign-off but is approvable), and the escalator partially compensates for Year-1 ramp. Eliminates the 90-day out clause risk in exchange for the slower ramp."
-        },
-        {
-          "label": "Option C: Professional Services as Separate Line + Smaller Subscription Discount",
-          "description": "Re-bundle implementation services as a paid line item at $30K (25% reduction from $40K list as a goodwill gesture). Subscription discount reduced to 20% ($288,000 ACV). Free period compressed to 60 days (not 6 months). Retain expansion pricing lock through 2027. Remove 90-day out clause entirely — offer instead a 12-month early termination fee equal to 3 months ACV as a compromise. Total Year-1 revenue: $318,000 ($288K subscription + $30K PS).",
+          "label": "36-Month Commit with Reduced Discount + Paid Implementation",
+          "description": "Extend term to 36 months, reduce headline discount to 20%, eliminate the waived implementation services (bill $40K as a separate professional services line), shorten the free period to 3 months, and remove the 90-day out clause. Expansion pricing lock through end of 2027 can be retained as a goodwill concession.",
           "proposed_price": 288000,
           "effective_discount_pct": 20,
           "expected_acv_impact": 48000,
-          "margin_pct_estimate": 39.2,
-          "rationale": "Unbundling PS restores a full-margin revenue line that the current proposal gives away entirely. Bringing the subscription discount to exactly the soft ceiling means it passes the warn guardrail and only requires Finance sign-off (not a hard block). The 90-day out clause is replaced with a mutual off-ramp that still protects Clay's revenue. Total deal economics improve significantly with PS revenue included."
+          "margin_pct_estimate": 25,
+          "rationale": "Dropping the discount to 20% and adding back the $40K implementation line gets margin above the absolute floor. The 36-month term offsets the reduced headline discount by improving LTV and reducing churn risk — Tessera's consolidation intent and profitable quarters support long-term commitment. Removing the 90-day out clause is the structural win that makes the commitment credible."
+        },
+        {
+          "label": "Year-1 Ramp with Built-In Escalator + Usage Floor",
+          "description": "Accept a 6-month ramp but charge a nominal ramp fee of $10K/month during months 1–6 (instead of $0), stepping to full $20K/month in months 7–12. Year 2 escalates 10% ($264K ACV). Remove the 90-day out clause. Implementation services billed at cost ($25K, split-funded). Headline discount reduced to 25%.",
+          "proposed_price": 270000,
+          "effective_discount_pct": 25,
+          "expected_acv_impact": 30000,
+          "margin_pct_estimate": 17.8,
+          "rationale": "The nominal ramp fee preserves revenue recognition simplicity, partially recovers the free-period giveaway, and signals to Tessera that the ramp is a scheduling accommodation rather than an extended trial. The Year 2 escalator provides ACV upside and sets a precedent for future expansion pricing. Margin remains below the absolute floor — this structure requires a waiver but is meaningfully better than the current proposal and more defensible with Finance."
+        },
+        {
+          "label": "Co-Marketing Credit in Lieu of Additional Discount + Remove Out Clause",
+          "description": "Hold the headline discount at 25% (proposed price $270K), remove the 90-day termination-for-convenience right entirely, waive implementation services but offset with a formal co-marketing and case study commitment (Tessera participates in a joint press release, a published case study, and one analyst reference call within 12 months of go-live). Ramp shortened to 3 months (months 1–3 at $0, months 4–12 at full rate) to comply with mid-market ramp guardrail and simplify ASC 606.",
+          "proposed_price": 270000,
+          "effective_discount_pct": 25,
+          "expected_acv_impact": 30000,
+          "margin_pct_estimate": 17.8,
+          "rationale": "The co-marketing obligation converts a pure price concession into a pipeline asset — a healthtech reference customer at Tessera's ARR tier has material pipeline value. Removing the 90-day out clause is the single most important structural improvement; it reduces churn optionality the customer should not have at this discount depth. Shortening the ramp to 3 months clears the mid-market ramp guardrail and simplifies revenue recognition, removing one of the two block_without_approval flags."
         }
       ],
       "ltv_estimate_under_usage_assumptions": null,
       "similar_deal_references": [],
       "confidence": "medium",
-      "reasoning_summary": "This deal violates every active guardrail simultaneously — the 33.3% subscription discount clears both the mid-market warn (20%) and block-without-approval (30%) thresholds, the 12-month ramp far exceeds the 3-month mid-market sign-off limit, and estimated gross margin of ~10% breaches the absolute floor of 25%, making this a hard block in current form. The margin estimate uses the working assumption that list price carries a 40% gross margin (i.e., COGS = 60% × $360K = $216K), so the CFO should refine this with actual COGS before relying on the specific margin percentage. The non-standard clauses compound the economic risk: the 6-month free period effectively doubles the implicit discount in Year 1, the waived $40K implementation adds further margin erosion, and the 90-day termination-for-convenience right creates material churn exposure on a deal that requires 24 months to generate adequate return. None of the three precedent deals were directly applicable (all enterprise-segment, lower discount rates), so alternative structures were built from guardrail logic and deal mechanics rather than precedent."
+      "reasoning_summary": "This deal fails every guardrail simultaneously: the 33.3% discount violates both the mid-market warn (20%) and Finance sign-off (30%) thresholds; the 12-month ramp far exceeds the 3-month mid-market ceiling; and estimated gross margin of ~10% breaches the absolute 25% floor — making the deal non-executable as structured. Margin is computed assuming list price carries a 40% gross margin (COGS = 60% of list = $216K), which is a working assumption the CFO should validate; if COGS are lower, the margin picture improves proportionally. The $40K waived implementation services are an additional unmodeled concession that further erodes true deal economics beyond what is reflected in the margin estimate. Comparable precedent deals (Helix, Cipher, Tideline) all closed at 11–16% discount in adjacent segments, suggesting the 33.3% ask is a significant outlier that should be reanchored before Finance review."
     },
     "asc606": {
       "performance_obligations": [
         {
           "name": "Platform subscription (paid term)",
-          "description": "SaaS subscription for sales engagement/data platform over the 18-month paid term (months 7-24).",
+          "description": "24-month SaaS subscription to the platform; paid term begins month 7 after a 6-month free period.",
           "is_distinct": true,
-          "estimated_standalone_value": 360000,
+          "estimated_standalone_value": 480000,
           "expected_recognition_pattern": "ratable_over_term",
-          "rationale": "Stand-ready obligation to provide continuous access to the platform; customer simultaneously receives and consumes benefits ratably (ASC 606-10-25-27)."
+          "rationale": "Subscription access is a series of distinct services satisfied over time; customer simultaneously receives and consumes the benefit (ASC 606-10-25-27)."
         },
         {
-          "name": "Free-period platform access (months 1-6)",
-          "description": "Six months of free platform access prior to the paid term commencing in month 7.",
-          "is_distinct": false,
+          "name": "6-month free access period",
+          "description": "Free platform access for months 1–6 prior to the paid term commencing.",
+          "is_distinct": true,
           "estimated_standalone_value": 120000,
           "expected_recognition_pattern": "ratable_over_term",
-          "rationale": "Not a separate PO — the free period is a material right/discount embedded in the same subscription service. The total $480K TCV should be recognized ratably across the entire 24-month service period."
+          "rationale": "Although billed at zero, the free period is a promised service and material right; under ASC 606 the total contract consideration ($480K TCV) should be allocated ratably across the entire 24-month service period (or 30 months including free), not just the paid months."
         },
         {
           "name": "Implementation services (waived)",
-          "description": "Onboarding/implementation services normally priced at $40K, contractually waived.",
-          "is_distinct": true,
+          "description": "Standard $40K implementation services bundled at no charge.",
+          "is_distinct": false,
           "estimated_standalone_value": 40000,
-          "expected_recognition_pattern": "milestone",
-          "rationale": "Implementation is capable of being distinct, but since it is waived (zero consideration allocated) it produces no revenue; if not distinct from the SaaS, its cost is bundled into ratable subscription revenue."
+          "expected_recognition_pattern": "point_in_time",
+          "rationale": "Implementation is typically not separately identifiable from subscription onboarding for this offering; bundled value should be allocated to the combined performance obligation and recognized as the subscription is delivered."
+        },
+        {
+          "name": "Expansion pricing lock (2026 rates through 2027)",
+          "description": "Customer option to purchase additional seats at 2026 prices through end of 2027.",
+          "is_distinct": true,
+          "estimated_standalone_value": null,
+          "expected_recognition_pattern": "point_in_time",
+          "rationale": "Constitutes a material right under ASC 606-10-55-41 if the locked price is below expected standalone selling price at exercise; a portion of transaction price must be allocated to this option and recognized when exercised or expired."
         }
       ],
       "variable_consideration_flags": [
         {
           "source": "termination_for_convenience",
-          "treatment_required": "contract_term_reassessment",
+          "treatment_required": "reassess_contract_term",
           "estimation_difficulty": "high",
-          "explanation": "The 90-day anytime out clause may shorten the enforceable contract term under ASC 606-10-25-3. If deemed substantive, the contract term could be as short as 90 days, requiring revenue to be recognized over a much shorter horizon and treating each renewal period as a contract modification."
+          "explanation": "The 90-day anytime out clause may shorten the enforceable contract term under ASC 606-10-25-3 to effectively a rolling 90-day contract, which would dramatically alter revenue recognition and TCV recognized."
         },
         {
           "source": "expansion_pricing_lock",
-          "treatment_required": "material_right_assessment",
-          "estimation_difficulty": "high",
-          "explanation": "Locking 2026 pricing for seat expansions through 2027 likely constitutes a material right (ASC 606-10-55-41). A portion of transaction price may need to be allocated to this option based on expected expansion volume and discount vs. standalone selling price."
+          "treatment_required": "material_right_allocation",
+          "estimation_difficulty": "medium",
+          "explanation": "The locked 2026 seat-expansion pricing through 2027 is a material right requiring allocation of transaction price to the option based on estimated likelihood and discount vs. SSP at exercise (ASC 606-10-55-42)."
         },
         {
-          "source": "free_period_discount",
-          "treatment_required": "transaction_price_allocation_over_full_service_period",
+          "source": "free_period_bundled",
+          "treatment_required": "expected_value_method",
           "estimation_difficulty": "low",
-          "explanation": "The 6-month free period is a discount embedded in the subscription; the $480K TCV is allocated ratably across the full 24-month service period rather than only the 18 paid months."
+          "explanation": "6 months of free service prior to paid term is non-cash consideration tied to the contract; total $480K transaction price should be allocated across the entire service period including free months."
         },
         {
           "source": "waived_implementation",
-          "treatment_required": "bundled_consideration_allocation",
-          "estimation_difficulty": "medium",
-          "explanation": "Waived $40K implementation services represent additional consideration concession; if implementation is distinct, SSP allocation may shift transaction price between POs."
+          "treatment_required": "allocate_to_combined_PO",
+          "estimation_difficulty": "low",
+          "explanation": "Waived $40K implementation has implied SSP and is bundled; transaction price allocation should reflect the combined deliverable."
         }
       ],
       "contract_modification_risk": {
         "is_at_risk": true,
-        "explanation": "The 90-day TFC clause and the 2026 expansion pricing lock through 2027 both create scenarios where future events (early termination, seat additions at locked pricing) would trigger reassessment of contract term, transaction price, and allocation under ASC 606-10-25-10 through 25-13."
+        "explanation": "The 90-day termination-for-convenience clause materially limits enforceable rights and may require treating the contract as a series of shorter renewable periods. The expansion pricing lock could trigger a contract modification under ASC 606-10-25-10 when seats are added at locked-in prices below then-prevailing SSP."
       },
       "recognized_revenue_schedule": [
         {
           "period": "Year 1 — Months 1-6 (free period)",
           "amount": 120000,
-          "notes": "Ratable recognition of total $480K TCV over full 24-month service period = $20K/month, even during free months."
+          "notes": "Allocated portion of $480K TCV ratably recognized during free access period (assuming enforceable 24-month term despite TFC)."
         },
         {
-          "period": "Year 1 — Months 7-12 (paid ramp begins)",
+          "period": "Year 1 — Months 7-12 (paid ramp)",
           "amount": 120000,
-          "notes": "$20K/month ratable; cash billed $20K/month per ramp schedule."
+          "notes": "Continued ratable recognition of allocated transaction price."
         },
         {
-          "period": "Year 2 — Months 13-24",
+          "period": "Year 2",
           "amount": 240000,
-          "notes": "$20K/month ratable; assumes no exercise of TFC clause."
+          "notes": "Ratable recognition over months 13-24; assumes TFC clause does not shorten enforceable term."
         }
       ],
       "red_flags": [
         {
           "severity": "block_without_approval",
           "label": "90-day termination-for-convenience clause",
-          "explanation": "An anytime 90-day TFC right may collapse the enforceable contract term to 90 days under ASC 606, materially changing revenue recognition and undermining the 24-month TCV. Requires CFO/auditor pre-clearance."
-        },
-        {
-          "severity": "block_without_approval",
-          "label": "Expansion pricing lock through 2027 (material right)",
-          "explanation": "Locked 2026 pricing for future seat expansions likely creates a material right requiring transaction price allocation; could defer revenue and complicate downstream modification accounting."
+          "explanation": "May reduce enforceable contract term under ASC 606-10-25-3 to 90 days, collapsing TCV recognition and impacting commission amortization (ASC 340-40). Requires CFO/auditor pre-clearance."
         },
         {
           "severity": "warn",
-          "label": "6 months free + waived $40K implementation",
-          "explanation": "Combined concessions exceed 50% of ACV. Must be reflected as discount in transaction price allocation across the 24-month service period, not booked as Year 2 catch-up."
+          "label": "Expansion pricing lock creates material right",
+          "explanation": "Locked 2026 pricing through 2027 likely constitutes a material right requiring transaction price allocation to the option."
         },
         {
           "severity": "warn",
-          "label": "35% discount vs. list",
-          "explanation": "Steep discount may distort SSP analysis and affect future deal benchmarking; ensure SSP is established independent of this contract."
+          "label": "6-month free period + waived implementation",
+          "explanation": "Significant non-cash and bundled consideration; total transaction price must be re-allocated across all promised goods/services, not just the paid months."
         },
         {
           "severity": "info",
-          "label": "Annual upfront billing with deferred service start",
-          "explanation": "Cash collected upfront while service is delivered ratably creates a sizable contract liability; ensure deferred revenue waterfall is modeled correctly."
+          "label": "Steep 35% discount + competitive displacement",
+          "explanation": "Discount magnitude and bundled freebies may distort SSP analysis used elsewhere in the portfolio."
         }
       ],
       "confidence": "low",
-      "reasoning_summary": "This deal combines multiple interacting variable-consideration sources (TFC, expansion pricing lock, free period, waived implementation) that materially complicate ASC 606 treatment. The 90-day TFC right is the dominant issue — it may shorten the enforceable term and invalidate ratable 24-month recognition. Transaction price ($480K) should be spread ratably across the full service period, but a material right allocation for the 2027 expansion lock is likely required. This is an automated estimate; final determination requires CFO/auditor review."
+      "reasoning_summary": "This deal combines multiple interacting variable-consideration sources: a 6-month free period, waived $40K implementation, a 90-day TFC clause that may shorten the enforceable term, and a 2026 expansion pricing lock through 2027 that creates a material right. Each element individually requires judgment; together they make revenue recognition timing and transaction price allocation highly uncertain. The TFC clause is the most consequential issue and could collapse the recognition schedule to a rolling short-term contract. This is an automated estimate; final determination requires CFO/auditor review."
     },
     "redline": {
       "flagged_clauses": [
         {
           "clause_type": "termination_for_convenience",
-          "customer_proposed_language": "Customer requests a 90-day termination-for-convenience right exercisable at any time during the 24-month term, with no cause required.",
+          "customer_proposed_language": "Customer requests a 90-day termination-for-convenience right exercisable at any time during the 24-month term, with no cure period or cause requirement.",
           "risk_level": "high",
-          "risk_explanation": "A 90-day anytime TFC on a 24-month deal means Tessera can walk after month 7 (first paid month) with just 90 days' notice, exposing Clay to as little as ~$60K in collected revenue against a 35%-discounted price, waived $40K implementation, and 6 months of free access — making the effective payback period unachievable. At a health score of 58, churn risk is real, not theoretical.",
-          "suggested_counter": "Customer may terminate this Agreement for convenience no earlier than the end of month eighteen (18) of the Initial Term, upon not less than ninety (90) days' prior written notice to Clay. In the event of such termination, Customer shall pay all fees due through the effective termination date plus a wind-down fee equal to three (3) months of the then-current monthly subscription fee. For the avoidance of doubt, no termination-for-convenience right shall be available during the first eighteen (18) months of the Initial Term.",
-          "fallback_position": "Accept a TFC window opening at month 15 (not 18), with 90-day notice and a two-month wind-down fee in lieu of three, provided all other concessions (6-month free period, waived impl.) remain unchanged.",
-          "precedent_notes": "Clay has accepted TFC rights with a minimum committed period floor (typically 12–18 months) on deals above $200K ACV; unconditional anytime TFC has not been approved at this discount depth."
+          "risk_explanation": "A 90-day anytime TFC on a 24-month deal means Clay absorbs the full cost of a 6-month free ramp plus $40K waived implementation, then faces walk risk from month 7 onward with only 90 days' notice. The mechanism: if Tessera churns at month 10, Clay collects ~$80K against a $40K implementation waiver and 6 months of free access — net revenue deeply negative versus cost to serve. Combined with a 35% discount, this clause converts a 24-month commitment into a de facto month-to-month arrangement after month 7.",
+          "suggested_counter": "Section [X] – Termination for Convenience is deleted in its entirety. In lieu thereof: 'Customer may terminate this Agreement for convenience upon one hundred eighty (180) days' prior written notice, provided that (a) such notice may not be delivered prior to the end of month twelve (12) of the Initial Term, (b) all fees through the end of the notice period remain due and payable, and (c) no refund of prepaid fees shall be owed.' For the avoidance of doubt, termination rights during the Initial Term remain limited to termination for cause as defined in Section [Y].",
+          "fallback_position": "Accept 90-day TFC but only exercisable after month 18 of the 24-month term, with all remaining annual fees for the notice-period year remaining due. Minimum cash collected before TFC window opens must cover implementation waiver and free-period cost basis.",
+          "precedent_notes": "Clay has accepted post-month-12 TFC windows on select enterprise deals above $500K ACV; sub-$300K ACV deals with concurrent free periods and implementation waivers have not historically received TFC rights."
         },
         {
           "clause_type": "expansion_pricing_lock",
-          "customer_proposed_language": "Customer requests that any seat or usage expansions purchased through end of 2027 be billed at 2026 contracted per-unit rates, regardless of standard price increases.",
+          "customer_proposed_language": "Customer requests that all seat expansions purchased through end of 2027 be priced at 2026 rates, regardless of any price increases Clay implements in the interim.",
           "risk_level": "high",
-          "risk_explanation": "A pricing lock through end of 2027 effectively converts a 24-month deal into a price-protected 30-month exposure (deal closes May 2026, lock runs to Dec 2027). If Clay raises list prices — standard 5–10% annually — and Tessera expands significantly, Clay absorbs the delta on every incremental seat. Combined with the 35% existing discount, expansion units could be priced at 65% of a stale list, compounding margin erosion on what should be the highest-margin revenue in the relationship.",
-          "suggested_counter": "Expansion seats purchased during the Initial Term shall be priced at Customer's contracted per-unit rate as of the Effective Date, subject to an annual uplift of no more than five percent (5%) applied on each anniversary of the Effective Date. This pricing protection expires upon the conclusion of the Initial Term and does not apply to any Renewal Term or to new product SKUs not included in the original Order Form.",
-          "fallback_position": "Accept flat 2026 pricing for expansions through end of the initial 24-month term only (i.e., through May 2028, not an artificial Dec 2027 cutoff), with no annual uplift, but only if TFC is restructured per the counter above.",
-          "precedent_notes": "Clay has offered within-term expansion price protection with a 5% annual uplift cap on strategic enterprise deals; a hard calendar-date lock decoupled from the contract anniversary has not been approved."
+          "risk_explanation": "Tessera is explicitly on an upmarket growth trajectory (1,200 employees, second profitable quarter, new CRO with stated expansion mandate). A 2026 price lock through end of 2027 means any seat adds — potentially significant given their stated consolidation and hiring trajectory — are immunized from Clay's standard annual price escalation. If Clay raises list prices 10–15% in 2027 (typical SaaS), Clay foregoes that uplift on every expansion unit Tessera buys. The lock is also asymmetric: it applies to expansions but not to any downward renegotiation leverage Clay might otherwise have at renewal.",
+          "suggested_counter": "Section [X] – Expansion Pricing: 'For any incremental seats added during the Initial Term, Customer shall receive pricing no greater than the per-seat rate in effect at the time of the original Order Form, subject to a maximum annual increase of five percent (5%) per calendar year. This expansion pricing commitment (a) applies solely to the same product tier purchased hereunder, (b) expires upon the end of the Initial Term, and (c) is contingent on Customer remaining current on all payment obligations. No expansion pricing commitment shall apply to any Renewal Term.'",
+          "fallback_position": "Accept a flat 2026 price lock on expansions up to 20% incremental seat growth over the contract baseline; any expansion beyond 20% of baseline seats is priced at then-current list with a 10% loyalty discount.",
+          "precedent_notes": "Clay has offered price-hold-for-term on expansions for strategic logos above $500K ACV; a hard calendar-year lock (extending into a renewal period) irrespective of ACV has not been standard."
         },
         {
           "clause_type": "free_period",
-          "customer_proposed_language": "Six months of free access (months 1–6) before the paid term begins at month 7, effectively deferring all revenue collection to the back 18 months of the 24-month contract.",
+          "customer_proposed_language": "Months 1–6 of the 24-month agreement are entirely free (no payment obligation); the paid term begins at month 7, yielding a ramp schedule that collects $120K in year one against a $240K ACV.",
           "risk_level": "high",
-          "risk_explanation": "Combined with the 90-day TFC, the free period creates a scenario where Tessera receives $120K in free platform value and $40K in waived services, then exits at month 9 (first paid month + 90-day notice) having paid only ~$60K — a net loss position for Clay. Even without early exit, Clay collects $240K TCV across only 18 paid months, meaning any churn or non-renewal in month 19 leaves Clay under-recovering against cost-to-serve and acquisition cost on a 35%-discounted deal.",
-          "suggested_counter": "The free onboarding period shall be limited to four (4) months (months 1–4). The paid term shall commence on the first day of month five (5). The ramp schedule shall be adjusted accordingly so that full contracted monthly fees are due no later than month nine (9). Clay will credit Customer the value of any unused implementation services (up to $20,000) as a fee credit applied against months 5–6 invoices in lieu of a full services waiver.",
-          "fallback_position": "Accept the 6-month free period only if (a) TFC is restructured to open no earlier than month 18, and (b) the expansion pricing lock includes the 5% annual uplift cap. If all three concessions stack without modification, the deal cannot ship.",
-          "precedent_notes": "Clay has approved free periods up to 3 months on competitive displacement deals at comparable ACV; 6-month free periods have only been approved when paired with multi-year hard commits (no TFC)."
+          "risk_explanation": "The 6-month free period, stacked on top of a 35% discount and a $40K implementation waiver, means Clay's effective yield in year one is $120K against a list value of $180K ($360K ACV ÷ 2). Combined with the 90-day TFC, Clay could exit the deal having collected $80K while having delivered 10 months of full service plus implementation. The free period also resets the customer's psychological 'start' of value realization to month 7, weakening renewal leverage at month 24.",
+          "suggested_counter": "Section [X] – Ramp Period: 'Months 1 through 3 of the Initial Term shall be provided at no charge as an onboarding period ('Ramp Period'). Commencing on the first day of month 4, Customer shall be invoiced at the full Annual Contract Value of $240,000, payable annually in advance. The Ramp Period shall not count toward any termination notice windows or minimum commitment periods.' (Reduces free exposure from 6 months to 3 months, recovering $60K in year-one cash.)",
+          "fallback_position": "Accept 4 months free (not 6), with the paid term beginning month 5. Annual invoicing at $240K ACV commences month 5. TFC window, if granted at all, cannot open until month 18.",
+          "precedent_notes": "Clay has approved up to 3-month ramp periods on competitive displacement deals; 6-month free periods have been approved only on deals exceeding $400K ACV with no concurrent TFC right."
         },
         {
           "clause_type": "implementation_services_waived",
-          "customer_proposed_language": "Customer requests full waiver of implementation services, normally valued at $40,000, as part of the deal package.",
+          "customer_proposed_language": "Implementation services (standard list price $40,000) are waived entirely as part of the competitive displacement package.",
           "risk_level": "medium",
-          "risk_explanation": "Waiving $40K in services on a $240K ACV deal represents an additional ~17% effective discount on top of the stated 35%, bringing the blended discount versus list to approximately 47%. More critically, without paid implementation, Tessera's time-to-value is at risk, which — given a health score of 58 at signing — increases the probability of early TFC invocation.",
-          "suggested_counter": "Clay shall provide implementation services at no additional charge up to a value of twenty thousand dollars ($20,000) ('Included Implementation Credit'). Any implementation services required beyond the Included Implementation Credit shall be scoped and priced separately. The Included Implementation Credit is non-transferable and expires ninety (90) days after the Effective Date.",
-          "fallback_position": "Accept full $40K services waiver only if the free period is reduced to 4 months and the TFC floor is set at month 15 or later. Do not accept full waiver alongside an unrestricted TFC.",
-          "precedent_notes": "Partial services credits ($15K–$25K) have been approved on competitive displacements; full $40K+ waivers typically require VP of Sales sign-off and are rare below $300K ACV."
+          "risk_explanation": "Individually a defensible concession on a competitive displacement deal; however, stacked with the 6-month free period and 35% discount, the total concession package is $40K waived services + $120K foregone ACV (free period) + $120K discount off list = $280K in total value given against $480K TCV. The $40K waiver becomes a direct cash cost (not a discount) if Clay uses third-party implementation resources. The risk compounds if the TFC is exercised early: Clay will have delivered full implementation value with no recovery mechanism.",
+          "suggested_counter": "Section [X] – Professional Services: 'Implementation services (standard value $40,000) shall be provided at no additional charge, subject to the following conditions: (a) Customer must complete the onboarding kickoff within thirty (30) days of the Effective Date; (b) implementation credits are non-transferable and expire if not consumed within the first ninety (90) days of the Term; and (c) in the event Customer exercises any early termination right, Customer shall reimburse Clay for the pro-rated value of implementation services delivered, calculated as ($40,000 × months remaining in Initial Term ÷ 24).'",
+          "fallback_position": "Waive implementation services unconditionally but cap scope: up to 80 hours of onboarding support only; any additional professional services at standard rates. Remove clawback requirement.",
+          "precedent_notes": "Implementation waivers on competitive displacements are common at this ACV tier; clawback provisions tied to early termination have been accepted by mid-market customers in at least two prior deals."
         }
       ],
       "standard_clauses_affirmed": [
         "Payment terms: annual upfront (standard)",
         "Pricing model: subscription (standard)",
-        "Contract term: 24 months (standard for mid-market displacement)"
+        "Data residency: not flagged as non-standard",
+        "Indemnification: not flagged as non-standard",
+        "Warranty: not flagged as non-standard"
       ],
       "overall_redline_priority": "block",
-      "one_line_summary": "This deal cannot ship as-is — the combination of a 6-month free period, unrestricted 90-day TFC, and expansion pricing lock creates a scenario where Clay takes on all delivery risk with no minimum revenue guarantee; we need the TFC floored at month 18, the free period cut to 4 months, and the expansion lock capped with a 5% annual uplift before this goes to legal.",
+      "one_line_summary": "We cannot ship this deal as-is: the 90-day anytime TFC must be pushed to post-month-18 at minimum, the 6-month free period should be cut to 3 months, and the 2027 expansion price lock needs a 5% annual escalator and a seat-volume cap — otherwise we're funding a trial with an exit ramp.",
       "confidence": "high",
-      "reasoning_summary": "The headline risk is the compounding of four concessions that individually are each manageable but together eliminate Clay's downside protection entirely: a 35% discount, 6 months free, $40K waived services, and a 90-day anytime TFC mean Tessera could exit after paying as little as ~$60K against ~$160K in value already delivered. The expansion pricing lock adds a secondary margin risk on what should be the deal's upside. Tessera's health score of 58 and a 10-day bake-off window suggest urgency on their side but also instability — the TFC is the single must-fix clause before this deal can proceed. Customer signals from Exa are largely noise (different Tessera entities), so competitive leverage assessment relies entirely on AE-reported bake-off dynamics."
+      "reasoning_summary": "This deal combines four compounding concessions — 35% discount, 6-month free period, $40K waived implementation, and a 90-day anytime TFC — that individually are precedented but collectively create a scenario where Clay's effective year-one yield (~$80–120K) may not cover cost of delivery. The 90-day TFC is the primary block: at a 24-month deal with a back-loaded ramp, it functionally caps Clay's downside protection at whatever is collected before month 7 plus 90 days. The expansion price lock is the secondary risk given Tessera's stated growth trajectory and new CRO mandate — any 2027 seat expansion is a material revenue event that should not be locked at 2026 rates without a cap and annual escalator. Tessera's strong consolidation intent and competitive bake-off context give Clay meaningful leverage to hold on TFC and free-period length; the customer needs a winner, and Clay's displacement value proposition is strongest in this evaluation."
     },
     "approval": {
       "required_approvers": [
         {
           "role": "ae_manager",
-          "rule_triggered": "Standard sub-$100K with ≤15% discount → AE Manager",
-          "rationale": "Default rule applies to all deals; AE Manager Marcus Reilly is always the first approver."
+          "rule_triggered": "Partnership / rev-share routes to CEO",
+          "rationale": "Default rule applies to all deals; AE Manager is the first approval gate."
+        },
+        {
+          "role": "cfo",
+          "rule_triggered": "TCV over $1M requires CFO",
+          "rationale": "Deal TCV of $480K does not exceed $1M; rule does not fire."
+        },
+        {
+          "role": "cfo",
+          "rule_triggered": "Discount over 25% routes to CFO",
+          "rationale": "Effective discount of 33.3% exceeds the 25% threshold and requires CFO sign-off."
         },
         {
           "role": "rev_ops",
           "rule_triggered": "ACV $100K–$500K requires RevOps",
-          "rationale": "Deal ACV of $240K falls within the $100K–$500K range requiring RevOps oversight for structure consistency."
-        },
-        {
-          "role": "cfo",
-          "rule_triggered": "Discount over 25% routes to CFO + TCV over $1M requires CFO + Pricing block_without_approval guardrails",
-          "rationale": "Effective discount of 33.3% exceeds the 25% threshold; TCV of $480K does not trigger the >$1M rule but the 33.3% discount and pricing guardrail blocks (mid-market 30% threshold, ramp length exceeding 3-month limit, gross margin floor breach) require explicit CFO approval. Pricing Agent flagged block_without_approval severity on discount (33.3% vs. 30% threshold) and ramp length (12 months vs. 3-month limit). ASC 606 flagged two block_without_approval red flags: 90-day TFC may collapse contract term and expansion pricing lock creates material right allocation complexity."
+          "rationale": "ACV of $240K falls within the $100K–$500K band, triggering RevOps review for deal structure consistency."
         },
         {
           "role": "legal",
-          "rule_triggered": "Non-standard clauses: termination_for_convenience, expansion_pricing_lock, free_period, implementation_services_waived + Redline Agent overall_redline_priority = block",
-          "rationale": "Deal contains four flagged non-standard clauses. Redline Agent assigned overall priority 'block' — the 90-day anytime TFC, 6-month free period, expansion pricing lock through 2027, and $40K waived implementation combine to eliminate downside protection. Legal must negotiate TFC floor (month 18 minimum), free period reduction (4 months max), expansion lock cap (5% annual uplift), and/or services credit restructuring before the deal can proceed."
+          "rule_triggered": "Redline priority escalation",
+          "rationale": "Redline Agent flagged overall_redline_priority as 'block' due to high-risk clauses (90-day TFC, 6-month free period, expansion pricing lock, waived implementation); Legal must resolve before advancement."
+        },
+        {
+          "role": "finance",
+          "rule_triggered": "Pricing guardrail block and ASC 606 complexity",
+          "rationale": "Pricing Agent flagged 'block_without_approval' on discount (33.3% vs 30% threshold) and 12-month ramp (exceeds 3-month mid-market ceiling); ASC 606 Agent flagged 'block_without_approval' on TFC clause potentially collapsing contract term and revenue recognition; Finance must review before deal proceeds."
         }
       ],
       "approval_chain": [
@@ -268,45 +283,52 @@
         },
         {
           "step": 2,
+          "approver_role": "legal",
+          "parallel_with": [],
+          "can_veto": true
+        },
+        {
+          "step": 3,
           "approver_role": "rev_ops",
           "parallel_with": [
-            "cfo",
-            "legal"
+            "finance",
+            "cfo"
           ],
           "can_veto": false
         },
         {
-          "step": 2,
-          "approver_role": "cfo",
-          "parallel_with": [
-            "rev_ops",
-            "legal"
-          ],
-          "can_veto": true
-        },
-        {
-          "step": 2,
-          "approver_role": "legal",
+          "step": 3,
+          "approver_role": "finance",
           "parallel_with": [
             "rev_ops",
             "cfo"
           ],
+          "can_veto": false
+        },
+        {
+          "step": 3,
+          "approver_role": "cfo",
+          "parallel_with": [
+            "rev_ops",
+            "finance"
+          ],
           "can_veto": true
         }
       ],
-      "expected_cycle_time_business_days": 7,
+      "expected_cycle_time_business_days": 10,
       "blockers_to_address_first": [
-        "Pricing guardrail block_absolute: gross margin estimated at ~10% violates 25% floor. Pricing Agent provided three alternative deal structures (Option A: 36-month at 22% discount with margin ~40%; Option B: 24-month ramp-to-full at 28% discount with margin ~30%; Option C: unbundle $30K PS at 20% subscription discount with margin ~39.2%). AE must restructure the deal economics before it can ship.",
-        "Redline block priority: 90-day anytime termination-for-convenience clause must be renegotiated. Minimum fallback: TFC window opens at month 15 (not immediately), with 90-day notice and 2-month wind-down fee. Suggested counter: TFC not available until month 18, with 3-month wind-down fee.",
-        "Redline block priority: 6-month free period combined with TFC creates churn exposure. Must reduce to 4 months or restructure as a fee credit against months 5–6 in exchange for TFC floor at month 18.",
-        "Redline block priority: Expansion pricing lock through 2027 creates material right allocation complexity (ASC 606 block_without_approval red flag). Must add 5% annual uplift cap and/or scope to the initial 24-month term only (not artificial Dec 2027 cutoff).",
-        "ASC 606 block_without_approval: 90-day TFC may collapse enforceable contract term to 90 days under ASC 606, invalidating 24-month ratable recognition. CFO and auditor must pre-clear TFC language before execution.",
-        "ASC 606 block_without_approval: Expansion pricing lock through 2027 likely constitutes a material right requiring transaction price allocation and may defer revenue. CFO/auditor assessment of allocation methodology required.",
-        "Missing Pricing Exception Form: Deal violates multiple guardrails (discount >30% threshold, ramp >3 months, margin <25% absolute floor). AE must submit completed pricing exception form with competitive context, customer health score assessment, and likely restructure per Pricing Agent recommendations."
+        "Gross margin absolute floor violation: estimated margin of ~10% is well below the 25% absolute floor. Deal structure must be remodeled before re-quote (e.g., extend term to 36 months, reduce discount to 20%, reinstate partial implementation fees, or remove 90-day TFC and shorten free period to 3 months).",
+        "90-day anytime termination-for-convenience clause must be modified before Legal sign-off: push TFC window to post-month-18 at earliest, or delete entirely and counter with a post-month-12 180-day notice window with fees-due-through-notice-period.",
+        "6-month free period must be shortened: reduce to 3 months maximum to comply with mid-market ramp guardrail (3-month ceiling) and recover ~$60K in year-one cash; current structure violates ASC 606 recognition simplicity and compounds TFC risk.",
+        "Expansion pricing lock through 2027 requires constraints: add a 5% annual escalator starting 2027, cap lock to 20% incremental seat growth, and expire lock at renewal; current open-ended lock creates unquantified material right allocation and renewal leverage loss.",
+        "ASC 606 revenue recognition uncertainty: 90-day TFC may collapse enforceable contract term to 90 days, fundamentally altering TCV and recognition schedule; CFO/auditor pre-clearance required before deal enters signature phase.",
+        "Pricing exception documentation: AE must submit formal exception request with competitive justification (Apollo + Outreach + ZoomInfo displacement, 10-day close window, three-vendor bake-off) to justify 33.3% discount exceeding mid-market 30% Finance threshold.",
+        "Implementation waiver recovery provisions: if implementation services are waived, include clawback language tied to early termination to recover pro-rated service value in event of TFC exercise.",
+        "Margin recovery path must be selected from Pricing Agent alternatives before deal re-quote: 36-month term at 20% discount, Year-1 ramp with escalator + usage floor, or co-marketing credit model with 3-month ramp and TFC deletion."
       ],
-      "one_line_summary": "This deal routes to AE Manager → RevOps + CFO + Legal (parallel) with an expected 7 business days; it cannot proceed without restructuring: the Pricing Agent's guardrail block (10% margin vs. 25% floor) requires a deal rethink (shorter term, lower discount, or unbundled services), and Legal's block-priority redlines (90-day anytime TFC + 6-month free period + expansion lock) must be renegotiated to floor TFC at month 18, cut free period to 4 months, and cap expansion pricing with a 5% annual uplift.",
+      "one_line_summary": "This deal cannot proceed as structured: gross margin of ~10% violates the 25% absolute floor, the 90-day anytime TFC + 6-month free period + expansion price lock are blocking redline issues, and the 33.3% discount + 12-month ramp require Finance sign-off. Route is AE Manager → Legal (blocker resolution mandatory) → RevOps + Finance + CFO (parallel), ~10 business days; AE must remodel deal economics (extend term, reduce discount, remove/relocate TFC, shorten ramp) and obtain margin pre-clearance before Legal will clear redlines.",
       "confidence": "high",
-      "reasoning_summary": "The approval chain is mechanically clear: AE Manager always first, then RevOps + CFO + Legal in parallel (all three are triggered by rules and agent outputs). The high confidence stems from unambiguous rule firing — discount >25%, ACV in $100K–$500K range, and explicit block-priority outputs from Pricing, ASC 606, and Redline agents. The critical issue is not routing but blockers: this deal violates the absolute gross margin floor (10% actual vs. 25% required), the Redline Agent assigned block priority, and ASC 606 flagged two block_without_approval red flags. The AE cannot submit for approval until: (1) deal economics are restructured per Pricing alternatives, (2) TFC is renegotiated to a minimum month-18 floor with wind-down fee, (3) free period is reduced and/or converted to a fee credit, and (4) expansion pricing lock is capped with annual uplift or scoped to the initial term. None of these are approvable exceptions — they require customer renegotiation. Cycle time is 7 days assuming blockers are resolved and all three parallel approvers complete in 3 days each (CFO and Legal typically 3–5 days, but deal urgency and clear deal structure may accelerate)."
+      "reasoning_summary": "All three upstream agents (Pricing, ASC 606, Redline) surfaced material blockers that must be resolved before the deal enters the standard approval chain. The Pricing Agent's 'block_absolute' on 10% gross margin is a hard stop — no approval authority can waive the 25% floor, and the deal must be restructured. The Redline Agent's 'block' priority is anchored on the 90-day anytime TFC, which when combined with a 6-month free period and 35% discount, creates a scenario where Clay funds an extended trial with minimal downside protection. The ASC 606 Agent's 'block_without_approval' on the TFC clause's impact on contract term is a financial reporting risk that CFO/accounting must pre-clear. The approval chain reflects these sequencing needs: AE Manager opens, Legal owns the redline blockage and must clear it before deal advances, then RevOps + Finance + CFO review in parallel (Finance and CFO have veto authority given the pricing and margin risks). The 10-day expected cycle assumes Legal can negotiate TFC/ramp/lock to acceptable terms in 3–5 days; if customer will not move, deal stalls."
     },
     "comms": {
       "slack_post": {
@@ -325,27 +347,27 @@
             "fields": [
               {
                 "type": "mrkdwn",
-                "text": "*ACV:* $240,000"
+                "text": "*ACV*\n$240,000"
               },
               {
                 "type": "mrkdwn",
-                "text": "*TCV:* $480,000 (24-month)"
+                "text": "*TCV*\n$480,000 (24-month)"
               },
               {
                 "type": "mrkdwn",
-                "text": "*Effective Discount:* 33.3% vs. list ($360K)"
+                "text": "*Effective Discount*\n33.3% (list $360K)"
               },
               {
                 "type": "mrkdwn",
-                "text": "*Est. Gross Margin:* ~10% (floor: 25%)"
+                "text": "*Gross Margin (est.)*\n~10% — violates 25% absolute floor"
               },
               {
                 "type": "mrkdwn",
-                "text": "*Segment:* Mid-Market / Healthtech (Series C)"
+                "text": "*Segment*\nMid-Market / Healthtech"
               },
               {
                 "type": "mrkdwn",
-                "text": "*Approval Chain:* AE Manager → RevOps + CFO + Legal (parallel) · ~7 business days"
+                "text": "*Approval Chain*\nAE Manager → Legal (veto) → RevOps + Finance + CFO (parallel, ~10 biz days)"
               }
             ]
           },
@@ -356,7 +378,7 @@
             "type": "section",
             "text": {
               "type": "mrkdwn",
-              "text": "*What the deal team needs to know:*\n\n• *Hard block — deal cannot ship in current form.* Estimated gross margin of ~10% violates the absolute 25% floor. The Pricing Agent flagged five failed guardrails including two `block_without_approval` triggers (discount 33.3% vs. 30% mid-market threshold; 12-month ramp vs. 3-month limit). AE must restructure before submitting for approval — three alternative structures are on file (Option A: 36-mo at 22% disc., ~40% margin; Option B: 24-mo ramp-to-full at 28% disc., ~30% margin; Option C: unbundle PS at 20% disc., ~39% margin).\n\n• *Four non-standard clauses compound the risk — Legal priority is block.* The 90-day anytime termination-for-convenience clause is the most urgent: combined with 6 months free and $40K waived implementation, Tessera could exit after paying as little as ~$60K against ~$160K in delivered value. Redline counters: TFC floor at month 18 minimum (fallback: month 15) with wind-down fee; free period cut to 4 months; expansion pricing lock capped at 5% annual uplift. All four clauses require Legal negotiation before execution.\n\n• *ASC 606 carries two block_without_approval red flags requiring CFO/auditor pre-clearance.* The 90-day TFC may collapse the enforceable contract term to 90 days, invalidating 24-month ratable recognition. The 2026 expansion pricing lock through 2027 likely constitutes a material right requiring transaction price allocation. Neither can be papered over — CFO and auditor must review contract language before the deal closes. Confidence on ASC 606 analysis is rated low given interacting variable-consideration sources; final determination requires direct CFO engagement."
+              "text": "*What the deal team needs to know:*\n\n• *This deal is a hard stop as structured.* The ~10% gross margin violates the absolute 25% floor — no approval authority can waive this. The deal must be remodeled before re-quote. Pricing Agent alternatives on the table: (1) 36-month term at 20% discount + paid implementation, (2) Year-1 ramp with nominal ramp fee + Y2 escalator, or (3) co-marketing credit model with 3-month ramp and TFC deleted. Priya must select a path and resubmit.\n\n• *The 90-day anytime termination-for-convenience clause is a redline block and an ASC 606 risk.* Combined with 6 months free + $40K waived implementation, Clay could collect ~$80K while absorbing full delivery cost if Tessera exits at month 10. Separately, the TFC may collapse the enforceable contract term to 90 days under ASC 606-10-25-3, fundamentally altering revenue recognition — CFO/auditor pre-clearance required. Counter: push TFC to post-month-18 at earliest, or delete and substitute a post-month-12 180-day notice window with fees due through notice period.\n\n• *The 2026 expansion pricing lock through end of 2027 is uncapped and asymmetric.* Tessera has a new CRO with an explicit consolidation and growth mandate, two profitable quarters, and 1,200 employees — seat expansion is a near-certainty. Locking all expansion at 2026 rates with no volume cap immunizes material future revenue from standard escalation. Required constraints before Legal will clear: 5% annual escalator starting 2027, cap at 20% incremental seat growth, lock expires at renewal."
             }
           },
           {
@@ -367,27 +389,23 @@
             "elements": [
               {
                 "type": "mrkdwn",
-                "text": "*AE Owner:* Priya Shankar · *AE Manager:* Marcus Reilly · *Close Date:* 2026-05-14 · *Customer Health Score:* 58/100"
-              },
-              {
-                "type": "mrkdwn",
-                "text": "review filed by Kiln · agent-driven"
+                "text": "AE: *Priya Shankar* (Mgr: Marcus Reilly)   |   Close target: May 14, 2026   |   review filed by Kiln · agent-driven"
               }
             ]
           }
         ],
-        "plaintext_fallback": "Deal Review: Apollo/Outreach/ZoomInfo Displacement — Tessera Health (Mid-Market)\nACV $240K | TCV $480K | 33.3% effective discount | ~10% est. gross margin (hard floor: 25%) | Close: 2026-05-14\nSTATUS: BLOCKED — violates absolute gross margin floor and five pricing guardrails; deal must be restructured before approval submission. Three alternative structures on file.\nApproval chain: AE Manager Marcus Reilly → RevOps + CFO + Legal (parallel, ~7 business days). CFO and auditor pre-clearance required for 90-day TFC (may collapse ASC 606 contract term) and expansion pricing lock (material right). Legal block priority on all four non-standard clauses — TFC floor, free period reduction, and expansion lock cap are must-fix before execution.\nAE Owner: Priya Shankar | review filed by Kiln · agent-driven"
+        "plaintext_fallback": "Deal Review: Apollo/Outreach/ZoomInfo Displacement — Tessera Health (Mid-Market)\nACV $240K | TCV $480K | 33.3% discount | ~10% gross margin — HARD STOP, violates 25% absolute floor.\nThree blockers: (1) deal economics must be remodeled before re-quote; (2) 90-day anytime TFC is a redline block and ASC 606 risk requiring CFO pre-clearance; (3) 2026 expansion price lock through 2027 needs a 5% escalator, 20% seat cap, and renewal expiry.\nApproval chain: AE Manager → Legal (mandatory redline resolution) → RevOps + Finance + CFO in parallel (~10 business days).\nAE: Priya Shankar | Mgr: Marcus Reilly | review filed by Kiln · agent-driven"
       },
       "ae_email_draft": {
         "to": "Priya Shankar",
-        "subject": "[Tessera Health] Deal review complete — hard blocks must be resolved before submission",
-        "body_markdown": "Priya, the deal review is done and this deal **cannot be submitted for approval in its current form** — it hits a hard margin floor (estimated ~10% gross margin vs. the 25% absolute minimum) and carries three block-priority redlines that need to be renegotiated with Tessera before anything else moves.\n\n**Your next steps — in order:**\n\n1. **Restructure the economics.** Pick one of the three Pricing Agent alternatives: Option A (36-month, 22% discount, ~40% margin), Option B (24-month ramp-to-full with Year-2 escalator, ~30% margin), or Option C (unbundle $30K PS, 20% subscription discount, ~39% margin). The current 6-month free period is the single biggest margin killer — it must be eliminated or replaced with a fee credit.\n2. **Renegotiate the TFC clause.** The 90-day anytime termination-for-convenience right is a hard block legally and under ASC 606 (it may collapse the enforceable term to 90 days). Counter-proposal: TFC window opens no earlier than month 18, with 90-day notice and a 3-month wind-down fee. Fallback: month 15 floor with a 2-month wind-down fee.\n3. **Cap the expansion pricing lock.** The 2026 pricing lock through Dec 2027 likely creates a material right under ASC 606 requiring CFO/auditor pre-clearance. Counter: apply a 5% annual uplift cap and scope the lock to the initial contract term only (not an arbitrary calendar date).\n\nOnce those three are addressed, you'll need to submit a completed Pricing Exception Form with competitive context before entering the approval queue. The chain is: Marcus (Step 1) → RevOps + CFO + Legal in parallel (Step 2, all with veto). Expect **7 business days** once submitted — with a May 14 close date, you have no time to spare.",
+        "subject": "[Tessera Health] Deal-desk review complete — 3 blockers to fix before this can move",
+        "body_markdown": "Priya, pricing review is done and this deal is blocked in its current form — it cannot go to Legal or Finance without structural changes first.\n\nThe core problem: at ~10% gross margin with a 35% discount, 6-month free period, $40K waived implementation, and a 90-day anytime out clause, the deal violates the absolute 25% margin floor. No approval authority can waive that; the economics must change before we re-quote.\n\n**Your next 3 actions (in order):**\n\n1. **Remodel the deal structure.** Pick one of the three pricing alternatives and resubmit: (a) 36-month term at 20% discount + reinstate implementation fees, (b) nominal ramp fee of $10K/mo months 1–6 + Year 2 escalator at 25% discount, or (c) 3-month free period + co-marketing commitment at 25% discount — all three get margin above the floor. Option (a) is the cleanest path.\n2. **Kill or relocate the 90-day TFC.** Legal will not clear redlines with an anytime out clause on a deal this discounted. Counter-propose: TFC exercisable only after month 18, with 180 days' notice and all remaining fees due. This is also the single biggest ASC 606 risk — the current clause may collapse the enforceable contract term to 90 days and blow up revenue recognition.\n3. **File the formal discount exception request.** The 33.3% discount exceeds the 30% Finance approval threshold — you need a written competitive justification (Apollo + Outreach + ZoomInfo displacement, three-vendor bake-off, 10-day window) submitted before Finance will even open the file.\n\n**Approval chain you're walking into:** AE Manager (Marcus) → Legal (blocker veto, must clear redlines) → RevOps + Finance + CFO in parallel (Finance and CFO both have veto authority). Expected cycle: ~10 business days — which means you have essentially zero margin given the May 14 close date. Get Marcus aligned on the restructured economics today so Legal can start the clock.",
         "suggested_send_time": "within 4 business hours"
       },
       "customer_email_draft": {
         "to_role": "champion",
-        "subject": "Tessera Health × Clay — Revised structure for your review",
-        "body_markdown": "Thank you for the detailed conversations this week — we understand consolidating Apollo, Outreach, and ZoomInfo into a single platform is a meaningful operational and financial decision, and we want to make this work within your 10-day window.\n\nOn the core subscription pricing, we are holding the 35% discount at $240K ACV; however, we need to restructure two elements of the deal package to get internal approvals across the finish line in time. First, on the free period: we can offer four months of free access (months 1–4) rather than six, with the paid term commencing month 5. In lieu of the remaining two free months, we will apply up to $20,000 as an invoice credit against months 5–6 — the net economic impact to Tessera in Year 1 is materially the same, and this structure resolves a revenue-recognition constraint on our end that would otherwise delay CFO sign-off. Second, on the termination-for-convenience right: we cannot accept an unrestricted anytime out on a 24-month deal at this discount depth, but we are prepared to offer a TFC window that opens at month 18, with 90 days' written notice and a wind-down fee equal to three months of the then-current monthly fee — this gives your CRO a genuine exit path after the platform has been fully deployed and measured. On expansion pricing, we will lock your contracted per-unit rate for any seat expansions through the end of the initial term, subject to a 5% annual uplift cap on each contract anniversary; this is the structure we can defend internally and that protects Tessera against meaningful price increases during the relationship. Implementation services remain waived as proposed, up to $20,000 of included onboarding credit, with additional scope priced separately if needed. The clear next step is a 30-minute call with you and your RevOps lead before end of week so we can align on the revised term sheet and submit for parallel CFO and Legal approval — given our 7-day internal cycle, we need to be in motion by May 8 to meet your May 14 decision date.",
+        "subject": "Tessera Health × Clay — revised deal structure for your review",
+        "body_markdown": "Thank you for the thorough evaluation your team has run — consolidating Apollo, Outreach, and ZoomInfo into a single platform is exactly the kind of initiative Clay is built to support, and we want to make this work on a timeline that respects your decision window.\n\nOn pricing and term: we can hold the $240K ACV with annual upfront payment, but we need to restructure the ramp — our internal guardrails require we shorten the free onboarding period from 6 months to 3 months, meaning paid invoicing would begin at month 4 rather than month 7; this recovers roughly $60K in year-one cash and is a firm requirement for Finance sign-off at this discount depth.\n\nOn implementation services: we are prepared to waive the standard $40K implementation fee, subject to a clawback provision that applies only if a termination right is exercised early — if the engagement runs its full term, there is no clawback and the waiver stands unconditionally.\n\nOn the 90-day termination-for-convenience clause: we cannot accept an anytime TFC on a 24-month deal structured with a free period and implementation waiver — the combination creates a scenario our Finance and Legal teams will not clear. Our counter is a 180-day notice window exercisable no earlier than the end of month 12, with all fees through the notice period remaining due; this gives Tessera a meaningful exit path in year two while preserving the contractual commitment that makes the discount defensible.\n\nOn expansion pricing: we can offer a per-seat rate lock at 2026 prices for expansions up to 20% of your baseline seat count, subject to a 5% annual escalator starting January 2027, expiring at the end of the initial term — this protects your budget for organic growth while keeping the commitment bounded.\n\nTo keep your May 14 decision date viable, we need alignment on these four points by end of week so our Legal and Finance approvals can run in parallel — can we schedule 30 minutes Thursday to walk through the redlined order form together?",
         "tone": "firm",
         "counter_positions_included": [
           "termination_for_convenience",
@@ -397,34 +415,34 @@
         ]
       },
       "approval_review_one_pager": {
-        "title": "Apollo/Outreach/ZoomInfo Displacement — Tessera Health",
+        "title": "Apollo/Outreach/ZoomInfo Displacement — Tessera Health Deal Approval One-Pager",
         "sections": [
           {
             "heading": "Headline",
-            "content_markdown": "Tessera Health (1,200-employee Healthtech, Series C, ~$95M ARR) seeks to consolidate a $320K/yr Apollo + Outreach + ZoomInfo stack onto Clay in a 10-day, three-vendor bake-off. AE proposes a 24-month deal at $240K ACV ($480K TCV) with a 35% discount, 6-month free period, waived $40K implementation, a 90-day anytime termination-for-convenience (TFC) right, and 2026-price expansion lock through end of 2027."
+            "content_markdown": "Tessera Health (Series C healthtech, 1,200 employees, ~$95M ARR) is consolidating a $320K/yr Apollo + Outreach + ZoomInfo stack onto Clay in a three-vendor bake-off with a 10-day decision window. AE (Priya Shankar) has proposed $240K ACV / $480K TCV over 24 months with a 35% discount, 6-month free period, and waived $40K implementation — **deal cannot proceed as currently structured and must be remodeled before re-quote.**"
           },
           {
             "heading": "Pricing Summary",
-            "content_markdown": "| Item | Value |\n|---|---|\n| List price | $360,000 ACV |\n| Proposed price | $240,000 ACV |\n| Stated discount | 35% |\n| Effective discount (incl. free period + waived impl.) | **~47% blended** |\n| Estimated gross margin | **~10%** |\n| Gross margin floor (absolute) | 25% |\n\n**Deal fails every active pricing guardrail simultaneously.** The 10% margin is a hard block — deal cannot ship in current form.\n\n**Alternative structures from Pricing Agent:**\n- **Option A** — 36-month commit, 22% discount, drop free period → ~40% margin, $280,800 ACV\n- **Option B** — 24-month true ramp (no free period) + 8% Year-2 escalator, 28% discount → ~30% margin, $260,000 ACV\n- **Option C** — Unbundle PS at $30K, 20% subscription discount, 60-day free period → ~39% margin, $288K ACV + $30K PS"
+            "content_markdown": "| Metric | Value |\n|---|---|\n| List price | $360K ACV / $720K TCV |\n| Proposed price | $240K ACV / $480K TCV |\n| Effective discount | 33.3% |\n| Estimated gross margin | ~10% |\n| Absolute margin floor | 25% (**VIOLATED — hard stop**) |\n| Additional concessions | $40K waived implementation + 6-month free period ($120K foregone) |\n| Total value given | ~$280K against $480K TCV |\n\n**Year-1 effective yield: ~$120K** (months 7–12 only); if TFC exercised at month 10, Clay collects ~$80K net against full implementation and ramp costs.\n\n**Best alternative structure (Pricing Agent rec):** 36-month term, 20% discount ($288K ACV), reinstate $40K implementation, 3-month free period, remove TFC → margin recovers to ~25% (floor-compliant)."
           },
           {
             "heading": "Risk Findings",
-            "content_markdown": "**🔴 Hard Blocks (cannot ship without resolution)**\n\n1. **Gross margin absolute floor breached** — ~10% actual vs. 25% floor. Pricing Agent: hard block. Deal must be restructured before submission.\n2. **90-day anytime TFC clause** — Combined with 6-month free period, Tessera could exit at month 9 having paid ~$60K against ~$160K value already delivered. Redline: block. ASC 606: may collapse enforceable contract term to 90 days, invalidating 24-month ratable revenue recognition — requires CFO/auditor pre-clearance.\n3. **Expansion pricing lock through Dec 2027** — Decoupled from contract anniversary; at 35% existing discount, expansion units could be priced at 65% of a stale list. ASC 606: likely constitutes a material right requiring transaction price allocation and revenue deferral — CFO/auditor assessment required. Redline: block.\n4. **12-month ramp exceeds 3-month mid-market limit** — Triggers mandatory Finance approval for ASC 606 and revenue recognition reasons.\n\n**🟡 Warnings**\n\n5. **6-month free period + waived $40K implementation** — Combined concessions exceed 50% of ACV; must be reflected as discount in transaction price allocation across full 24-month period, not booked as Year-2 catch-up.\n6. **Customer health score: 58** — Below average at signing; elevates TFC invocation risk from theoretical to real.\n7. **Exa signals are noise** — All external signals match different Tessera entities (Therapeutics, P&C insurance); competitive leverage assessment relies solely on AE-reported bake-off dynamics. No independent corroboration.\n8. **35% discount distorts SSP benchmarks** for future deal modeling."
+            "content_markdown": "**🔴 BLOCK — Gross Margin Absolute Floor (Pricing Agent)**\n- Estimated margin ~10% vs. 25% absolute floor. Hard stop; no approval authority can waive. Must restructure before re-quote.\n\n**🔴 BLOCK — 90-Day Anytime Termination-for-Convenience (Redline + ASC 606)**\n- TFC exercisable at any point in a 24-month deal means Clay's downside is capped at whatever is collected before month 7 + 90 days. Could net negative versus cost to serve.\n- ASC 606: May collapse enforceable contract term to 90 days (ASC 606-10-25-3), fundamentally altering TCV recognition and commission amortization (ASC 340-40). **Requires CFO/auditor pre-clearance.**\n- Counter: Delete TFC; offer post-month-12 termination with 180-day notice and fees due through notice period.\n\n**🔴 BLOCK — 33.3% Discount + 12-Month Ramp (Pricing Agent)**\n- Discount exceeds 30% mid-market Finance sign-off threshold and 20% soft ceiling.\n- 12-month ramp exceeds 3-month mid-market ceiling — Finance approval required; also raises ASC 606 recognition complexity.\n\n**🟡 WARN — Expansion Pricing Lock Through 2027 (Redline + ASC 606)**\n- Tessera has a new CRO with explicit expansion mandate; locking 2026 seat pricing through end of 2027 forfeits standard 10–15% annual escalation on all future seat adds.\n- ASC 606: Constitutes a material right (ASC 606-10-55-41) requiring transaction price allocation to the option.\n- Counter: Cap lock to 20% incremental seat growth; add 5% annual escalator; expire at Initial Term end.\n\n**🟡 WARN — 6-Month Free Period (Redline + ASC 606)**\n- Stacked with TFC, Clay could deliver 10 months of service + full implementation and collect ~$80K. Precedent: free periods >3 months approved only on deals >$400K ACV with no concurrent TFC.\n- ASC 606: Total $480K TCV must be allocated ratably across full service period (including free months), not just paid months.\n- Counter: Reduce free period to 3 months; recover ~$60K in year-one cash.\n\n**🟡 WARN — Waived $40K Implementation (Redline)**\n- Direct cash cost if third-party resources used; no recovery mechanism if TFC exercised early.\n- Counter: Add clawback language — pro-rated implementation value recoverable upon early termination."
           },
           {
             "heading": "Approval Routing",
-            "content_markdown": "| Step | Approver | Veto? | Trigger |\n|---|---|---|---|\n| 1 | AE Manager — Marcus Reilly | No | Standard default |\n| 2 (parallel) | RevOps | No | ACV $100K–$500K |\n| 2 (parallel) | **CFO** | **Yes** | Discount >25%, margin floor breach (block_without_approval), ramp >3 months |\n| 2 (parallel) | **Legal** | **Yes** | 4 non-standard clauses, Redline overall priority = block |\n\n**Estimated cycle time: 7 business days** — *but blockers must be resolved before the chain can even start. Close date is May 14 (9 days away). Timeline is extremely tight.*\n\n**Pre-submission requirements:** (1) Restructure deal economics per a Pricing Agent alternative; (2) renegotiate TFC to floor at month 15–18 minimum with wind-down fee; (3) cut free period to ≤4 months or convert to fee credit; (4) add 5% annual uplift cap to expansion lock; (5) submit completed Pricing Exception Form."
+            "content_markdown": "| Step | Approver | Veto? | Notes |\n|---|---|---|---|\n| 1 | AE Manager — Marcus Reilly | No | Default gate; must open immediately given 10-day close window |\n| 2 | **Legal** | **Yes** | Must resolve TFC, free period, expansion lock redlines before deal advances — estimated 3–5 days |\n| 3 (parallel) | RevOps | No | Deal structure consistency; ACV $240K triggers $100K–$500K band review |\n| 3 (parallel) | **Finance** | No | Discount >30% threshold + 12-month ramp block; formal exception request with competitive justification required |\n| 3 (parallel) | **CFO** | **Yes** | Discount >25% + ASC 606 TFC contract-term risk; auditor pre-clearance on revenue recognition required |\n\n**Estimated cycle time: ~10 business days** — contingent on Legal clearing redlines within 3–5 days. If customer will not move on TFC or free period length, deal stalls. AE must remodel deal economics and submit pricing exception documentation before Legal review begins."
           },
           {
             "heading": "Recommendation",
-            "content_markdown": "**🔴 HOLD — do not submit for approval in current form.**\n\nThis deal violates the absolute gross margin floor (10% vs. 25% required), triggers Redline block priority on three clauses, and contains two ASC 606 block_without_approval red flags; AE must renegotiate TFC (floor at month 18), reduce the free period (max 4 months), cap the expansion pricing lock with a 5% annual uplift, and restructure economics to Option A, B, or C before this deal is approvable — even then, CFO and Legal both hold veto rights and the 9-day close window is at serious risk."
+            "content_markdown": "**🔴 HOLD — restructure required before re-quote.**\n\nDeal is commercially attractive (genuine consolidation intent, competitive bake-off urgency, strong Tessera growth signals) but non-executable as structured: the 90-day anytime TFC combined with a 6-month free period, 35% discount, and ~10% gross margin violates the absolute margin floor and creates an uncapped trial-funding risk that no approval authority can waive — AE must remodel to the 36-month / 20% discount / 3-month ramp / TFC-deleted structure before this enters the approval chain."
           }
         ]
       },
-      "reasoning_summary": "Calibrated customer email to firm tone given the deal context. AE email leads with verdict (ship-with-conditions (blockers must clear first)) and a numbered next-step list. One-pager and Slack post both headline the recommendation and surface 4 flagged redlines (4 countered in customer reply). Approval routing summary: ~7 business days through 4-step chain."
+      "reasoning_summary": "Calibrated customer email to firm tone given the deal context. AE email leads with verdict (ship-with-conditions (blockers must clear first)) and a numbered next-step list. One-pager and Slack post both headline the recommendation and surface 4 flagged redlines (4 countered in customer reply). Approval routing summary: ~10 business days through 5-step chain."
     }
   },
-  "synthesis": "Pricing is a hard block in current form: the 33.3% discount, 12-month ramp, and ~10% estimated gross margin breach the 25% absolute floor simultaneously, with the 6-month free period and waived $40K implementation compounding margin erosion. ASC 606 treatment is materially at risk because the 90-day termination-for-convenience right may shorten the enforceable term and invalidate ratable 24-month recognition, and a material right allocation for the 2027 expansion lock is likely required. Redline assigns overall block priority — the stack of 35% discount, 6 months free, waived services, and anytime TFC means Tessera could exit having paid ~$60K against ~$160K in delivered value, so the TFC is the single must-fix before this deal moves. Approval routes AE Manager → RevOps + CFO + Legal in parallel (~7 business days), but the AE cannot submit until economics are restructured, TFC is floored at month 18 with a wind-down fee, the free period is reduced or converted to a credit, and the expansion lock is capped. Call: hold and re-scope — communicate to Tessera in a firm tone with a numbered conditions list; none of the four blockers are approvable as exceptions and all require customer renegotiation.",
+  "synthesis": "Pricing is non-executable as structured: a 33.3% discount, 12-month ramp, and ~10% estimated gross margin breach the absolute 25% margin floor that no approver can waive. ASC 606 flags the 90-day TFC as the most consequential issue, with four compounding variable-consideration elements that could collapse recognition into a rolling short-term contract and trigger contract-modification risk. Redline rates the deal a block, anchored on that same 90-day anytime TFC stacked with a 6-month free period and waived $40K implementation, leaving year-one yield (~$80–120K) potentially below cost of delivery. Approval routes ae_manager → legal → rev_ops → finance → cfo over ~10 business days, but Legal must clear the TFC and margin restructure before the chain can meaningfully advance. Recommendation: hold and re-scope — reanchor discount to the 11–16% precedent band, cap or remove the TFC, and add an escalator to the expansion price lock before re-entering approval.",
   "similar_deals": [
     {
       "deal_id": "deal_helix_2026_baa",
@@ -467,57 +485,57 @@
     }
   ],
   "customer_signals": {
-    "source": "exa",
+    "source": "simulated",
     "customer": {
       "name": "Tessera Health",
       "domain": "tesserahealth.com"
     },
-    "fetched_at": "2026-05-05T15:29:59.339Z",
+    "fetched_at": "2026-05-05T16:29:39.678Z",
     "signals": [
       {
-        "kind": "funding",
-        "headline": "Tessera Therapeutics Stock Price, Funding, Valuation, Revenue & Financial Statements",
-        "source_domain": "cbinsights.com",
-        "url": "https://www.cbinsights.com/company/tessera-therapeutics/financials",
-        "published_date": "2026-03-23T00:50:00.000Z",
-        "summary": "Tessera Therapeutics Funding Round Highlights - Total raised: $530 million across 9 funding rounds - Recent round: Grant - III on March 23, 2026 - Lead/ notable investor: Bill & Melinda Gates Foundation - Round type: Grant (philanthropic/g…",
-        "score": 50
+        "kind": "leadership",
+        "headline": "Tessera Health names new Chief Revenue Officer to lead consolidation push",
+        "source_domain": "healthtechnews.com",
+        "url": "",
+        "published_date": "2026-03-12T14:00:00.000Z",
+        "summary": "Tessera Health announced the appointment of a new CRO (formerly VP Sales at a rival healthtech provider), tasked with consolidating sales tooling and accelerating mid-market enterprise expansion through 2026.",
+        "score": 78
       },
       {
         "kind": "product",
-        "headline": "Tessera Launches Product Management Operating System for P&C Insurance - ProgramBusiness…",
-        "source_domain": "programbusiness.com",
-        "url": "https://programbusiness.com/news/tessera-launches-product-management-operating-system-for-pc-insurance/",
-        "published_date": "2026-03-03T14:00:02.000Z",
-        "summary": "Tessera announces the launch of a Product Management Operating System (PMOS) designed specifically for Property & Casualty (P&C) insurance, including personal lines and SMB segments. The platform aims to be end-to-end, unifying product man…",
-        "score": 50
+        "headline": "Tessera Health expands HIPAA-attested integration suite for hospital networks",
+        "source_domain": "healthtechnews.com",
+        "url": "",
+        "published_date": "2026-04-02T09:30:00.000Z",
+        "summary": "Tessera released expanded HIPAA-attested integrations targeting Epic, Cerner, and Meditech-shaped buyers. The release is positioned as evidence of compliance maturity ahead of Tessera's enterprise upmarket push.",
+        "score": 72
       },
       {
-        "kind": "product",
-        "headline": "Introducing Tessera: P&C Insurance Now Has a Technology Platform for Product Management",
-        "source_domain": "prnewswire.com",
-        "url": "https://prnewswire.com/news-releases/introducing-tessera-pc-insurance-now-has-a-technology-platform-for-product-management-302701142.html",
-        "published_date": "2026-03-02T15:00:00.000Z",
-        "summary": "Summary tailored to the query \"Tessera Health product launch announcement\" but based on the provided page about Tessera for P&C insurance: - Tessera announces the first Product Management Operating System built specifically for property &…",
-        "score": 50
+        "kind": "other",
+        "headline": "Tessera Health crosses 1,200 employees, posts second consecutive profitable quarter",
+        "source_domain": "healthtechnews.com",
+        "url": "",
+        "published_date": "2026-01-23T16:45:00.000Z",
+        "summary": "Q4 2025 earnings update notes a 1,200-person headcount and a second straight profitable quarter, alongside a stated 2026 priority of vendor consolidation across go-to-market infrastructure.",
+        "score": 70
       },
       {
         "kind": "leadership",
-        "headline": "Somerville-based Tessera Therapeutics to lay off more than 80 MA workers",
-        "source_domain": "metrowestdailynews.com",
-        "url": "https://www.metrowestdailynews.com/story/news/2026/01/13/somerville-based-biotech-tessera-therapeutics-to-lay-off-more-than-80-massachusetts-workers/88140306007/",
-        "published_date": "2026-01-13T00:00:00.000Z",
-        "summary": "Summary: - Tessera Therapeutics, a Somerville-based biotech, is undergoing a leadership and staffing transition alongside major layoffs. - CFO change: Howard Liang, the company’s president and CFO, stepped down in December. Kathy Bergstein…",
-        "score": 50
+        "headline": "Tessera Health adds VP RevOps from data-platform vendor",
+        "source_domain": "modernhealthtech.co",
+        "url": "",
+        "published_date": "2025-12-09T13:15:00.000Z",
+        "summary": "Tessera hired a VP RevOps from a data-platform vendor; her stated 90-day plan reportedly includes a sales-tooling RFP focused on prospecting, enrichment, and outbound orchestration.",
+        "score": 68
       },
       {
-        "kind": "funding",
-        "headline": "Tessera Therapeutics Announces FDA Clearance of IND",
-        "source_domain": "globenewswire.com",
-        "url": "https://www.globenewswire.com/news-release/2026/01/12/3216718/0/en/tessera-therapeutics-announces-fda-clearance-of-ind-application-for-its-lead-in-vivo-gene-editing-program-tsra-196-for-aatd.html",
-        "published_date": "2026-01-12T07:00:00.000Z",
-        "summary": "Summary: - Tessera Therapeutics announced regulatory progress for its lead in vivo gene editing program, TSRA-196, targeting alpha-1 antitrypsin deficiency (AATD). - FDA cleared TSRA-196’s IND to begin a Phase 1/2, first-in-human, open-lab…",
-        "score": 50
+        "kind": "other",
+        "headline": "Healthtech RevOps leaders cite stack consolidation as #1 2026 priority — survey",
+        "source_domain": "modernhealthtech.co",
+        "url": "",
+        "published_date": "2026-02-18T11:00:00.000Z",
+        "summary": "Industry survey finds 64% of mid-market healthtech RevOps leaders plan to consolidate three or more sales-engagement tools in 2026, citing renewal pressure and security-review fatigue.",
+        "score": 66
       }
     ],
     "note": null
@@ -535,821 +553,835 @@
       "label": "Fetched deal: Tessera Health — Apollo/Outreach/ZoomInfo Displacement",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 126
+      "elapsed_ms": 127
     },
     {
       "id": "step2_fanout",
       "label": "Fanning out: customer signals + similar past deals (parallel)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 126
+      "elapsed_ms": 127
     },
     {
       "id": "step2_signals",
       "label": "Querying Exa for Tessera Health signals (≤6mo)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 126
+      "elapsed_ms": 127
     },
     {
       "id": "step2_similar",
       "label": "Running k-NN over deal_embeddings (sqlite-vec)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 126
-    },
-    {
-      "id": "step2_similar",
-      "label": "Found 3 similar past deals (top: 68% match)",
-      "status": "complete",
-      "parent": "Orchestrator",
-      "elapsed_ms": 149
+      "elapsed_ms": 127
     },
     {
       "id": "step2_signals",
       "label": "Found 5 recent signals for Tessera Health",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 16005
+      "elapsed_ms": 134
+    },
+    {
+      "id": "step2_similar",
+      "label": "Found 3 similar past deals (top: 68% match)",
+      "status": "complete",
+      "parent": "Orchestrator",
+      "elapsed_ms": 134
     },
     {
       "id": "step2_fanout",
       "label": "Step 2 complete (5 signals · 3 similar deals)",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 16005
+      "elapsed_ms": 134
     },
     {
       "id": "step3_dispatch",
       "label": "Dispatching parallel review: Pricing + ASC 606 + Redline",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 16005
+      "elapsed_ms": 134
     },
     {
       "id": "step3_await",
       "label": "Awaiting parallel review completion (0 of 3 returned)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 16005
+      "elapsed_ms": 134
     },
     {
       "id": "fetch_deal",
       "label": "Fetching deal record from CRM",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 16005
+      "elapsed_ms": 134
     },
     {
       "id": "fetch_deal",
       "label": "Fetched deal record from CRM",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 16006
+      "elapsed_ms": 134
     },
     {
       "id": "load_guardrails",
       "label": "Loading active pricing guardrails for mid-market segment",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 16006
+      "elapsed_ms": 134
     },
     {
       "id": "identify_obligations",
       "label": "Identifying performance obligations",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 16006
+      "elapsed_ms": 134
     },
     {
       "id": "load_context",
       "label": "Loading deal context and customer signals",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 16011
+      "elapsed_ms": 139
     },
     {
       "id": "load_context",
       "label": "Loaded deal context and customer signals",
       "status": "complete",
       "parent": "Redline Agent",
-      "elapsed_ms": 16162
+      "elapsed_ms": 292
     },
     {
       "id": "scan_clauses",
       "label": "Scanning non-standard clauses",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 16162
+      "elapsed_ms": 292
     },
     {
       "id": "load_guardrails",
       "label": "Loaded 5 guardrails for mid-market segment",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 16206
+      "elapsed_ms": 336
     },
     {
       "id": "similar_deals",
       "label": "Identifying similar past deals via vector search",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 16206
+      "elapsed_ms": 336
     },
     {
       "id": "similar_deals",
       "label": "Loaded 3 similar deals as precedent",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 16427
+      "elapsed_ms": 558
     },
     {
       "id": "reasoning",
       "label": "Reasoning about pricing economics",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 16427
-    },
-    {
-      "id": "scan_clauses",
-      "label": "Scanned non-standard clauses",
-      "status": "complete",
-      "parent": "Redline Agent",
-      "elapsed_ms": 18669
-    },
-    {
-      "id": "analyze_clauses",
-      "label": "Analyzing flagged clauses (0)",
-      "status": "running",
-      "parent": "Redline Agent",
-      "elapsed_ms": 18669
-    },
-    {
-      "id": "analyze_clauses",
-      "label": "Analyzing flagged clauses (1)",
-      "status": "running",
-      "parent": "Redline Agent",
-      "elapsed_ms": 18669
+      "elapsed_ms": 558
     },
     {
       "id": "guardrail_eval",
       "label": "Evaluating guardrails (0 of 5)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 20582
+      "elapsed_ms": 4085
+    },
+    {
+      "id": "scan_clauses",
+      "label": "Scanned non-standard clauses",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 4114
+    },
+    {
+      "id": "analyze_clauses",
+      "label": "Analyzing flagged clauses (0)",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 4114
+    },
+    {
+      "id": "analyze_clauses",
+      "label": "Analyzing flagged clauses (1)",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 4114
     },
     {
       "id": "identify_obligations",
       "label": "Identified performance obligations",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 20619
+      "elapsed_ms": 4706
     },
     {
       "id": "evaluate_distinctness",
       "label": "Evaluating distinctness (1)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 20619
+      "elapsed_ms": 4706
     },
     {
       "id": "guardrail_eval",
       "label": "Evaluating guardrails (1 of 5)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 20980
+      "elapsed_ms": 4944
     },
     {
       "id": "guardrail_eval",
       "label": "Evaluating guardrails (2 of 5)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 22429
-    },
-    {
-      "id": "analyze_clauses",
-      "label": "Analyzed 1 flagged clauses",
-      "status": "complete",
-      "parent": "Redline Agent",
-      "elapsed_ms": 22990
-    },
-    {
-      "id": "draft_counters",
-      "label": "Drafting counter-positions for high-risk clauses",
-      "status": "running",
-      "parent": "Redline Agent",
-      "elapsed_ms": 22990
-    },
-    {
-      "id": "guardrail_eval",
-      "label": "Evaluating guardrails (3 of 5)",
-      "status": "running",
-      "parent": "Pricing Agent",
-      "elapsed_ms": 23572
+      "elapsed_ms": 6635
     },
     {
       "id": "evaluate_distinctness",
       "label": "Evaluating distinctness (2)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 23725
+      "elapsed_ms": 7040
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (3 of 5)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 8406
+    },
+    {
+      "id": "analyze_clauses",
+      "label": "Analyzed 1 flagged clauses",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 9145
+    },
+    {
+      "id": "draft_counters",
+      "label": "Drafting counter-positions for high-risk clauses",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 9145
     },
     {
       "id": "guardrail_eval",
       "label": "Evaluating guardrails (4 of 5)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 25128
+      "elapsed_ms": 10053
     },
     {
       "id": "evaluate_distinctness",
       "label": "Evaluating distinctness (3)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 25622
-    },
-    {
-      "id": "draft_counters",
-      "label": "Drafted counter-positions",
-      "status": "complete",
-      "parent": "Redline Agent",
-      "elapsed_ms": 25787
-    },
-    {
-      "id": "draft_fallbacks",
-      "label": "Drafting fallback positions",
-      "status": "running",
-      "parent": "Redline Agent",
-      "elapsed_ms": 25787
+      "elapsed_ms": 10088
     },
     {
       "id": "guardrail_eval",
       "label": "Evaluating guardrails (5 of 5)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 26292
+      "elapsed_ms": 11744
+    },
+    {
+      "id": "draft_counters",
+      "label": "Drafted counter-positions",
+      "status": "complete",
+      "parent": "Redline Agent",
+      "elapsed_ms": 12325
+    },
+    {
+      "id": "draft_fallbacks",
+      "label": "Drafting fallback positions",
+      "status": "running",
+      "parent": "Redline Agent",
+      "elapsed_ms": 12325
+    },
+    {
+      "id": "evaluate_distinctness",
+      "label": "Evaluating distinctness (4)",
+      "status": "running",
+      "parent": "ASC 606 Agent",
+      "elapsed_ms": 12381
     },
     {
       "id": "guardrail_eval",
       "label": "Evaluated 5 guardrails",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 27047
+      "elapsed_ms": 12965
     },
     {
       "id": "alternatives",
       "label": "Generating alternative structures (0 of 3)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 27047
+      "elapsed_ms": 12965
     },
     {
       "id": "evaluate_distinctness",
-      "label": "Evaluated 3 performance obligations",
+      "label": "Evaluated 4 performance obligations",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 27510
+      "elapsed_ms": 14290
     },
     {
       "id": "analyze_variable_consideration",
       "label": "Analyzing variable consideration sources",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 27510
+      "elapsed_ms": 14290
     },
     {
       "id": "alternatives",
       "label": "Generating alternative structures (1 of 3)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 30855
+      "elapsed_ms": 16251
     },
     {
       "id": "analyze_variable_consideration",
       "label": "Analyzed variable consideration",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 35523
+      "elapsed_ms": 20757
     },
     {
       "id": "assess_modification_risk",
       "label": "Assessing contract modification risk",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 35523
+      "elapsed_ms": 20757
     },
     {
       "id": "alternatives",
       "label": "Generating alternative structures (2 of 3)",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 36615
+      "elapsed_ms": 22018
     },
     {
       "id": "assess_modification_risk",
       "label": "Assessed contract modification risk",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 37429
+      "elapsed_ms": 22661
     },
     {
       "id": "compute_recognition_schedule",
       "label": "Computing revenue recognition schedule",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 37429
+      "elapsed_ms": 22662
     },
     {
       "id": "compute_recognition_schedule",
       "label": "Computing recognition schedule (period 1)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 37429
+      "elapsed_ms": 22662
     },
     {
       "id": "compute_recognition_schedule",
       "label": "Computing recognition schedule (period 2)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 38572
+      "elapsed_ms": 23810
     },
     {
       "id": "compute_recognition_schedule",
       "label": "Computing recognition schedule (period 3)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 39714
+      "elapsed_ms": 24615
     },
     {
       "id": "compute_recognition_schedule",
       "label": "Computed recognition schedule (3 periods)",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 40477
+      "elapsed_ms": 25376
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (0)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 40477
+      "elapsed_ms": 25376
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (1)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 40477
+      "elapsed_ms": 25377
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (2)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 42000
-    },
-    {
-      "id": "alternatives",
-      "label": "Generating alternative structures (3 of 3)",
-      "status": "running",
-      "parent": "Pricing Agent",
-      "elapsed_ms": 42436
+      "elapsed_ms": 26948
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (3)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 43145
+      "elapsed_ms": 27710
     },
     {
       "id": "flag_red_flags",
       "label": "Flagging red flags (4)",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 44669
+      "elapsed_ms": 28473
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (3 of 3)",
+      "status": "running",
+      "parent": "Pricing Agent",
+      "elapsed_ms": 28589
     },
     {
       "id": "flag_red_flags",
-      "label": "Flagging red flags (5)",
-      "status": "running",
+      "label": "Flagged 4 red flags",
+      "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 45810
+      "elapsed_ms": 29616
     },
     {
       "id": "alternatives",
       "label": "Generated 3 alternative structures",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 45869
-    },
-    {
-      "id": "flag_red_flags",
-      "label": "Flagged 5 red flags",
-      "status": "complete",
-      "parent": "ASC 606 Agent",
-      "elapsed_ms": 47334
+      "elapsed_ms": 31830
     },
     {
       "id": "finalizing",
       "label": "Finalizing recognition recommendation",
       "status": "running",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 50609
+      "elapsed_ms": 34294
     },
     {
       "id": "finalizing",
-      "label": "Finalized rev-rec analysis (low confidence, 5 red flags)",
+      "label": "Finalized rev-rec analysis (low confidence, 4 red flags)",
       "status": "complete",
       "parent": "ASC 606 Agent",
-      "elapsed_ms": 50730
+      "elapsed_ms": 34416
     },
     {
       "id": "step3_await",
       "label": "Awaiting parallel review completion (1 of 3 returned — ASC 606)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 50731
+      "elapsed_ms": 34416
     },
     {
       "id": "reasoning",
       "label": "Reasoned about pricing economics",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 52029
+      "elapsed_ms": 37181
     },
     {
       "id": "margin_sensitivity",
       "label": "Computing margin sensitivity under the 40% list-price baseline",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 52029
+      "elapsed_ms": 37182
     },
     {
       "id": "margin_sensitivity",
       "label": "Computed margin sensitivity (10.0% est.)",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 52183
+      "elapsed_ms": 37335
     },
     {
       "id": "finalizing",
       "label": "Finalizing recommendation",
       "status": "running",
       "parent": "Pricing Agent",
-      "elapsed_ms": 52183
+      "elapsed_ms": 37335
     },
     {
       "id": "finalizing",
       "label": "Finalized recommendation (medium confidence)",
       "status": "complete",
       "parent": "Pricing Agent",
-      "elapsed_ms": 52305
+      "elapsed_ms": 37457
     },
     {
       "id": "step3_await",
       "label": "Awaiting parallel review completion (2 of 3 returned — Pricing)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 52305
+      "elapsed_ms": 37457
     },
     {
       "id": "draft_fallbacks",
       "label": "Drafted fallback positions",
       "status": "complete",
       "parent": "Redline Agent",
-      "elapsed_ms": 56673
+      "elapsed_ms": 45827
     },
     {
       "id": "cross_reference_signals",
       "label": "Cross-referencing customer position-of-strength signals",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 56673
+      "elapsed_ms": 45827
     },
     {
       "id": "cross_reference_signals",
       "label": "Cross-referenced position-of-strength signals",
       "status": "complete",
       "parent": "Redline Agent",
-      "elapsed_ms": 60311
+      "elapsed_ms": 49897
     },
     {
       "id": "finalizing",
       "label": "Finalizing redline recommendations",
       "status": "running",
       "parent": "Redline Agent",
-      "elapsed_ms": 65701
+      "elapsed_ms": 56157
     },
     {
       "id": "finalizing",
       "label": "Finalized redline (4 flagged · priority: block)",
       "status": "complete",
       "parent": "Redline Agent",
-      "elapsed_ms": 65823
+      "elapsed_ms": 56279
     },
     {
       "id": "step3_await",
       "label": "Awaiting parallel review completion (3 of 3 returned — Redline)",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 65824
+      "elapsed_ms": 56279
     },
     {
       "id": "step3_dispatch",
       "label": "Parallel review complete (3 of 3 returned)",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 65824
+      "elapsed_ms": 56279
     },
     {
       "id": "step3_await",
       "label": "All three parallel agents returned",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 65824
+      "elapsed_ms": 56279
     },
     {
       "id": "step4_routing",
       "label": "Routing approvals based on upstream outputs",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 65824
+      "elapsed_ms": 56279
     },
     {
       "id": "load_matrix",
       "label": "Loading active approval matrix (8 rules)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 65824
+      "elapsed_ms": 56280
     },
     {
       "id": "load_matrix",
       "label": "Loaded 8 active matrix rules",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 65947
+      "elapsed_ms": 56402
     },
     {
       "id": "evaluate_rules",
       "label": "Evaluating each matrix rule (0 of 8)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 65947
+      "elapsed_ms": 56402
     },
     {
       "id": "evaluate_rules",
       "label": "Evaluated 8 matrix rules",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 68328
+      "elapsed_ms": 59465
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (0)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 68329
+      "elapsed_ms": 59465
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (1)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 68329
+      "elapsed_ms": 59465
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (2)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 69220
+      "elapsed_ms": 60095
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (3)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 69846
+      "elapsed_ms": 60524
     },
     {
       "id": "identify_triggered",
       "label": "Identifying triggered rules (4)",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 72437
+      "elapsed_ms": 61171
     },
     {
       "id": "identify_triggered",
-      "label": "Identified 4 triggered rules",
+      "label": "Identifying triggered rules (5)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 61588
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identifying triggered rules (6)",
+      "status": "running",
+      "parent": "Approval Agent",
+      "elapsed_ms": 62428
+    },
+    {
+      "id": "identify_triggered",
+      "label": "Identified 6 triggered rules",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 74135
+      "elapsed_ms": 63902
     },
     {
       "id": "build_chain",
       "label": "Building approval chain",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 74135
+      "elapsed_ms": 63902
     },
     {
       "id": "build_chain",
       "label": "Built approval chain",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 75201
+      "elapsed_ms": 65173
     },
     {
       "id": "compute_cycle_time",
       "label": "Computing expected cycle time",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 75201
+      "elapsed_ms": 65173
     },
     {
       "id": "compute_cycle_time",
       "label": "Computed expected cycle time",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 81160
+      "elapsed_ms": 72088
     },
     {
       "id": "finalizing",
       "label": "Finalizing routing decision",
       "status": "running",
       "parent": "Approval Agent",
-      "elapsed_ms": 87227
+      "elapsed_ms": 77147
     },
     {
       "id": "finalizing",
-      "label": "Finalized routing (4 steps · 7d cycle time)",
+      "label": "Finalized routing (5 steps · 10d cycle time)",
       "status": "complete",
       "parent": "Approval Agent",
-      "elapsed_ms": 87349
+      "elapsed_ms": 77270
     },
     {
       "id": "step4_routing",
-      "label": "Routed approvals (4 steps)",
+      "label": "Routed approvals (5 steps)",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 87349
+      "elapsed_ms": 77270
     },
     {
       "id": "step5_comms",
       "label": "Generating communications based on full review",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 87349
+      "elapsed_ms": 77270
     },
     {
       "id": "analyze_context",
       "label": "Analyzing deal context and tone requirements",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 87350
+      "elapsed_ms": 77270
     },
     {
       "id": "analyze_context",
       "label": "Selected tone calibration based on deal context",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 87502
+      "elapsed_ms": 77423
     },
     {
       "id": "draft_slack_post",
       "label": "Drafting Slack post for #deal-desk",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 87502
+      "elapsed_ms": 77423
     },
     {
       "id": "draft_ae_email",
       "label": "Drafting AE email with structured action items",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 87502
+      "elapsed_ms": 77423
     },
     {
       "id": "draft_customer_email",
       "label": "Drafting customer reply with counter-positions",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 87502
+      "elapsed_ms": 77423
     },
     {
       "id": "build_one_pager",
       "label": "Building approval review one-pager",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 87502
-    },
-    {
-      "id": "draft_ae_email",
-      "label": "Drafted AE email",
-      "status": "complete",
-      "parent": "Comms Agent",
-      "elapsed_ms": 100327
+      "elapsed_ms": 77423
     },
     {
       "id": "draft_customer_email",
       "label": "Drafted customer reply (firm tone)",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 106658
+      "elapsed_ms": 93092
+    },
+    {
+      "id": "draft_ae_email",
+      "label": "Drafted AE email",
+      "status": "complete",
+      "parent": "Comms Agent",
+      "elapsed_ms": 93965
     },
     {
       "id": "draft_slack_post",
       "label": "Drafted Slack post",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 112351
+      "elapsed_ms": 99637
     },
     {
       "id": "build_one_pager",
       "label": "Built approval review one-pager (5 sections)",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 115106
+      "elapsed_ms": 113056
     },
     {
       "id": "finalizing",
       "label": "Finalizing communication artifacts",
       "status": "running",
       "parent": "Comms Agent",
-      "elapsed_ms": 115106
+      "elapsed_ms": 113056
     },
     {
       "id": "finalizing",
       "label": "Finalized 4 artifacts (Slack · AE email · customer email · one-pager)",
       "status": "complete",
       "parent": "Comms Agent",
-      "elapsed_ms": 115229
+      "elapsed_ms": 113179
     },
     {
       "id": "step5_comms",
       "label": "Generated all communication artifacts",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 115229
+      "elapsed_ms": 113179
     },
     {
       "id": "step6_synthesis",
       "label": "Synthesizing executive summary",
       "status": "running",
       "parent": "Orchestrator",
-      "elapsed_ms": 115229
+      "elapsed_ms": 113179
     },
     {
       "id": "step6_synthesis",
       "label": "Synthesized 4-sentence executive overview",
       "status": "complete",
       "parent": "Orchestrator",
-      "elapsed_ms": 123682
+      "elapsed_ms": 121913
     }
   ],
   "metadata": {
-    "duration_ms": 123682,
-    "total_input_tokens": 103906,
-    "total_output_tokens": 11782,
-    "total_cost_usd": 0.47953494999999996,
-    "recorded_at": "2026-05-05T15:31:47.016Z",
+    "duration_ms": 121913,
+    "total_input_tokens": 109795,
+    "total_output_tokens": 11800,
+    "total_cost_usd": 0.5547970499999999,
+    "recorded_at": "2026-05-05T16:31:41.464Z",
     "per_agent": {
       "pricing": {
-        "duration_ms": 36300,
-        "input_tokens": 7891,
-        "output_tokens": 1887,
-        "cost_usd": 0.042569550000000005
+        "duration_ms": 37323,
+        "input_tokens": 8680,
+        "output_tokens": 1802,
+        "cost_usd": 0.06305474999999999
       },
       "asc606": {
-        "duration_ms": 34724,
-        "input_tokens": 9685,
-        "output_tokens": 2192,
-        "cost_usd": 0.07216525
+        "duration_ms": 34282,
+        "input_tokens": 10873,
+        "output_tokens": 1953,
+        "cost_usd": 0.11906375000000001
       },
       "redline": {
-        "duration_ms": 49812,
-        "input_tokens": 7778,
-        "output_tokens": 2040,
-        "cost_usd": 0.06238625
+        "duration_ms": 56140,
+        "input_tokens": 8230,
+        "output_tokens": 2325,
+        "cost_usd": 0.05576465
       },
       "approval": {
-        "duration_ms": 21525,
-        "input_tokens": 13927,
-        "output_tokens": 1753,
-        "cost_usd": 0.027669700000000002
+        "duration_ms": 20990,
+        "input_tokens": 14921,
+        "output_tokens": 1709,
+        "cost_usd": 0.029671200000000002
       },
       "comms": {
-        "duration_ms": 27879,
-        "input_tokens": 56641,
-        "output_tokens": 3497,
-        "cost_usd": 0.2470062
+        "duration_ms": 35909,
+        "input_tokens": 59093,
+        "output_tokens": 3673,
+        "cost_usd": 0.26130319999999996
       },
       "synthesis": {
-        "duration_ms": 8453,
-        "input_tokens": 7984,
-        "output_tokens": 413,
-        "cost_usd": 0.027738
+        "duration_ms": 8734,
+        "input_tokens": 7998,
+        "output_tokens": 338,
+        "cost_usd": 0.025939499999999997
       }
     }
   }

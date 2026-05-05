@@ -59,6 +59,7 @@ export function CustomerSignalsPanel({
   }
 
   const signals = result.signals;
+  const isSimulated = result.source === "simulated";
   const visible = expanded
     ? signals.slice(0, MAX_EXPANDED)
     : signals.slice(0, MAX_VISIBLE);
@@ -68,11 +69,8 @@ export function CustomerSignalsPanel({
     <section className="rounded-md border border-border bg-card">
       <PanelHeader
         customerName={result.customer.name}
-        sourceLabel={
-          result.source === "exa"
-            ? `Exa · last 6mo`
-            : "Exa unavailable"
-        }
+        sourceLabel={sourceLabelFor(result.source)}
+        isSimulated={isSimulated}
       />
 
       {signals.length === 0 ? (
@@ -82,8 +80,12 @@ export function CustomerSignalsPanel({
       ) : (
         <>
           <ul className="divide-y divide-border">
-            {visible.map((s) => (
-              <SignalRow key={s.url} signal={s} />
+            {visible.map((s, i) => (
+              <SignalRow
+                key={signalKey(s, i)}
+                signal={s}
+                clickable={!isSimulated && s.url.length > 0}
+              />
             ))}
           </ul>
           {canExpand && (
@@ -103,12 +105,28 @@ export function CustomerSignalsPanel({
   );
 }
 
+function sourceLabelFor(
+  source: CustomerSignalsResult["source"],
+): string | undefined {
+  if (source === "exa") return "Exa · last 6mo";
+  if (source === "exa_unavailable") return "Exa unavailable";
+  if (source === "simulated") return undefined; // badge replaces this
+  return undefined;
+}
+
+function signalKey(s: CustomerSignal, fallbackIdx: number): string {
+  if (s.url) return s.url;
+  return `${s.published_date ?? "x"}-${s.headline.slice(0, 60)}-${fallbackIdx}`;
+}
+
 function PanelHeader({
   customerName,
   sourceLabel,
+  isSimulated,
 }: {
   customerName?: string;
   sourceLabel?: string;
+  isSimulated?: boolean;
 }) {
   return (
     <header className="flex items-baseline justify-between gap-3 border-b border-border px-3.5 py-2.5 sm:px-4">
@@ -120,58 +138,94 @@ function PanelHeader({
           Recent public news · funding, leadership, product
         </p>
       </div>
-      {sourceLabel && (
-        <span className="text-[11px] text-muted-foreground">{sourceLabel}</span>
+      {isSimulated ? (
+        <SimulatedBadge />
+      ) : (
+        sourceLabel && (
+          <span className="text-[11px] text-muted-foreground">
+            {sourceLabel}
+          </span>
+        )
       )}
     </header>
   );
 }
 
-function SignalRow({ signal }: { signal: CustomerSignal }) {
-  const { icon: Icon, label, tone } = KIND_META[signal.kind] ?? KIND_META.other;
+function SimulatedBadge() {
   return (
-    <li>
-      <a
-        href={signal.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group block px-3.5 py-3 transition-colors hover:bg-surface-hover sm:px-4"
+    <span
+      className="inline-flex h-5 shrink-0 items-center gap-1 rounded-sm border border-amber-200 bg-amber-50 px-1.5 text-[10px] font-medium uppercase tracking-wider text-amber-800"
+      title="These signals are hand-authored demo fixtures, not live web results. Used because this customer is fictional."
+    >
+      Simulated · Demo data
+    </span>
+  );
+}
+
+function SignalRow({
+  signal,
+  clickable,
+}: {
+  signal: CustomerSignal;
+  clickable: boolean;
+}) {
+  const { icon: Icon, label, tone } = KIND_META[signal.kind] ?? KIND_META.other;
+  const body = (
+    <div className="flex items-start gap-2.5">
+      <span
+        className={cn(
+          "inline-flex h-5 shrink-0 items-center gap-1 rounded-sm border px-1.5 text-[10px] font-medium uppercase tracking-wider",
+          tone,
+        )}
       >
-        <div className="flex items-start gap-2.5">
-          <span
-            className={cn(
-              "inline-flex h-5 shrink-0 items-center gap-1 rounded-sm border px-1.5 text-[10px] font-medium uppercase tracking-wider",
-              tone,
-            )}
-          >
-            <Icon className="h-2.5 w-2.5" />
-            {label}
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start gap-1.5">
-              <p className="line-clamp-2 text-[13px] font-medium leading-snug text-foreground">
-                {signal.headline}
-              </p>
-              <ArrowUpRight className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground transition-colors group-hover:text-[var(--brand)]" />
-            </div>
-            {signal.summary && signal.summary !== signal.headline && (
-              <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-muted-foreground">
-                {signal.summary}
-              </p>
-            )}
-            <div className="mt-1.5 flex items-center gap-2 text-[10px] text-muted-foreground">
-              <span className="font-mono">{signal.source_domain}</span>
-              {signal.published_date && (
-                <>
-                  <span>·</span>
-                  <span>{formatDate(signal.published_date)}</span>
-                </>
-              )}
-            </div>
-          </div>
+        <Icon className="h-2.5 w-2.5" />
+        {label}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start gap-1.5">
+          <p className="line-clamp-2 text-[13px] font-medium leading-snug text-foreground">
+            {signal.headline}
+          </p>
+          {clickable && (
+            <ArrowUpRight className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground transition-colors group-hover:text-[var(--brand)]" />
+          )}
         </div>
-      </a>
-    </li>
+        {signal.summary && signal.summary !== signal.headline && (
+          <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-muted-foreground">
+            {signal.summary}
+          </p>
+        )}
+        <div className="mt-1.5 flex items-center gap-2 text-[10px] text-muted-foreground">
+          <span className="font-mono">{signal.source_domain}</span>
+          {signal.published_date && (
+            <>
+              <span>·</span>
+              <span>{formatDate(signal.published_date)}</span>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  if (clickable) {
+    return (
+      <li>
+        <a
+          href={signal.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group block px-3.5 py-3 transition-colors hover:bg-surface-hover sm:px-4"
+        >
+          {body}
+        </a>
+      </li>
+    );
+  }
+  // Simulated signals — no link, no hover affordance, no external arrow.
+  // The header's "Simulated · Demo data" badge handles disclosure.
+  return (
+    <li className="block px-3.5 py-3 sm:px-4">{body}</li>
   );
 }
 
