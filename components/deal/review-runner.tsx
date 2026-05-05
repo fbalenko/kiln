@@ -8,9 +8,18 @@ import { TimelinePlaceholder } from "./timeline-placeholder";
 // Owns the "Run review" CTA + the area beneath it. Stays as the placeholder
 // timeline until the user clicks; then mounts <ReasoningStream> which opens an
 // SSE connection to /api/run-review/[dealId] and renders live agent state.
+//
+// Two entry points:
+//   • "Run review"      — uses the cache if present (snappy demo path)
+//   • "Re-run live"     — appends ?live=1 to bypass the cache and stream the
+//                          agent end-to-end. The cache file is rewritten with
+//                          the new output on success.
+
+type RunMode = "idle" | "cached" | "live";
 
 export function ReviewRunner({ dealId }: { dealId: string }) {
-  const [running, setRunning] = useState(false);
+  const [mode, setMode] = useState<RunMode>("idle");
+  const running = mode !== "idle";
 
   return (
     <section className="mt-8">
@@ -23,17 +32,33 @@ export function ReviewRunner({ dealId }: { dealId: string }) {
               : "Six agents will reason in sequence — context, pricing, ASC 606, redlines, approvals, and comms."}
           </p>
         </div>
-        <Button
-          onClick={() => setRunning(true)}
-          disabled={running}
-          className="sm:w-auto"
-        >
-          {running ? "Running…" : "Run review"}
-        </Button>
+        <div className="flex flex-col items-stretch gap-1.5 sm:items-end">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setMode("live")}
+              disabled={running}
+              className="sm:w-auto"
+            >
+              {mode === "live" ? "Streaming…" : "Re-run live"}
+            </Button>
+            <Button
+              onClick={() => setMode("cached")}
+              disabled={running}
+              className="sm:w-auto"
+            >
+              {mode === "cached" ? "Running…" : "Run review"}
+            </Button>
+          </div>
+          <p className="max-w-xs text-right text-[11px] leading-snug text-muted-foreground">
+            Re-runs may produce slightly different output (the agents are
+            non-deterministic).
+          </p>
+        </div>
       </div>
       <div className="mt-4">
         {running ? (
-          <ReasoningStream dealId={dealId} />
+          <ReasoningStream dealId={dealId} live={mode === "live"} />
         ) : (
           <TimelinePlaceholder />
         )}

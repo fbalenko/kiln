@@ -32,11 +32,20 @@ type StreamEvent =
   | { type: "step_start"; step: string; agent: string | null; ts: number }
   | { type: "step_progress"; step: string; partial_output: unknown; ts: number }
   | { type: "step_complete"; step: string; output: unknown; ts: number }
+  | {
+      type: "substep";
+      parent: string;
+      id: string;
+      label: string;
+      status: "running" | "complete";
+      ts: number;
+    }
   | { type: "synthesis"; summary: string; review_id: string; ts: number }
   | { type: "error"; step: string; message: string; ts: number };
 
-export async function GET(_req: NextRequest, { params }: RouteParams) {
+export async function GET(req: NextRequest, { params }: RouteParams) {
   const { dealId } = await params;
+  const forceRefresh = req.nextUrl.searchParams.get("live") === "1";
   const deal = getDealById(dealId);
   if (!deal) {
     return new Response(JSON.stringify({ error: "deal_not_found" }), {
@@ -100,7 +109,19 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
           ts: pricingStart,
         });
 
-        const result = await runPricingAgent(dealId);
+        const result = await runPricingAgent(dealId, {
+          forceRefresh,
+          onSubstep: (e) => {
+            send({
+              type: "substep",
+              parent: pricingLabel,
+              id: e.id,
+              label: e.label,
+              status: e.status,
+              ts: Date.now(),
+            });
+          },
+        });
 
         // Field-by-field reveal of the structured output. Spec: progressive
         // partials, NOT raw token streaming. Order chosen to mirror how a
