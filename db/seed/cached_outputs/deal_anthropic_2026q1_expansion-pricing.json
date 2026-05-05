@@ -1,89 +1,251 @@
 {
-  "list_price": 588235,
-  "proposed_price": 500000,
-  "effective_discount_pct": 15,
-  "margin_pct_estimate": 29.4,
-  "guardrail_evaluations": [
+  "version": 1,
+  "output": {
+    "list_price": 588235,
+    "proposed_price": 500000,
+    "effective_discount_pct": 15,
+    "margin_pct_estimate": 29.4,
+    "guardrail_evaluations": [
+      {
+        "rule_name": "Enterprise discount hard ceiling",
+        "passed": true,
+        "severity": "block_absolute",
+        "actual_value": 15,
+        "threshold_value": 50,
+        "explanation": "The 15% discount is well below the 50% absolute ceiling. No structural block triggered."
+      },
+      {
+        "rule_name": "Enterprise discount requires CFO sign-off",
+        "passed": true,
+        "severity": "block_without_approval",
+        "actual_value": 15,
+        "threshold_value": 35,
+        "explanation": "At 15% discount, CFO sign-off is not required. This is comfortably within the 35% threshold."
+      },
+      {
+        "rule_name": "Enterprise discount soft ceiling",
+        "passed": true,
+        "severity": "warn",
+        "actual_value": 15,
+        "threshold_value": 25,
+        "explanation": "15% discount falls within the standard enterprise envelope (≤25%). Justification should still be documented given the non-standard clauses bundled into this deal."
+      },
+      {
+        "rule_name": "Enterprise ramp length soft ceiling",
+        "passed": true,
+        "severity": "warn",
+        "actual_value": 6,
+        "threshold_value": 6,
+        "explanation": "The ramp schedule covers exactly 6 months (months 1–6 at 50%), which meets the soft ceiling exactly. No violation, but the effective discount during ramp months is materially higher — effectively ~57.5% off list-rate equivalent in Y1 — and should be factored into margin modeling."
+      },
+      {
+        "rule_name": "Gross margin absolute floor",
+        "passed": true,
+        "severity": "block_absolute",
+        "actual_value": 29.4,
+        "threshold_value": 25,
+        "explanation": "Estimated gross margin of ~29.4% at proposed price clears the 25% absolute floor. However, this is under the 40% warn threshold and margin erodes further during the 6-month ramp period."
+      },
+      {
+        "rule_name": "Gross margin floor (warn)",
+        "passed": false,
+        "severity": "warn",
+        "actual_value": 29.4,
+        "threshold_value": 40,
+        "explanation": "Estimated gross margin of ~29.4% is below the 40% warn threshold. Combined with ramp (50% payments in months 1–6), the $200K credits carve-out, and billing in arrears, the effective realized margin in Year 1 is likely well below 29.4%. Finance should rerun the blended margin after all concessions."
+      }
+    ],
+    "alternative_structures": [
+      {
+        "label": "Shorter Ramp + Prepay Discount",
+        "description": "Reduce the onboarding ramp to 3 months at 50% (instead of 6) and offer annual billing in advance (prepay) in exchange for holding the 15% list discount. This accelerates cash collection and reduces the effective Y1 discount.",
+        "proposed_price": 500000,
+        "effective_discount_pct": 15,
+        "expected_acv_impact": 62499,
+        "margin_pct_estimate": 32.5,
+        "rationale": "The 6-month ramp means Clay collects only ~$125K in Y1 during ramp months instead of ~$250K — a $125K cash drag. Shortening to 3 months recovers ~$62.5K in Y1 ACV and improves blended margin by ~3 points. Switching to annual prepay eliminates the billing-in-arrears credit risk for a deadline-driven Procurement team that wants to close fast anyway."
+      },
+      {
+        "label": "Usage Commit Floor + Overage Upside (Hybrid Restructure)",
+        "description": "Replace the flat ACV construct with a $420K/year usage commit floor (28.6% discount off list) plus an overage rate at list price for usage above the commit. Remove the unconditional MFN and replace with a tiered MFN that only triggers if Anthropic exceeds 150% of the commit in a given year.",
+        "proposed_price": 420000,
+        "effective_discount_pct": 28.6,
+        "expected_acv_impact": 40000,
+        "margin_pct_estimate": 40,
+        "rationale": "The lower commit floor protects Anthropic's budget risk concern while Clay captures upside via overage at list (40% margin). The tiered MFN carve-out reduces legal and pricing risk significantly — an unconditional 24-month MFN across all AI lab peers is a major commercial liability. At list-price overages, blended margin recovers to ~40%+ on any usage above floor. Expected ACV impact is positive because overage revenue at list adds ~$40K+ in a typical growth scenario for a consolidating enterprise."
+      },
+      {
+        "label": "Co-Marketing Credit Swap + Reduced Cash Discount",
+        "description": "Reduce the cash discount to 10% (proposed price $529,412) and offer $150K in co-marketing credits (case study, joint PR, reference program participation) in lieu of $50K of additional cash discount and a portion of the $200K data provider credits. Retain annual billing in arrears as-is but remove termination-for-convenience.",
+        "proposed_price": 529412,
+        "effective_discount_pct": 10,
+        "expected_acv_impact": 29412,
+        "margin_pct_estimate": 36.2,
+        "rationale": "For a high-profile AI lab logo, $150K in co-marketing value (case study, reference calls, joint press) likely costs Clay <$30K in internal resources — far better margin than a $50K cash discount. This structure raises proposed ACV by ~$29K/year, improves margin from ~29% to ~36%, and eliminates the termination-for-convenience clause (which creates real revenue-at-risk starting month 13). Anthropic gets a story to tell publicly about their consolidation — a reputational win — while Clay monetizes the brand relationship."
+      }
+    ],
+    "ltv_estimate_under_usage_assumptions": 1687500,
+    "similar_deal_references": [],
+    "confidence": "medium",
+    "reasoning_summary": "The headline discount of 15% clears all hard guardrails and sits within the standard enterprise envelope, but the effective economics are materially worse than the face rate suggests: the 6-month 50% ramp reduces Y1 cash collections by ~$125K, the $200K pre-paid data-provider credits effectively depress realized TCV to ~$1.3M, annual billing in arrears adds credit/collection risk, and the unconditional 24-month MFN across AI lab peers introduces significant future pricing liability not captured in any discount metric. Gross margin is estimated at ~29.4% under the working assumption that list price carries a 40% gross margin (COGS = 60% of list); this assumption should be refined by Finance before final approval. The margin warn guardrail fires and blended Y1 margin is likely well below the 29.4% estimate once ramp and credits are netted. LTV estimate of ~$1.69M assumes linear ramp to $500K ACV commit, then 15% YoY usage growth over a 3-year horizon on this hybrid deal."
+  },
+  "timings": [
     {
-      "rule_name": "Enterprise discount hard ceiling",
-      "passed": true,
-      "severity": "block_absolute",
-      "actual_value": 15,
-      "threshold_value": 50,
-      "explanation": "The 15% discount is well below the 50% absolute ceiling. This guardrail is comfortably cleared."
+      "id": "fetch_deal",
+      "label": "Fetching deal record from CRM",
+      "status": "running",
+      "elapsed_ms": 0
     },
     {
-      "rule_name": "Enterprise discount requires CFO sign-off",
-      "passed": true,
-      "severity": "block_without_approval",
-      "actual_value": 15,
-      "threshold_value": 35,
-      "explanation": "At 15% off list, the deal does not reach the 25–35% band that would trigger mandatory CFO sign-off. No approval escalation required on discount alone."
+      "id": "fetch_deal",
+      "label": "Fetched deal record from CRM",
+      "status": "complete",
+      "elapsed_ms": 1
     },
     {
-      "rule_name": "Enterprise discount soft ceiling",
-      "passed": true,
-      "severity": "warn",
-      "actual_value": 15,
-      "threshold_value": 25,
-      "explanation": "15% sits inside the standard enterprise envelope of ≤25%. AE should still document the multi-year volume rationale for the audit trail."
+      "id": "load_guardrails",
+      "label": "Loading active pricing guardrails for enterprise segment",
+      "status": "running",
+      "elapsed_ms": 1
     },
     {
-      "rule_name": "Enterprise ramp length soft ceiling",
-      "passed": true,
-      "severity": "warn",
-      "actual_value": 6,
-      "threshold_value": 6,
-      "explanation": "The ramp schedule covers exactly 6 months (months 1–6 at 50% of full price), meeting the soft ceiling precisely. No violation, but the effective first-year discount is materially higher than the stated 15% — see reasoning summary."
+      "id": "load_guardrails",
+      "label": "Loaded 6 guardrails for enterprise segment",
+      "status": "complete",
+      "elapsed_ms": 201
     },
     {
-      "rule_name": "Gross margin absolute floor",
-      "passed": true,
-      "severity": "block_absolute",
-      "actual_value": 29.4,
-      "threshold_value": 25,
-      "explanation": "Estimated gross margin of ~29.4% clears the 25% absolute floor. However, once the $200K data-provider credit is factored in as a cash-equivalent concession, effective margin compresses further — recommend a credit-adjusted margin check before countersigning."
+      "id": "similar_deals",
+      "label": "Identifying similar past deals via vector search",
+      "status": "running",
+      "elapsed_ms": 202
     },
     {
-      "rule_name": "Gross margin floor (warn)",
-      "passed": false,
-      "severity": "warn",
-      "actual_value": 29.4,
-      "threshold_value": 40,
-      "explanation": "Margin of ~29.4% falls below the 40% yellow-flag threshold. The combination of the 15% price discount, a 6-month 50%-ramp, $200K in pre-paid credits, and annual billing in arrears compound the effective margin erosion beyond what the headline discount implies."
+      "id": "similar_deals",
+      "label": "Vector search returns no precedent set (Phase 5 stub)",
+      "status": "complete",
+      "elapsed_ms": 503
+    },
+    {
+      "id": "reasoning",
+      "label": "Reasoning about pricing economics",
+      "status": "running",
+      "elapsed_ms": 503
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (0 of 6)",
+      "status": "running",
+      "elapsed_ms": 3996
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (1 of 6)",
+      "status": "running",
+      "elapsed_ms": 4712
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (2 of 6)",
+      "status": "running",
+      "elapsed_ms": 5457
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (3 of 6)",
+      "status": "running",
+      "elapsed_ms": 6197
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (4 of 6)",
+      "status": "running",
+      "elapsed_ms": 7477
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (5 of 6)",
+      "status": "running",
+      "elapsed_ms": 9732
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluating guardrails (6 of 6)",
+      "status": "running",
+      "elapsed_ms": 10856
+    },
+    {
+      "id": "guardrail_eval",
+      "label": "Evaluated 6 guardrails",
+      "status": "complete",
+      "elapsed_ms": 12392
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (0 of 3)",
+      "status": "running",
+      "elapsed_ms": 12392
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (1 of 3)",
+      "status": "running",
+      "elapsed_ms": 14748
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (2 of 3)",
+      "status": "running",
+      "elapsed_ms": 19867
+    },
+    {
+      "id": "alternatives",
+      "label": "Generating alternative structures (3 of 3)",
+      "status": "running",
+      "elapsed_ms": 25601
+    },
+    {
+      "id": "alternatives",
+      "label": "Generated 3 alternative structures",
+      "status": "complete",
+      "elapsed_ms": 29390
+    },
+    {
+      "id": "reasoning",
+      "label": "Reasoned about pricing economics",
+      "status": "complete",
+      "elapsed_ms": 35375
+    },
+    {
+      "id": "margin_sensitivity",
+      "label": "Computing margin sensitivity under the 40% list-price baseline",
+      "status": "running",
+      "elapsed_ms": 35375
+    },
+    {
+      "id": "margin_sensitivity",
+      "label": "Computed margin sensitivity (29.4% est.)",
+      "status": "complete",
+      "elapsed_ms": 35529
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalizing recommendation",
+      "status": "running",
+      "elapsed_ms": 35529
+    },
+    {
+      "id": "finalizing",
+      "label": "Finalized recommendation (medium confidence)",
+      "status": "complete",
+      "elapsed_ms": 35649
     }
   ],
-  "alternative_structures": [
-    {
-      "label": "Shorter Ramp + Reduced Credit in Exchange for Lower Net Discount",
-      "description": "Collapse the ramp to 3 months at 50% (instead of 6) and cap data-provider credits at $100K. In exchange, hold the list-price discount at 15% and offer a mutual case-study commitment. This recovers ~$125K of first-year revenue versus the current ramp and halves the credit exposure.",
-      "proposed_price": 500000,
-      "effective_discount_pct": 15,
-      "expected_acv_impact": 62500,
-      "margin_pct_estimate": 33.2,
-      "rationale": "The ramp is the largest hidden concession in this deal — 6 months at 50% effectively doubles the real first-year discount. Cutting it to 3 months recovers real cash without changing the headline rate Procurement sees. Reducing credits from $200K to $100K removes a full-margin-eroding pre-pay. The case study is a co-marketing win for both sides."
-    },
-    {
-      "label": "36-Month Commit with Built-In Escalator — MFN Replaced by Most-Favored-Tier",
-      "description": "Accept the 36-month term and 15% discount but restructure the MFN: instead of a blanket 24-month MFN against peer AI labs, offer a 'Most-Favored-Tier' clause that guarantees Anthropic access to any new published enterprise tier at the same discount rate they hold today, triggered only if their usage exceeds a defined commit threshold in Year 2. Add a 5% ACV escalator from Year 1 to Year 2 and Year 2 to Year 3. Eliminate annual billing in arrears; move to annual billing in advance.",
-      "proposed_price": 500000,
-      "effective_discount_pct": 15,
-      "expected_acv_impact": 50000,
-      "margin_pct_estimate": 35.1,
-      "rationale": "A blanket MFN against named competitors is a structural liability — it caps upside on any future price optimization across the entire enterprise segment. Replacing it with a usage-gated Most-Favored-Tier protects Clay's pricing integrity while giving Anthropic a credible commitment. The escalator locks in ACV growth and partially offsets the ramp concession. Flipping to billing in advance eliminates working-capital risk on a $1.5M TCV deal."
-    },
-    {
-      "label": "Usage-Commit Hybrid with Overage Upside — Full-Margin PS Line",
-      "description": "Restructure as a hybrid usage-commit deal: set a $420K/year usage floor (15% below current ACV) with a $0.85/unit overage rate above the commit. Carve out the $200K data-provider credits entirely, replacing them with a $200K professional services onboarding package at list price (full-margin revenue). Remove termination-for-convenience right in exchange for a 3% price protection guarantee. Ramp remains 6 months but at 65% (not 50%) of full price.",
-      "proposed_price": 420000,
-      "effective_discount_pct": 28.6,
-      "expected_acv_impact": -30000,
-      "margin_pct_estimate": 27.8,
-      "rationale": "This structure trades a lower guaranteed floor for overage upside as Anthropic consolidates 6 workspaces and grows usage — which is likely given their scale and AI-native workflows. Converting credits to PS revenue protects margin: $200K in pre-paid credits is a near-100% concession, while a PS engagement delivers real value and carries margin. The removal of termination-for-convenience right from Month 13 materially derisks the TCV. Note: at $420K floor, the discount hits 28.6% which enters the CFO sign-off band — the PS revenue line and usage upside are the offsetting strategic rationale."
-    }
-  ],
-  "ltv_estimate_under_usage_assumptions": 1687500,
-  "similar_deal_references": [],
-  "confidence": "medium",
-  "reasoning_summary": "The headline 15% discount clears all hard guardrails and sits within the standard enterprise envelope, but the effective first-year economics are materially worse than they appear: a 6-month 50%-ramp reduces Year-1 realized ACV to roughly $375K (vs. $500K nominal), the $200K in data-provider credits represent a near-full-margin cash concession, and annual billing in arrears introduces meaningful working-capital risk on a $1.5M TCV deal. Margin is estimated at ~29.4% at the proposed price, below the 40% warn threshold — this figure uses the working assumption that list price carries a 40% gross margin (COGS = 60% of list), which the CFO team should validate against actual unit economics. The uncapped 24-month MFN against peer AI labs is the single highest-risk non-standard clause and warrants legal and finance review independent of the pricing guardrails evaluated here. No precedent deals were available, so confidence is medium."
+  "metadata": {
+    "duration_ms": 35529,
+    "input_tokens": 3,
+    "output_tokens": 1886,
+    "cost_usd": 0.0596825,
+    "recorded_at": "2026-05-05T00:15:21.424Z"
+  }
 }

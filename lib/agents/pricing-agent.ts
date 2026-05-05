@@ -12,8 +12,14 @@ import { CRM_TOOL_NAMES, crmMcpServer } from "../mcp-servers/crm-server";
 // returns a single JSON object. Registering the `crm` MCP server keeps the
 // architecture honest — Phase 4's orchestrator will exercise these same
 // tools to gather context before fanning out to sub-agents.
+//
+// Cache file layout (db/seed/cached_outputs/<deal>-pricing.json) is a
+// versioned wrapper (`CacheFile`) carrying the structured output plus the
+// timing tape from the original live run. Cache hits paced-replay the
+// timing tape so the demo path looks indistinguishable from a live run.
 
 const MODEL = "claude-sonnet-4-6";
+const CACHE_VERSION = 1;
 
 const PROMPT_PATH = join(
   process.cwd(),
@@ -24,7 +30,8 @@ const PROMPT_PATH = join(
 const CACHE_DIR = join(process.cwd(), "db", "seed", "cached_outputs");
 
 // Stable substep ids the client knows about. Order is the canonical sequence
-// shown in the timeline (lib/agents/substep-plan.ts mirrors this for the UI).
+// shown in the timeline (PRICING_SUBSTEPS in components/reasoning-stream.tsx
+// mirrors this for the UI).
 export type PricingSubstepId =
   | "fetch_deal"
   | "load_guardrails"
@@ -39,6 +46,25 @@ export interface SubstepEvent {
   id: PricingSubstepId;
   label: string;
   status: "running" | "complete";
+}
+
+interface SubstepTiming extends SubstepEvent {
+  // Milliseconds from the start of the agent run when the event fired.
+  // Used by cache-hit paced replay to reproduce the original cadence.
+  elapsed_ms: number;
+}
+
+interface CacheFile {
+  version: typeof CACHE_VERSION;
+  output: PricingOutput;
+  timings: SubstepTiming[];
+  metadata: {
+    duration_ms: number;
+    input_tokens: number | null;
+    output_tokens: number | null;
+    cost_usd: number | null;
+    recorded_at: string;
+  };
 }
 
 export interface RunPricingOptions {
@@ -61,19 +87,21 @@ export async function runPricingAgent(
 ): Promise<RunPricingResult> {
   const cachePath = join(CACHE_DIR, `${dealId}-pricing.json`);
   const start = Date.now();
-  const emit = opts.onSubstep ?? (() => {});
 
+  // ---- Cache hit: paced replay of the original substep tape ----
   if (!opts.forceRefresh && existsSync(cachePath)) {
-    const cached = JSON.parse(readFileSync(cachePath, "utf-8")) as unknown;
-    const output = PricingOutputSchema.parse(cached);
-    return {
-      output,
-      fromCache: true,
-      durationMs: Date.now() - start,
-      inputTokens: null,
-      outputTokens: null,
-      costUsd: null,
-    };
+    const cached = readCacheFile(cachePath);
+    if (cached) {
+      await replayTimings(cached.timings, opts.onSubstep, start);
+      return {
+        output: cached.output,
+        fromCache: true,
+        durationMs: Date.now() - start,
+        inputTokens: cached.metadata.input_tokens,
+        outputTokens: cached.metadata.output_tokens,
+        costUsd: cached.metadata.cost_usd,
+      };
+    }
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -81,6 +109,14 @@ export async function runPricingAgent(
       "ANTHROPIC_API_KEY is required to run the Pricing Agent live (no cache hit).",
     );
   }
+
+  // Live run. Wrap onSubstep so every emission is also taped to disk for
+  // future replays.
+  const recordedTimings: SubstepTiming[] = [];
+  const emit = (e: SubstepEvent) => {
+    recordedTimings.push({ ...e, elapsed_ms: Date.now() - start });
+    opts.onSubstep?.(e);
+  };
 
   // ---- Substep 1: deal fetch ----
   emit({ id: "fetch_deal", label: "Fetching deal record from CRM", status: "running" });
@@ -216,8 +252,30 @@ export async function runPricingAgent(
     label: "Finalizing recommendation",
     status: "running",
   });
+  const durationMs = Date.now() - start;
+  const cacheFile: CacheFile = {
+    version: CACHE_VERSION,
+    output,
+    timings: recordedTimings,
+    metadata: {
+      duration_ms: durationMs,
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+      cost_usd: costUsd,
+      recorded_at: new Date().toISOString(),
+    },
+  };
+  // Note: the trailing "finalizing complete" emission below isn't yet on the
+  // tape — we add it manually after writing the file so the cached replay
+  // carries the same number of events.
+  cacheFile.timings.push({
+    id: "finalizing",
+    label: `Finalized recommendation (${output.confidence} confidence)`,
+    status: "complete",
+    elapsed_ms: durationMs + 120,
+  });
   mkdirSync(dirname(cachePath), { recursive: true });
-  writeFileSync(cachePath, JSON.stringify(output, null, 2));
+  writeFileSync(cachePath, JSON.stringify(cacheFile, null, 2));
   await tinyPause(120);
   emit({
     id: "finalizing",
@@ -233,6 +291,52 @@ export async function runPricingAgent(
     outputTokens,
     costUsd,
   };
+}
+
+// Replay the recorded substep tape on its original cadence. Each substep
+// fires when its `elapsed_ms` matches the wall clock since `start`. If the
+// caller didn't pass an onSubstep handler we still honor the timing so the
+// route's deal_review row reflects the realistic duration.
+async function replayTimings(
+  timings: SubstepTiming[],
+  emit: ((e: SubstepEvent) => void) | undefined,
+  start: number,
+) {
+  for (const t of timings) {
+    const targetElapsed = t.elapsed_ms;
+    const actual = Date.now() - start;
+    const wait = targetElapsed - actual;
+    if (wait > 0) {
+      await new Promise<void>((res) => setTimeout(res, wait));
+    }
+    emit?.({ id: t.id, label: t.label, status: t.status });
+  }
+}
+
+// Read the cache file. Returns null on an unrecognized format so callers
+// fall through to a live run instead of crashing on a stale schema.
+function readCacheFile(cachePath: string): CacheFile | null {
+  try {
+    const raw = JSON.parse(readFileSync(cachePath, "utf-8")) as unknown;
+    if (
+      raw &&
+      typeof raw === "object" &&
+      "version" in raw &&
+      (raw as { version?: number }).version === CACHE_VERSION &&
+      "output" in raw &&
+      "timings" in raw
+    ) {
+      const wrapped = raw as CacheFile;
+      // Validate the output still parses against the current schema; if the
+      // schema evolved, treat the cache as stale.
+      const parsed = PricingOutputSchema.safeParse(wrapped.output);
+      if (!parsed.success) return null;
+      return { ...wrapped, output: parsed.data };
+    }
+  } catch {
+    // Fall through to "no cache" — the live path will overwrite the file.
+  }
+  return null;
 }
 
 // Watches streamed text for schema-field landmarks. The JSON itself is never
@@ -271,12 +375,10 @@ class StreamWatcher {
       });
     }
 
-    // Count individual guardrail entries by looking for the closing `}` that
-    // ends each entry inside the guardrail_evaluations array. Each entry has
-    // a `"explanation":` field — counting those is more reliable than brace
-    // matching across nested objects.
+    // Count individual guardrail entries by looking for the `"explanation"`
+    // field that closes each entry inside the guardrail_evaluations array.
     if (this.guardrailRunning) {
-      const seen = countOccurrences(this.acc, '"explanation"', this.guardrailCount);
+      const seen = countOccurrences(this.acc, '"explanation"');
       while (this.guardrailCount < seen) {
         this.guardrailCount++;
         this.emit({
@@ -307,9 +409,9 @@ class StreamWatcher {
       });
     }
 
-    // Count alternative_structures entries via their `"rationale":` field.
+    // Count alternative_structures entries via their `"rationale"` field.
     if (this.alternativesRunning) {
-      const seen = countOccurrences(this.acc, '"rationale"', this.alternativeCount);
+      const seen = countOccurrences(this.acc, '"rationale"');
       while (this.alternativeCount < seen) {
         this.alternativeCount++;
         this.emit({
@@ -355,9 +457,7 @@ class StreamWatcher {
   }
 }
 
-function countOccurrences(haystack: string, needle: string, after = 0): number {
-  // Cheap counter using indexOf in a loop. Returns the count starting from
-  // index 0; the caller compares to its previous count to detect deltas.
+function countOccurrences(haystack: string, needle: string): number {
   let i = 0;
   let count = 0;
   while ((i = haystack.indexOf(needle, i)) !== -1) {
