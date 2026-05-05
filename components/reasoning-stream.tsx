@@ -41,6 +41,8 @@ import { CustomerSignalsPanel } from "@/components/panels/customer-signals-panel
 import { SimilarDealsPanel } from "@/components/panels/similar-deals-panel";
 import type { CustomerSignalsResult } from "@/lib/tools/exa-search";
 import type { SimilarDealRecord } from "@/lib/tools/vector-search";
+import type { SlackPostRecord } from "@/lib/tools/slack";
+import type { SlackPostUiState } from "@/components/slack-post-status";
 import { cn } from "@/lib/utils";
 
 // Live timeline that subscribes to /api/run-review/[dealId] over SSE.
@@ -95,6 +97,7 @@ type StreamEvent =
       data: unknown;
       ts: number;
     }
+  | { type: "slack_post"; record: SlackPostRecord; ts: number }
   | { type: "synthesis"; summary: string; review_id: string; ts: number }
   | { type: "error"; step: ParentName; message: string; ts: number };
 
@@ -210,6 +213,7 @@ export function ReasoningStream({
   );
   const [customerSignals, setCustomerSignals] =
     useState<CustomerSignalsResult | null>(null);
+  const [slackPost, setSlackPost] = useState<SlackPostUiState | null>(null);
   const [done, setDone] = useState(false);
   const esRef = useRef<EventSource | null>(null);
 
@@ -290,6 +294,16 @@ export function ReasoningStream({
               },
             };
           });
+          // Surface a "pending" Slack indicator the moment the orchestrator
+          // dispatches the post — the slack_post settlement event arrives a
+          // few seconds later (or near-instantly on cache replay).
+          if (
+            ev.parent === "Orchestrator" &&
+            ev.id === "step6_slack_post" &&
+            ev.status === "running"
+          ) {
+            setSlackPost({ phase: "pending" });
+          }
           break;
         }
         case "panel_data": {
@@ -298,6 +312,10 @@ export function ReasoningStream({
           } else if (ev.panel === "customer_signals") {
             setCustomerSignals(ev.data as CustomerSignalsResult);
           }
+          break;
+        }
+        case "slack_post": {
+          setSlackPost({ phase: "settled", record: ev.record });
           break;
         }
         case "synthesis": {
@@ -384,6 +402,11 @@ export function ReasoningStream({
         index={4}
         parent="Comms Agent"
         state={steps["Comms Agent"]}
+        slackPost={slackPost}
+        reviewId={synthesis?.reviewId ?? null}
+        onSlackPostChange={(next) =>
+          setSlackPost({ phase: "settled", record: next })
+        }
       />
 
       {/* 5. Synthesis */}
@@ -439,16 +462,29 @@ function TimelineRow({
   index,
   parent,
   state,
+  slackPost,
+  reviewId,
+  onSlackPostChange,
 }: {
   index: number;
   parent: ParentName;
   state: StepState;
+  slackPost?: SlackPostUiState | null;
+  reviewId?: string | null;
+  onSlackPostChange?: (next: SlackPostRecord) => void;
 }) {
   const plan = SUBSTEP_PLANS[parent];
   return (
     <li className="relative">
       <StepDot index={index} status={state.status} />
-      <StepCard parent={parent} state={state} plan={plan} />
+      <StepCard
+        parent={parent}
+        state={state}
+        plan={plan}
+        slackPost={slackPost}
+        reviewId={reviewId}
+        onSlackPostChange={onSlackPostChange}
+      />
     </li>
   );
 }
@@ -469,11 +505,17 @@ function StepCard({
   state,
   plan,
   compact = false,
+  slackPost,
+  reviewId,
+  onSlackPostChange,
 }: {
   parent: ParentName;
   state: StepState;
   plan: SubstepPlan[];
   compact?: boolean;
+  slackPost?: SlackPostUiState | null;
+  reviewId?: string | null;
+  onSlackPostChange?: (next: SlackPostRecord) => void;
 }) {
   return (
     <div
@@ -512,7 +554,13 @@ function StepCard({
       {(state.status === "running" || state.status === "complete") &&
         state.partialOutput !== undefined && (
           <div className="border-t border-border p-3 sm:p-4">
-            <AgentOutputRouter parent={parent} payload={state.partialOutput} />
+            <AgentOutputRouter
+              parent={parent}
+              payload={state.partialOutput}
+              slackPost={slackPost}
+              reviewId={reviewId}
+              onSlackPostChange={onSlackPostChange}
+            />
           </div>
         )}
     </div>
@@ -522,9 +570,15 @@ function StepCard({
 function AgentOutputRouter({
   parent,
   payload,
+  slackPost,
+  reviewId,
+  onSlackPostChange,
 }: {
   parent: ParentName;
   payload: unknown;
+  slackPost?: SlackPostUiState | null;
+  reviewId?: string | null;
+  onSlackPostChange?: (next: SlackPostRecord) => void;
 }) {
   if (parent === "Pricing Agent") {
     return <AgentOutputCard output={payload as Parameters<typeof AgentOutputCard>[0]["output"]} />;
@@ -539,7 +593,14 @@ function AgentOutputRouter({
     return <ApprovalCard output={payload as Parameters<typeof ApprovalCard>[0]["output"]} />;
   }
   if (parent === "Comms Agent") {
-    return <CommsCard output={payload as Parameters<typeof CommsCard>[0]["output"]} />;
+    return (
+      <CommsCard
+        output={payload as Parameters<typeof CommsCard>[0]["output"]}
+        slackPost={slackPost}
+        reviewId={reviewId}
+        onSlackPostChange={onSlackPostChange}
+      />
+    );
   }
   // Orchestrator has no structured output beyond synthesis; render nothing.
   return null;

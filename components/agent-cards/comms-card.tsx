@@ -6,6 +6,11 @@ import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { CommsOutput } from "@/lib/agents/schemas";
+import {
+  SlackPostStatus,
+  type SlackPostUiState,
+} from "@/components/slack-post-status";
+import type { SlackPostRecord } from "@/lib/tools/slack";
 
 type Partial = globalThis.Partial<CommsOutput> & { _meta?: AgentMeta };
 
@@ -16,7 +21,20 @@ interface AgentMeta {
   output_tokens?: number | null;
 }
 
-export function CommsCard({ output }: { output: Partial }) {
+export function CommsCard({
+  output,
+  slackPost,
+  reviewId,
+  onSlackPostChange,
+}: {
+  output: Partial;
+  // The orchestrator's Slack post status. Optional so this card still
+  // renders during the agent's own progressive reveal (before the
+  // orchestrator's parallel synthesis + Slack step has emitted anything).
+  slackPost?: SlackPostUiState | null;
+  reviewId?: string | null;
+  onSlackPostChange?: (next: SlackPostRecord) => void;
+}) {
   return (
     <div className="space-y-2">
       {output.slack_post && (
@@ -25,6 +43,15 @@ export function CommsCard({ output }: { output: Partial }) {
           subtitle={output.slack_post.channel_suggestion}
           icon={MessageSquare}
         >
+          {slackPost && (
+            <div className="mb-2.5">
+              <SlackPostStatus
+                state={slackPost}
+                reviewId={reviewId}
+                onRetried={onSlackPostChange}
+              />
+            </div>
+          )}
           <pre className="whitespace-pre-wrap rounded bg-surface-secondary p-2.5 text-xs leading-relaxed text-foreground/85">
             {output.slack_post.plaintext_fallback}
           </pre>
