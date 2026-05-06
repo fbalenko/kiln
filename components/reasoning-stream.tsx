@@ -39,8 +39,15 @@ import { CommsCard } from "@/components/agent-cards/comms-card";
 import { RedlineCard } from "@/components/agent-cards/redline-card";
 import { CustomerSignalsPanel } from "@/components/panels/customer-signals-panel";
 import { SimilarDealsPanel } from "@/components/panels/similar-deals-panel";
-import { ArtifactsPanel } from "@/components/artifacts-panel";
 import { AGENT_IDENTITY } from "@/lib/agent-identity";
+import { CompletedView } from "@/components/deal/completed-view";
+import type {
+  ApprovalOutput,
+  Asc606Output,
+  CommsOutput,
+  PricingOutput,
+  RedlineOutput,
+} from "@/lib/agents/schemas";
 import type { CustomerSignalsResult } from "@/lib/tools/exa-search";
 import type { SimilarDealRecord } from "@/lib/tools/vector-search";
 import type { SlackPostRecord } from "@/lib/tools/slack";
@@ -356,18 +363,16 @@ export function ReasoningStream({
     };
   }, [dealId, live]);
 
-  return (
+  // The agent-only timeline. In Mode 1 (running) this is the dominant
+  // surface; in Mode 2 (post-synthesis) it's tucked behind the
+  // "View reasoning trace" expander inside <CompletedView>.
+  const agentTimeline = (
     <ol className="relative space-y-2.5 border-l border-border pl-6 sm:pl-8">
-      {/* 1. Orchestrator */}
       <TimelineRow
         index={1}
         parent="Orchestrator"
         state={steps.Orchestrator}
       />
-
-      {/* 2. Parallel grid: Pricing | ASC 606 | Redline. The three cards
-          mount inside a single timeline row so the visitor sees them
-          spinning simultaneously — "wow, it's actually multi-agent." */}
       <li className="relative">
         <ParallelGroupDot
           status={collapseStatuses([
@@ -391,15 +396,11 @@ export function ReasoningStream({
           />
         </div>
       </li>
-
-      {/* 3. Approval — sequential after the parallel block */}
       <TimelineRow
         index={3}
         parent="Approval Agent"
         state={steps["Approval Agent"]}
       />
-
-      {/* 4. Comms — sequential after Approval */}
       <TimelineRow
         index={4}
         parent="Comms Agent"
@@ -410,70 +411,102 @@ export function ReasoningStream({
           setSlackPost({ phase: "settled", record: next })
         }
       />
+    </ol>
+  );
 
-      {/* 5. Synthesis */}
-      {synthesis && (
-        <li className="relative pt-1">
-          <span
-            aria-hidden
-            className="absolute -left-[26px] top-3 inline-flex h-4 w-4 items-center justify-center rounded-full bg-[var(--brand)] text-white sm:-left-[34px]"
-          >
-            <Check className="h-2.5 w-2.5" strokeWidth={3} />
-          </span>
-          <div className="rounded-md border border-[var(--brand)]/30 bg-[var(--brand)]/[0.04] p-3.5 sm:p-4 animate-in fade-in slide-in-from-bottom-1 duration-300">
-            <div className="text-[11px] font-medium uppercase tracking-wider text-[var(--brand)]">
-              Executive synthesis
-            </div>
-            <p className="mt-1 whitespace-pre-line text-[13px] leading-relaxed text-foreground">
-              {synthesis.summary}
-            </p>
-            <div className="mt-2 font-mono text-[10px] text-muted-foreground">
-              review {synthesis.reviewId}
-            </div>
-          </div>
-        </li>
-      )}
+  // Mode 2 — the orchestrator's synthesis has fired and every agent has a
+  // finalOutput we can hand to <CompletedView>. We delay the layout swap
+  // by a tick if any agent's finalOutput is missing (defensive — should not
+  // happen in practice because synthesis fires *after* every step_complete).
+  const finalOutputs = collectFinalOutputs(steps);
+  const elapsedMs =
+    steps.Orchestrator.startedAt && steps.Orchestrator.completedAt
+      ? steps.Orchestrator.completedAt - steps.Orchestrator.startedAt
+      : null;
+  const substepCount = countCompletedSubsteps(steps);
 
-      {/* 5b. Deal-desk artifacts — the five downloadable outputs derived
-          from the comms agent's drafts + the upstream agent state. Renders
-          right after synthesis so the visitor sees the agents' work and is
-          immediately offered the take-aways. */}
-      {synthesis && (
-        <li className="relative pt-1">
-          <span
-            aria-hidden
-            className="absolute -left-[26px] top-3 inline-flex h-4 w-4 items-center justify-center rounded-full border border-border bg-background text-muted-foreground sm:-left-[34px]"
-          >
-            <FileText className="h-2.5 w-2.5" />
-          </span>
-          <ArtifactsPanel reviewId={synthesis.reviewId} />
-        </li>
-      )}
+  if (synthesis && finalOutputs) {
+    return (
+      <CompletedView
+        pricing={finalOutputs.pricing}
+        asc606={finalOutputs.asc606}
+        redline={finalOutputs.redline}
+        approval={finalOutputs.approval}
+        comms={finalOutputs.comms}
+        synthesis={synthesis}
+        similarDeals={similarDeals}
+        customerSignals={customerSignals}
+        slackPost={slackPost}
+        timeline={agentTimeline}
+        totalElapsedMs={elapsedMs}
+        substepCount={substepCount}
+        agentCount={5}
+        onSlackPostChange={(next) =>
+          setSlackPost({ phase: "settled", record: next })
+        }
+      />
+    );
+  }
 
-      {/* 6. Phase 5 panels — similar past deals + customer context. Mount as
-          soon as the orchestrator's Step 2 fan-out finishes (well before
-          synthesis), so the visitor sees the institutional-memory + external-
-          context surfaces fill in alongside the agent timeline. */}
+  // Mode 1 — running. Render the timeline plus any in-flight context panels.
+  return (
+    <div className="space-y-3">
+      {agentTimeline}
+
+      {/* Phase 5 panels — surface as soon as Step 2 fan-out lands, well
+          before synthesis. In Mode 1 they sit below the timeline; Mode 2
+          repositions them into the three-up context row. */}
       {(similarDeals || customerSignals) && (
-        <li className="relative pt-1">
-          <span
-            aria-hidden
-            className="absolute -left-[26px] top-3 inline-flex h-4 w-4 items-center justify-center rounded-full border border-border bg-background text-muted-foreground sm:-left-[34px]"
-          >
-            <GitBranch className="h-2.5 w-2.5" />
-          </span>
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-            <SimilarDealsPanel deals={similarDeals} />
-            <CustomerSignalsPanel result={customerSignals} />
-          </div>
-        </li>
+        <div className="grid grid-cols-1 gap-3 pl-6 sm:pl-8 lg:grid-cols-2">
+          <SimilarDealsPanel deals={similarDeals} />
+          <CustomerSignalsPanel result={customerSignals} />
+        </div>
       )}
 
       {done && !synthesis && (
-        <li className="text-xs text-muted-foreground">Stream ended.</li>
+        <p className="pl-6 text-xs text-muted-foreground sm:pl-8">
+          Stream ended.
+        </p>
       )}
-    </ol>
+    </div>
   );
+}
+
+// Final-output extractor. Returns null until every agent has emitted its
+// step_complete event (defensive — synthesis arrives after, so this is
+// rarely null when synthesis is set).
+function collectFinalOutputs(steps: Record<ParentName, StepState>): {
+  pricing: PricingOutput;
+  asc606: Asc606Output;
+  redline: RedlineOutput;
+  approval: ApprovalOutput;
+  comms: CommsOutput;
+} | null {
+  const p = steps["Pricing Agent"].finalOutput;
+  const a = steps["ASC 606 Agent"].finalOutput;
+  const r = steps["Redline Agent"].finalOutput;
+  const ap = steps["Approval Agent"].finalOutput;
+  const c = steps["Comms Agent"].finalOutput;
+  if (!p || !a || !r || !ap || !c) return null;
+  return {
+    pricing: p as PricingOutput,
+    asc606: a as Asc606Output,
+    redline: r as RedlineOutput,
+    approval: ap as ApprovalOutput,
+    comms: c as CommsOutput,
+  };
+}
+
+function countCompletedSubsteps(
+  steps: Record<ParentName, StepState>,
+): number {
+  let n = 0;
+  for (const k of Object.keys(steps) as ParentName[]) {
+    for (const sub of Object.values(steps[k].substeps)) {
+      if (sub.status === "complete") n++;
+    }
+  }
+  return n;
 }
 
 function TimelineRow({
