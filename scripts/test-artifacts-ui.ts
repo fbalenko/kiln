@@ -1,4 +1,4 @@
-import puppeteer from "puppeteer-core";
+import puppeteer, { type ElementHandle } from "puppeteer-core";
 import { mkdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 
@@ -56,7 +56,7 @@ async function main() {
     return buttons.find((b) => b.textContent?.trim().match(/^Run review/i));
   });
   if (!runButton) throw new Error("Run review button not found");
-  await (runButton as puppeteer.ElementHandle<HTMLButtonElement>).click();
+  await (runButton as ElementHandle<HTMLButtonElement>).click();
   console.log("→ clicked Run review");
 
   // Wait for the synthesis card → triggers ArtifactsPanel mount.
@@ -86,7 +86,7 @@ async function main() {
       results.push({ label: target.label, ok: false, bytes: 0 });
       continue;
     }
-    await (handle as puppeteer.ElementHandle<HTMLButtonElement>).click();
+    await (handle as ElementHandle<HTMLButtonElement>).click();
 
     // Brief pause so the download actually starts before we begin polling
     // — and so the next click doesn't land before this download settles.
@@ -117,7 +117,7 @@ async function main() {
       (el) => (el as HTMLElement).parentElement?.parentElement ?? null,
     );
     if (panel) {
-      await (panel as puppeteer.ElementHandle<Element>).screenshot({
+      await (panel as ElementHandle<Element>).screenshot({
         path: join(DOWNLOAD_DIR, "panel.png"),
       });
       console.log("→ panel screenshot saved");

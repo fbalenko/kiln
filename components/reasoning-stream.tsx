@@ -40,6 +40,7 @@ import { RedlineCard } from "@/components/agent-cards/redline-card";
 import { CustomerSignalsPanel } from "@/components/panels/customer-signals-panel";
 import { SimilarDealsPanel } from "@/components/panels/similar-deals-panel";
 import { ArtifactsPanel } from "@/components/artifacts-panel";
+import { AGENT_IDENTITY } from "@/lib/agent-identity";
 import type { CustomerSignalsResult } from "@/lib/tools/exa-search";
 import type { SimilarDealRecord } from "@/lib/tools/vector-search";
 import type { SlackPostRecord } from "@/lib/tools/slack";
@@ -534,8 +535,18 @@ function StepCard({
   reviewId?: string | null;
   onSlackPostChange?: (next: SlackPostRecord) => void;
 }) {
+  const identity = AGENT_IDENTITY[parent];
+  // 2px left-border accent in the agent's identity color makes the five
+  // lanes (Pricing/ASC 606/Redline/Approval/Comms) scannable as distinct
+  // tracks. Hidden while pending so the timeline reads dim before the
+  // substep tape starts ticking.
+  const showAccent =
+    parent !== "Orchestrator" && state.status !== "pending";
   return (
     <div
+      style={
+        showAccent ? { borderLeftColor: identity.hex, borderLeftWidth: 2 } : undefined
+      }
       className={cn(
         "rounded-md border bg-card transition-colors",
         state.status === "running" && "border-[var(--brand)]/40 bg-[var(--brand)]/[0.03]",
@@ -671,7 +682,7 @@ function SubstepList({
         </button>
       )}
       {effectiveOpen && (
-        <ul className="space-y-0.5 px-3.5 py-2 sm:px-4">
+        <ul className="space-y-0 px-3.5 py-1.5 sm:px-4">
           {plan.map((p) => {
             const sub = state.substeps[p.id];
             const status = sub?.status ?? "pending";
@@ -680,7 +691,7 @@ function SubstepList({
               <li
                 key={p.id}
                 className={cn(
-                  "flex items-center gap-2 rounded px-1.5 py-1 text-[12px] leading-tight transition-colors",
+                  "flex items-center gap-2 rounded px-1.5 py-0.5 text-[12px] leading-tight transition-colors",
                   status === "running" &&
                     "bg-[var(--brand)]/[0.06] text-foreground",
                   status === "complete" && "text-muted-foreground",
