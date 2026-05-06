@@ -39,6 +39,7 @@ import { CommsCard } from "@/components/agent-cards/comms-card";
 import { RedlineCard } from "@/components/agent-cards/redline-card";
 import { CustomerSignalsPanel } from "@/components/panels/customer-signals-panel";
 import { SimilarDealsPanel } from "@/components/panels/similar-deals-panel";
+import { ArtifactsPanel } from "@/components/artifacts-panel";
 import type { CustomerSignalsResult } from "@/lib/tools/exa-search";
 import type { SimilarDealRecord } from "@/lib/tools/vector-search";
 import type { SlackPostRecord } from "@/lib/tools/slack";
@@ -429,6 +430,22 @@ export function ReasoningStream({
               review {synthesis.reviewId}
             </div>
           </div>
+        </li>
+      )}
+
+      {/* 5b. Deal-desk artifacts — the five downloadable outputs derived
+          from the comms agent's drafts + the upstream agent state. Renders
+          right after synthesis so the visitor sees the agents' work and is
+          immediately offered the take-aways. */}
+      {synthesis && (
+        <li className="relative pt-1">
+          <span
+            aria-hidden
+            className="absolute -left-[26px] top-3 inline-flex h-4 w-4 items-center justify-center rounded-full border border-border bg-background text-muted-foreground sm:-left-[34px]"
+          >
+            <FileText className="h-2.5 w-2.5" />
+          </span>
+          <ArtifactsPanel reviewId={synthesis.reviewId} />
         </li>
       )}
 
