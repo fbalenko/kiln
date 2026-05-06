@@ -96,7 +96,9 @@ function DownloadTile({
       document.body.appendChild(a);
       a.click();
       a.remove();
-      URL.revokeObjectURL(url);
+      // Defer revoke past the download tick — Chrome headless can race the
+      // synchronous revoke and abort the save mid-stream.
+      setTimeout(() => URL.revokeObjectURL(url), 4_000);
       setState("done");
       // Reset the "downloaded" affordance after a beat so a second click
       // doesn't look like it failed.
@@ -110,6 +112,7 @@ function DownloadTile({
   return (
     <button
       type="button"
+      data-artifact-tile={tile.type}
       onClick={onClick}
       disabled={state === "loading"}
       className={cn(
