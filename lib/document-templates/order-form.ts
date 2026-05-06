@@ -10,12 +10,17 @@ import {
 //
 // Sections:
 //   1. Header — customer + deal name + ACV/TCV/term
-//   2. Line items table (subscription line + ramp delta + any waivers)
-//   3. Ramp schedule visualization — month-by-month bars when applicable
-//   4. ASC 606 treatment notes — pulled from asc606.recognized_revenue_schedule
-//      + the variable_consideration_flags
-//   5. Signature block placeholders (customer + Clay)
-//   6. Footer — Kiln disclaimer + review URL
+//   2. Two-column metadata grid
+//   3. Line items table (subscription + ramp delta + waivers)
+//   4. Ramp schedule visualization — month-by-month bars
+//   5. ASC 606 treatment notes
+//   6. Signature block (customer + Clay)
+//   7. Footer — Kiln disclaimer + review URL
+//
+// Implementation note: pdfkit's text() with explicit (x, y) sets the current
+// x as a column anchor, which then bleeds into subsequent autoflow calls
+// (text after drawKvGrid would otherwise render in the right column). Every
+// helper explicitly resets doc.x = LEFT after drawing.
 
 const PAGE_OPTS = {
   size: "LETTER",
@@ -33,25 +38,34 @@ const COLORS = {
 export async function generateOrderForm(
   input: ArtifactInput,
 ): Promise<ArtifactBuffer> {
-  const { deal, pricing, asc606, appUrl } = input;
+  const { deal, asc606, pricing } = input;
+  void pricing; // referenced inside drawLineItems
 
   const doc = new PDFDocument(PAGE_OPTS);
   const chunks: Buffer[] = [];
   doc.on("data", (c: Buffer) => chunks.push(c));
   const closed = new Promise<void>((res) => doc.on("end", () => res()));
 
+  const left = PAGE_OPTS.margins.left;
+  const usableW =
+    doc.page.width - PAGE_OPTS.margins.left - PAGE_OPTS.margins.right;
+
   // ---- Header ----
+  doc.x = left;
   doc
     .font("Helvetica-Bold")
     .fontSize(18)
     .fillColor(COLORS.ink)
-    .text("Order Form");
+    .text("Order Form", left, doc.y, { width: usableW });
   doc
     .font("Helvetica")
-    .fontSize(9)
+    .fontSize(9.5)
     .fillColor(COLORS.muted)
     .text(
       `${deal.customer.name} · ${deal.name} · ${input.generatedAt.toISOString().slice(0, 10)}`,
+      left,
+      doc.y,
+      { width: usableW },
     );
   doc.moveDown(0.6);
   rule(doc);
@@ -59,9 +73,7 @@ export async function generateOrderForm(
 
   // ---- Two-column metadata block ----
   const metaTop = doc.y;
-  const colWidth =
-    (doc.page.width - PAGE_OPTS.margins.left - PAGE_OPTS.margins.right - 24) /
-    2;
+  const colWidth = (usableW - 24) / 2;
   const leftMeta: [string, string][] = [
     ["Customer", deal.customer.name],
     ["Segment", humanize(deal.customer.segment)],
@@ -74,72 +86,77 @@ export async function generateOrderForm(
     ["Term", `${deal.term_months} months`],
     ["Pricing model", humanize(deal.pricing_model)],
   ];
-  drawKvGrid(doc, leftMeta, PAGE_OPTS.margins.left, metaTop, colWidth);
-  drawKvGrid(
-    doc,
-    rightMeta,
-    PAGE_OPTS.margins.left + colWidth + 24,
-    metaTop,
-    colWidth,
-  );
-  doc.y = metaTop + leftMeta.length * KV_ROW_HEIGHT + 8;
+  drawKvGrid(doc, leftMeta, left, metaTop, colWidth);
+  drawKvGrid(doc, rightMeta, left + colWidth + 24, metaTop, colWidth);
+  doc.x = left;
+  doc.y = metaTop + leftMeta.length * KV_ROW_HEIGHT + 4;
 
   // ---- Line items table ----
   rule(doc);
   doc.moveDown(0.4);
+  doc.x = left;
   doc
     .font("Helvetica-Bold")
     .fontSize(10)
     .fillColor(COLORS.ink)
-    .text("Line items");
-  doc.moveDown(0.3);
+    .text("LINE ITEMS", left, doc.y, {
+      width: usableW,
+      characterSpacing: 1.2,
+    });
+  doc.moveDown(0.4);
   drawLineItems(doc, input);
-  doc.moveDown(0.5);
+  doc.x = left;
+  doc.moveDown(0.4);
 
-  // ---- Ramp schedule (if deal has ramp_schedule_json) ----
+  // ---- Ramp schedule (optional) ----
   const ramp = parseRampSchedule(deal.ramp_schedule_json);
   if (ramp.length > 0) {
     rule(doc);
     doc.moveDown(0.4);
+    doc.x = left;
     doc
       .font("Helvetica-Bold")
       .fontSize(10)
       .fillColor(COLORS.ink)
-      .text("Ramp schedule");
-    doc.moveDown(0.3);
+      .text("RAMP SCHEDULE", left, doc.y, {
+        width: usableW,
+        characterSpacing: 1.2,
+      });
+    doc.moveDown(0.4);
     drawRampBars(doc, ramp);
-    doc.moveDown(0.5);
+    doc.x = left;
+    doc.moveDown(0.4);
   }
 
   // ---- ASC 606 notes ----
   rule(doc);
   doc.moveDown(0.4);
+  doc.x = left;
   doc
     .font("Helvetica-Bold")
     .fontSize(10)
     .fillColor(COLORS.ink)
-    .text("ASC 606 treatment notes");
+    .text("ASC 606 TREATMENT NOTES", left, doc.y, {
+      width: usableW,
+      characterSpacing: 1.2,
+    });
   doc.moveDown(0.3);
-  doc
-    .font("Helvetica")
-    .fontSize(9.5)
-    .fillColor(COLORS.ink)
-    .list(
-      [
-        ...asc606.variable_consideration_flags
-          .slice(0, 4)
-          .map(
-            (f) =>
-              `${f.source} (${f.estimation_difficulty} difficulty): ${f.treatment_required}`,
-          ),
-        asc606.contract_modification_risk.is_at_risk
-          ? `Contract modification risk: ${asc606.contract_modification_risk.explanation}`
-          : "Contract modification risk: not flagged.",
-        `Confidence: ${asc606.confidence}.`,
-      ],
-      { bulletRadius: 1.5, textIndent: 8 },
-    );
-  doc.moveDown(0.6);
+
+  const notes = [
+    ...asc606.variable_consideration_flags
+      .slice(0, 4)
+      .map(
+        (f) =>
+          `${humanize(f.source)} (${f.estimation_difficulty} difficulty): ${f.treatment_required.replace(/_/g, " ")}`,
+      ),
+    asc606.contract_modification_risk.is_at_risk
+      ? `Contract modification risk: ${asc606.contract_modification_risk.explanation}`
+      : "Contract modification risk: not flagged.",
+    `Confidence: ${asc606.confidence}.`,
+  ];
+  drawBullets(doc, notes, left, usableW);
+  doc.x = left;
+  doc.moveDown(0.4);
 
   // ---- Signature block ----
   rule(doc);
@@ -148,7 +165,6 @@ export async function generateOrderForm(
 
   // ---- Footer ----
   drawFooter(doc, input);
-  void pricing; // referenced for typing; line items consume it implicitly above
 
   doc.end();
   await closed;
@@ -164,7 +180,7 @@ export async function generateOrderForm(
 
 // ---------------------------------------------------------------------------
 
-const KV_ROW_HEIGHT = 32;
+const KV_ROW_HEIGHT = 30;
 
 function drawKvGrid(
   doc: typeof PDFDocument.prototype,
@@ -182,7 +198,7 @@ function drawKvGrid(
       .text(k.toUpperCase(), x, cy, { width, characterSpacing: 1.2 });
     doc
       .font("Helvetica-Bold")
-      .fontSize(10.5)
+      .fontSize(11)
       .fillColor(COLORS.ink)
       .text(v, x, cy + 11, { width });
     cy += KV_ROW_HEIGHT;
@@ -194,39 +210,54 @@ function drawLineItems(
   input: ArtifactInput,
 ) {
   const { deal, pricing } = input;
-  const cols = [
-    { label: "Item", width: 200, align: "left" as const },
-    { label: "Qty", width: 50, align: "right" as const },
-    { label: "Unit Price", width: 90, align: "right" as const },
-    { label: "Subtotal", width: 90, align: "right" as const },
-    { label: "Notes", width: 70, align: "left" as const },
-  ];
-  const totalW = cols.reduce((s, c) => s + c.width, 0);
-  const startX = PAGE_OPTS.margins.left;
+  const left = PAGE_OPTS.margins.left;
   const usableW =
     doc.page.width - PAGE_OPTS.margins.left - PAGE_OPTS.margins.right;
-  const scale = usableW / totalW;
 
-  // Header row
-  let cx = startX;
-  doc.font("Helvetica-Bold").fontSize(8).fillColor(COLORS.muted);
+  // Column proportions sum to usableW.
+  const cols: { label: string; width: number; align: "left" | "right" }[] = [
+    { label: "Item", width: usableW * 0.42, align: "left" },
+    { label: "Qty", width: usableW * 0.08, align: "right" },
+    { label: "Unit Price", width: usableW * 0.16, align: "right" },
+    { label: "Subtotal", width: usableW * 0.16, align: "right" },
+    { label: "Notes", width: usableW * 0.18, align: "left" },
+  ];
+  const padX = 4;
+
+  // Header row — fixed Y for all columns.
+  const headerY = doc.y;
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(8)
+    .fillColor(COLORS.muted);
+  let cx = left;
   for (const col of cols) {
-    doc.text(col.label.toUpperCase(), cx, doc.y, {
-      width: col.width * scale,
+    doc.text(col.label.toUpperCase(), cx + padX, headerY, {
+      width: col.width - padX * 2,
       align: col.align,
-      characterSpacing: 1,
+      characterSpacing: 1.0,
+      lineBreak: false,
     });
-    cx += col.width * scale;
+    cx += col.width;
   }
-  doc.moveDown(0.6);
+  doc.y = headerY + 14;
 
+  doc
+    .strokeColor(COLORS.border)
+    .lineWidth(0.5)
+    .moveTo(left, doc.y)
+    .lineTo(left + usableW, doc.y)
+    .stroke();
+  doc.y += 4;
+
+  // Body rows
   const rows: [string, string, string, string, string][] = [
     [
       "Annual subscription",
       "1",
       formatMoney(deal.list_price),
       formatMoney(deal.list_price),
-      "",
+      "List rate",
     ],
     [
       "Discount",
@@ -246,57 +277,90 @@ function drawLineItems(
 
   doc.font("Helvetica").fontSize(10).fillColor(COLORS.ink);
   for (const row of rows) {
-    cx = startX;
     const rowY = doc.y;
+    cx = left;
     let maxH = 0;
     cols.forEach((col, i) => {
-      doc.text(row[i], cx, rowY, {
-        width: col.width * scale - 6,
+      doc.text(row[i] ?? "", cx + padX, rowY, {
+        width: col.width - padX * 2,
         align: col.align,
+        lineBreak: true,
       });
-      const h = doc.heightOfString(row[i], {
-        width: col.width * scale - 6,
+      const h = doc.heightOfString(row[i] ?? "", {
+        width: col.width - padX * 2,
         align: col.align,
       });
       if (h > maxH) maxH = h;
-      cx += col.width * scale;
+      cx += col.width;
     });
-    doc.y = rowY + maxH + 4;
+    doc.y = rowY + Math.max(maxH, 12) + 4;
   }
 
-  // Total row — single line, label left of value, no overlap.
-  doc.moveDown(0.2);
-  rule(doc);
-  doc.moveDown(0.3);
-  const totalLabelX =
-    startX + (cols[0].width + cols[1].width) * scale;
-  const totalValueX =
-    startX + (cols[0].width + cols[1].width + cols[2].width) * scale;
+  // TCV total row
+  doc
+    .strokeColor(COLORS.border)
+    .lineWidth(0.5)
+    .moveTo(left, doc.y)
+    .lineTo(left + usableW, doc.y)
+    .stroke();
+  doc.y += 4;
+
   const totalY = doc.y;
+  // Sum the widths of cols 0+1+2 to left-align "TCV" label, then col 3 has the value.
+  const labelStartX = left + cols[0].width + cols[1].width;
+  const labelW = cols[2].width;
+  const valueStartX = labelStartX + cols[2].width;
+  const valueW = cols[3].width;
+
   doc
     .font("Helvetica-Bold")
     .fontSize(11)
     .fillColor(COLORS.ink)
-    .text("TCV", totalLabelX, totalY, {
-      width: cols[2].width * scale - 6,
+    .text("TCV", labelStartX + padX, totalY, {
+      width: labelW - padX * 2,
       align: "right",
+      lineBreak: false,
     });
   doc
     .font("Helvetica-Bold")
     .fontSize(11)
     .fillColor(COLORS.brand)
-    .text(formatMoney(deal.tcv), totalValueX, totalY, {
-      width: cols[3].width * scale - 6,
+    .text(formatMoney(deal.tcv), valueStartX + padX, totalY, {
+      width: valueW - padX * 2,
       align: "right",
+      lineBreak: false,
     });
-  doc.y = totalY + 16;
+  doc.y = totalY + 18;
+}
+
+function drawBullets(
+  doc: typeof PDFDocument.prototype,
+  items: string[],
+  x: number,
+  width: number,
+) {
+  for (const item of items) {
+    const y = doc.y;
+    doc
+      .font("Helvetica")
+      .fontSize(9.5)
+      .fillColor(COLORS.ink)
+      .text("•", x, y, { width: 12, lineBreak: false });
+    doc.font("Helvetica").fontSize(9.5).fillColor(COLORS.ink).text(
+      item,
+      x + 14,
+      y,
+      { width: width - 14, lineGap: 1.5 },
+    );
+    doc.moveDown(0.15);
+  }
 }
 
 function drawRampBars(
   doc: typeof PDFDocument.prototype,
   ramp: { month: number; price_pct: number }[],
 ) {
-  const startX = PAGE_OPTS.margins.left;
+  const left = PAGE_OPTS.margins.left;
   const usableW =
     doc.page.width - PAGE_OPTS.margins.left - PAGE_OPTS.margins.right;
   const baseY = doc.y;
@@ -308,19 +372,12 @@ function drawRampBars(
   for (let i = 0; i < months; i++) {
     const r = ramp[i];
     const pct = Math.max(0.05, Math.min(1, r.price_pct));
-    const x = startX + i * slot;
+    const x = left + i * slot;
     const w = slot - padding;
-
-    // Background box
-    doc
-      .rect(x, baseY, w, barHeight)
-      .fill(COLORS.brandTint);
-    // Fill bar (height proportional to price_pct)
+    doc.rect(x, baseY, w, barHeight).fill(COLORS.brandTint);
     doc
       .rect(x, baseY + (1 - pct) * barHeight, w, pct * barHeight)
       .fill(COLORS.brand);
-
-    // Month label below
     doc
       .font("Helvetica")
       .fontSize(7)
@@ -328,31 +385,26 @@ function drawRampBars(
       .text(`M${r.month}`, x, baseY + barHeight + 2, {
         width: w,
         align: "center",
+        lineBreak: false,
       });
   }
-  doc.y = baseY + barHeight + 18;
+  doc.y = baseY + barHeight + 16;
 }
 
 function drawSignatureBlock(
   doc: typeof PDFDocument.prototype,
   deal: ArtifactInput["deal"],
 ) {
-  const startX = PAGE_OPTS.margins.left;
+  const left = PAGE_OPTS.margins.left;
   const usableW =
     doc.page.width - PAGE_OPTS.margins.left - PAGE_OPTS.margins.right;
   const colW = (usableW - 24) / 2;
-  const y = doc.y + 6;
+  const y = doc.y + 4;
 
-  drawSignatureColumn(doc, startX, y, colW, "Customer signatory", deal.customer.name);
-  drawSignatureColumn(
-    doc,
-    startX + colW + 24,
-    y,
-    colW,
-    "Clay signatory",
-    "Clay, Inc.",
-  );
-  doc.y = y + 80;
+  drawSignatureColumn(doc, left, y, colW, "Customer signatory", deal.customer.name);
+  drawSignatureColumn(doc, left + colW + 24, y, colW, "Clay signatory", "Clay, Inc.");
+  doc.x = left;
+  doc.y = y + 70;
 }
 
 function drawSignatureColumn(
@@ -367,45 +419,67 @@ function drawSignatureColumn(
     .font("Helvetica-Bold")
     .fontSize(8)
     .fillColor(COLORS.muted)
-    .text(heading.toUpperCase(), x, y, { width, characterSpacing: 1.2 });
-  doc.font("Helvetica").fontSize(10).fillColor(COLORS.ink).text(org, x, y + 12);
-  // Signature line
+    .text(heading.toUpperCase(), x, y, {
+      width,
+      characterSpacing: 1.2,
+      lineBreak: false,
+    });
+  doc
+    .font("Helvetica")
+    .fontSize(10)
+    .fillColor(COLORS.ink)
+    .text(org, x, y + 12, { width, lineBreak: false });
   doc
     .strokeColor(COLORS.border)
     .lineWidth(0.5)
-    .moveTo(x, y + 50)
-    .lineTo(x + width, y + 50)
+    .moveTo(x, y + 46)
+    .lineTo(x + width, y + 46)
     .stroke();
   doc
     .font("Helvetica")
     .fontSize(8)
     .fillColor(COLORS.muted)
-    .text("Signature · Name · Title · Date", x, y + 54, { width });
+    .text("Signature · Name · Title · Date", x, y + 50, {
+      width,
+      lineBreak: false,
+    });
 }
 
 function drawFooter(
   doc: typeof PDFDocument.prototype,
   input: ArtifactInput,
 ) {
-  const footerY = doc.page.height - PAGE_OPTS.margins.bottom + 16;
+  const left = PAGE_OPTS.margins.left;
   const usableW =
     doc.page.width - PAGE_OPTS.margins.left - PAGE_OPTS.margins.right;
+  // Anchor far enough above the page bottom that the 2-line footer (~24px)
+  // stays inside the printable area. Past this and pdfkit auto-paginates.
+  const baseY = doc.page.height - PAGE_OPTS.margins.bottom - 32;
+
+  doc
+    .strokeColor(COLORS.border)
+    .lineWidth(0.5)
+    .moveTo(left, baseY - 6)
+    .lineTo(left + usableW, baseY - 6)
+    .stroke();
   doc
     .font("Helvetica")
-    .fontSize(7)
+    .fontSize(7.5)
     .fillColor(COLORS.muted)
-    .text(KILN_DISCLAIMER, PAGE_OPTS.margins.left, footerY - 18, {
+    .text(KILN_DISCLAIMER, left, baseY, {
       width: usableW,
+      align: "left",
+      lineBreak: false,
     });
   doc
     .font("Helvetica")
-    .fontSize(7)
+    .fontSize(7.5)
     .fillColor(COLORS.muted)
     .text(
       `Generated by Kiln · ${input.appUrl}/deals/${input.deal.id}`,
-      PAGE_OPTS.margins.left,
-      footerY,
-      { width: usableW },
+      left,
+      baseY + 12,
+      { width: usableW, align: "left", lineBreak: false },
     );
 }
 
@@ -420,10 +494,9 @@ function rule(doc: typeof PDFDocument.prototype) {
     .stroke();
 }
 
-// ramp_schedule_json is `[{month, amount}]` per the seed. Normalize to a
-// price_pct in [0, 1] by dividing each month's amount by the max amount in
-// the schedule (so the bar chart shows ramp shape, not absolute dollars).
-// Also accepts {price_pct} or {multiplier} for forward-compat.
+// ramp_schedule_json is `[{month, amount}]` per the seed. Normalize amounts
+// to a price_pct ∈ (0, 1] by dividing each month's amount by the schedule's
+// max amount, so the bar shows ramp shape instead of absolute dollars.
 function parseRampSchedule(
   raw: string | null,
 ): { month: number; price_pct: number }[] {
@@ -437,7 +510,7 @@ function parseRampSchedule(
       const obj = r as Record<string, unknown>;
       const month =
         typeof obj.month === "number" ? obj.month : Number(obj.month);
-      const raw =
+      const value =
         typeof obj.amount === "number"
           ? obj.amount
           : typeof obj.price_pct === "number"
@@ -445,10 +518,10 @@ function parseRampSchedule(
             : typeof obj.multiplier === "number"
               ? obj.multiplier
               : null;
-      if (!Number.isFinite(month) || raw === null || !Number.isFinite(raw)) {
+      if (!Number.isFinite(month) || value === null || !Number.isFinite(value)) {
         continue;
       }
-      interim.push({ month, raw: raw as number });
+      interim.push({ month, raw: value });
     }
     if (interim.length === 0) return [];
     const max = interim.reduce((m, e) => (e.raw > m ? e.raw : m), 0);
@@ -467,8 +540,6 @@ function formatMoney(n: number): string {
   return `$${n.toLocaleString()}`;
 }
 
-// Display the deal's discount field as a percent. Schema stores it as a
-// percentage value (15 means 15%), not a decimal.
 function formatPercent(n: number): string {
   return `${n.toFixed(1)}%`;
 }

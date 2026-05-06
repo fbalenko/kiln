@@ -11,10 +11,17 @@ import { generateOrderForm } from "@/lib/document-templates/order-form";
 import { generateRedlinedMsa } from "@/lib/document-templates/redlined-msa";
 import type { ArtifactInput } from "@/lib/document-templates/types";
 
-async function main() {
-  const dealId = "deal_anthropic_2026q1_expansion";
+const DEAL_IDS = [
+  "deal_anthropic_2026q1_expansion",
+  "deal_northbeam_2026_renewal",
+  "deal_notion_2026_enterprise_conversion",
+  "deal_reverberate_2026_partnership",
+  "deal_tessera_2026_displacement",
+];
+
+async function runDeal(dealId: string) {
   const deal = getDealById(dealId);
-  if (!deal) throw new Error("deal not found");
+  if (!deal) throw new Error(`deal not found: ${dealId}`);
 
   const cache = JSON.parse(
     readFileSync(
@@ -31,42 +38,42 @@ async function main() {
     approval: cache.outputs.approval,
     comms: cache.outputs.comms,
     synthesis: cache.synthesis,
-    reviewId: "rev_test_smoke",
+    reviewId: `rev_test_${dealId.slice(0, 8)}`,
     appUrl: "http://localhost:3000",
     generatedAt: new Date(),
   };
 
-  mkdirSync("/tmp/kiln-artifacts", { recursive: true });
+  console.log(`\n=== ${dealId} ===`);
 
   const ae = generateAeEmail(input);
   writeFileSync(`/tmp/kiln-artifacts/${ae.filename}`, ae.buffer);
-  console.log(
-    `[ae-email] ${ae.filename} (${(ae.byteLength / 1024).toFixed(1)} KB)`,
-  );
+  console.log(`  ae-email          ${(ae.byteLength / 1024).toFixed(1)} KB`);
 
   const cust = generateCustomerEmail(input);
   writeFileSync(`/tmp/kiln-artifacts/${cust.filename}`, cust.buffer);
-  console.log(
-    `[customer-email] ${cust.filename} (${(cust.byteLength / 1024).toFixed(1)} KB)`,
-  );
+  console.log(`  customer-email    ${(cust.byteLength / 1024).toFixed(1)} KB`);
 
   const onePager = await generateApprovalOnePager(input);
   writeFileSync(`/tmp/kiln-artifacts/${onePager.filename}`, onePager.buffer);
-  console.log(
-    `[approval-one-pager] ${onePager.filename} (${(onePager.byteLength / 1024).toFixed(1)} KB)`,
-  );
+  console.log(`  one-pager         ${(onePager.byteLength / 1024).toFixed(1)} KB`);
 
   const orderForm = await generateOrderForm(input);
   writeFileSync(`/tmp/kiln-artifacts/${orderForm.filename}`, orderForm.buffer);
-  console.log(
-    `[order-form] ${orderForm.filename} (${(orderForm.byteLength / 1024).toFixed(1)} KB)`,
-  );
+  console.log(`  order-form        ${(orderForm.byteLength / 1024).toFixed(1)} KB`);
 
   const msa = await generateRedlinedMsa(input);
   writeFileSync(`/tmp/kiln-artifacts/${msa.filename}`, msa.buffer);
-  console.log(
-    `[redlined-msa] ${msa.filename} (${(msa.byteLength / 1024).toFixed(1)} KB)`,
-  );
+  console.log(`  redlined-msa      ${(msa.byteLength / 1024).toFixed(1)} KB`);
+}
+
+async function main() {
+  mkdirSync("/tmp/kiln-artifacts", { recursive: true });
+  const target = process.argv[2];
+  if (target === "--all") {
+    for (const id of DEAL_IDS) await runDeal(id);
+  } else {
+    await runDeal(target ?? DEAL_IDS[0]);
+  }
 }
 
 main().catch((err) => {
