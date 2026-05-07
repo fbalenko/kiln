@@ -5,15 +5,19 @@ import {
   formatSegment,
 } from "@/lib/format";
 
-export function DealMetadata({ deal }: { deal: DealWithCustomer }) {
+// Compact deal-context column for the Mode 1 workbench layout. Same
+// information as the prior <DealMetadata> 3-card grid, but stacked
+// vertically and tightened for a 4-of-12 column rail.
+
+export function DealContextRail({ deal }: { deal: DealWithCustomer }) {
   const clauses = deal.non_standard_clauses
     ? (JSON.parse(deal.non_standard_clauses) as string[])
     : [];
   const paymentLabel = deal.payment_terms.replace(/_/g, " ");
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-      <InfoCard title="Customer">
+    <div className="space-y-3">
+      <Card title="Customer">
         <Field label="Segment">{formatSegment(deal.customer.segment)}</Field>
         <Field label="Industry">{deal.customer.industry}</Field>
         <Field label="Employees">
@@ -22,15 +26,17 @@ export function DealMetadata({ deal }: { deal: DealWithCustomer }) {
         {deal.customer.health_score != null ? (
           <Field label="Health">{deal.customer.health_score} / 100</Field>
         ) : null}
-      </InfoCard>
-      <InfoCard title="Pricing">
+      </Card>
+
+      <Card title="Pricing">
         <Field label="Type">{formatDealType(deal.deal_type)}</Field>
         <Field label="List">{formatACV(deal.list_price)}</Field>
         <Field label="Proposed">{formatACV(deal.proposed_price)}</Field>
         <Field label="Discount">{deal.discount_pct.toFixed(1)}%</Field>
         <Field label="Payment">{paymentLabel}</Field>
-      </InfoCard>
-      <InfoCard title="Owners">
+      </Card>
+
+      <Card title="Owners">
         <Field label="AE">{deal.ae_owner}</Field>
         <Field label="Manager">{deal.ae_manager}</Field>
         {deal.close_date ? (
@@ -39,21 +45,21 @@ export function DealMetadata({ deal }: { deal: DealWithCustomer }) {
         <Field label="Pricing model">
           {deal.pricing_model.replace(/_/g, " ")}
         </Field>
-      </InfoCard>
+      </Card>
 
-      <div className="rounded-md border border-border bg-card px-4 py-3 sm:col-span-3">
-        <h3 className="text-[10px] uppercase tracking-wider text-muted-foreground">
+      <div className="rounded-md border border-border bg-card px-3 py-2.5">
+        <h3 className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground">
           Customer request
         </h3>
-        <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-foreground">
+        <p className="mt-1.5 whitespace-pre-line text-[12px] leading-relaxed text-foreground">
           {deal.customer_request}
         </p>
         {clauses.length > 0 ? (
-          <div className="mt-3 flex flex-wrap gap-1.5">
+          <div className="mt-2.5 flex flex-wrap gap-1">
             {clauses.map((c) => (
               <span
                 key={c}
-                className="inline-flex rounded-full border border-border bg-secondary px-2 py-0.5 font-mono text-[10.5px] text-muted-foreground"
+                className="inline-flex items-center rounded-sm border border-border bg-surface-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground"
               >
                 {c}
               </span>
@@ -61,11 +67,11 @@ export function DealMetadata({ deal }: { deal: DealWithCustomer }) {
           </div>
         ) : null}
         {deal.competitive_context ? (
-          <div className="mt-3 border-t border-border pt-3">
-            <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          <div className="mt-2.5 border-t border-border pt-2">
+            <h4 className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground">
               Competitive context
             </h4>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">
               {deal.competitive_context}
             </p>
           </div>
@@ -75,7 +81,7 @@ export function DealMetadata({ deal }: { deal: DealWithCustomer }) {
   );
 }
 
-function InfoCard({
+function Card({
   title,
   children,
 }: {
@@ -83,11 +89,11 @@ function InfoCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-md border border-border bg-card px-4 py-3">
-      <h3 className="text-[10px] uppercase tracking-wider text-muted-foreground">
+    <div className="rounded-md border border-border bg-card px-3 py-2.5">
+      <h3 className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground">
         {title}
       </h3>
-      <div className="mt-2 space-y-1">{children}</div>
+      <div className="mt-1.5 space-y-1">{children}</div>
     </div>
   );
 }
@@ -100,9 +106,9 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 text-sm">
+    <div className="flex items-baseline justify-between gap-3 text-[12px]">
       <span className="text-muted-foreground">{label}</span>
-      <span className="text-right font-mono text-[13px] tabular-nums text-foreground">
+      <span className="text-right font-mono tabular-nums text-foreground">
         {children}
       </span>
     </div>

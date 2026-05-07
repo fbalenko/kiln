@@ -20,6 +20,7 @@
     "docx": "^9.6.1",
     "exa-js": "^2.12.1",
     "exceljs": "^4.4.0",
+    "framer-motion": "^12.38.0",
     "jsonrepair": "^3.14.0",
     "lucide-react": "^1.14.0",
     "next": "16.2.4",

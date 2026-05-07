@@ -10,15 +10,19 @@ import type { Customer } from "@/lib/db/queries";
 // data" badge on CustomerSignalsPanel becomes a confirmation, not the
 // primary disclosure.
 //
-// Three variants:
+// Four variants:
 //   A — real customer (Anthropic, Notion, etc.) with a fabricated deal
 //   B — fully fictional customer (Tessera Health, Northbeam, Reverberate)
-//   C — visitor-submitted deal (Phase 7); plumbed now so it's ready
+//   C — visitor-submitted deal (Phase 7); plumbed and used today
+//   D — Clay-enriched (phase 8 placeholder per docs/12-redesign-plan.md
+//       §4). The slot, copy, and rendering branch all exist; pickVariant
+//       intentionally never returns "D" until the MCP integration ships
+//       and the orchestrator sets a Clay-enrichment marker on the deal.
 //
 // Tone is informative, not warning. Light blue strip per spec
 // (bg #EFF6FF / text #1E40AF — Tailwind blue-50 / blue-800).
 
-type Variant = "A" | "B" | "C";
+type Variant = "A" | "B" | "C" | "D";
 
 interface BannerCopy {
   body: string;
@@ -26,6 +30,13 @@ interface BannerCopy {
 }
 
 function bannerCopy(variant: Variant, customerName: string): BannerCopy {
+  if (variant === "D") {
+    return {
+      body: `Live Clay-enriched · This deal pulls real customer signals from Clay's MCP connector. Pricing guardrails and approval matrix are this demo's defaults, not Clay's actual policy.`,
+      expanded:
+        "Clay-enriched deals route through the orchestrator's Clay-MCP step before the parallel review fans out. Company size, funding, tech stack, leadership changes, and intent signals come from Clay's connector and feed all five sub-agents. The pricing guardrails, approval matrix, and ASC 606 analysis still reflect this demo's seeded policy — not Clay's actual deal desk operations.",
+    };
+  }
   if (variant === "C") {
     return {
       body:
@@ -54,6 +65,11 @@ function pickVariant(args: {
   isVisitorSubmitted: boolean;
   isReal: boolean;
 }): Variant {
+  // Variant D (Clay-enriched) is reserved per docs/12-redesign-plan.md §4
+  // and will be picked by a future predicate (e.g.,
+  // args.hasClayEnrichment) once the MCP integration ships. The branch
+  // exists in bannerCopy so adding the predicate in Phase 8 is a one-
+  // line change here, not a refactor.
   if (args.isVisitorSubmitted) return "C";
   return args.isReal ? "A" : "B";
 }

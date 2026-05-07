@@ -109,6 +109,17 @@
   --warning: #a16207;
   --danger: #b91c1c;
 
+  /* State colors — additive system-state signals used on Mode 1 cards
+     and artifacts panel. See docs/12-redesign-plan.md §2.3. */
+  --state-cached: #0369a1;
+  --state-cached-bg: #e0f2fe;
+  --state-live: #15803d;
+  --state-live-bg: #dcfce7;
+  --state-posted: #3b82f6;
+  --state-posted-bg: #dbeafe;
+  --state-failed: #b91c1c;
+  --state-failed-bg: #fee2e2;
+
   --chart-1: #3b82f6;
   --chart-2: #15803d;
   --chart-3: #a16207;
@@ -184,9 +195,11 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "cv11", "ss01";
-    /* Body baseline ~13.5px to match Clay's tighter density (down from
-       Tailwind's default 16px). Per-component classes can override. */
-    font-size: 13.5px;
+    /* Body baseline 12.5px — operator-density register (down from
+       13.5px to match Stripe Dashboard / Clay product UI). Per-
+       component classes still override. See docs/12-redesign-plan.md
+       §2.2. */
+    font-size: 12.5px;
     line-height: 1.45;
   }
   html {

@@ -1,42 +1,82 @@
-import { EntryCard } from "@/components/dashboard/entry-card";
-import { GeometricIcon } from "@/components/dashboard/geometric-icon";
+import { ArrowUpRight } from "lucide-react";
+import { listDeals } from "@/lib/db/queries";
+import { getCachedRiskSummary } from "@/lib/dashboard/cached-summary";
+import { getRecentActivity } from "@/lib/dashboard/activity-feed";
+import { KpiRail } from "@/components/dashboard/kpi-rail";
+import { HeroQuickStart } from "@/components/dashboard/hero-quick-start";
+import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { SurfacesTable } from "@/components/dashboard/surfaces-table";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
-  title: "Home · Kiln",
-  description: "Welcome to the Kiln demo workspace.",
+  title: "Deal desk · Kiln",
+  description: "Pipeline health summary, hero scenarios, and recent activity.",
 };
 
 export default function DashboardPage() {
+  const deals = listDeals();
+  const heroes = deals
+    .filter((d) => d.is_scenario === 1)
+    .sort(
+      (a, b) =>
+        (a.scenario_meta?.display_order ?? 99) -
+        (b.scenario_meta?.display_order ?? 99),
+    );
+
+  // Tile 1: "in review" = not yet won/lost.
+  const inReview = deals.filter(
+    (d) => d.stage !== "closed_won" && d.stage !== "closed_lost",
+  );
+  const inReviewHeroCount = inReview.filter((d) => d.is_scenario === 1).length;
+
+  // Feed Tiles 2/3/4 from real cached output. The helper takes plain
+  // maps so it stays unit-testable.
+  const dealAcvById = new Map(deals.map((d) => [d.id, d.acv]));
+  const heroIds = new Set(heroes.map((d) => d.id));
+  const summary = getCachedRiskSummary(dealAcvById, heroIds);
+
+  const activity = getRecentActivity(8);
+
   return (
-    <div className="mx-auto w-full max-w-6xl flex-1 pb-16 pt-6 sm:pt-10">
-      <div className="px-4 sm:px-6">
-        <h1 className="text-[22px] font-semibold tracking-tight text-foreground sm:text-2xl">
-          Welcome to Kiln
-        </h1>
-        <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">
-          A demo deal-desk co-pilot, built for Clay&rsquo;s Deal Strategy
-          &amp; Ops team. Pick an entry point below — or head straight to
-          the pipeline to watch the agents work.
-        </p>
+    <div className="mx-auto w-full max-w-6xl flex-1 px-4 pt-5 pb-10 sm:px-6 sm:pt-6">
+      <header className="flex items-end justify-between gap-3 pb-4">
+        <div className="min-w-0">
+          <h1 className="text-[15px] font-semibold tracking-tight text-foreground">
+            Deal desk overview
+          </h1>
+          <p className="mt-1 max-w-xl text-[12px] text-muted-foreground">
+            Pipeline health, hero scenarios, and recent agent activity. Click
+            any tile, scenario, or row to dig in.
+          </p>
+        </div>
+        <a
+          href="/pipeline"
+          className="hidden shrink-0 items-center gap-1.5 rounded-md border border-border bg-card px-3 h-8 text-[12.5px] font-medium text-foreground transition hover:bg-surface-hover sm:inline-flex"
+        >
+          Open pipeline
+          <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden />
+        </a>
+      </header>
+
+      <KpiRail
+        inReviewCount={inReview.length}
+        inReviewHeroCount={inReviewHeroCount}
+        acvAtRiskCents={summary.acvAtRiskCents}
+        acvAtRiskCount={summary.acvAtRiskCount}
+        cfoApprovalCount={summary.cfoApprovalCount}
+        cfoApprovalHeroCount={summary.cfoApprovalHeroCount}
+        cfoApprovalHeroTotal={heroes.length}
+        avgCycleDays={summary.avgCycleDays}
+        nReviews={summary.nReviews}
+      />
+
+      <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <HeroQuickStart heroes={heroes} totalDealCount={deals.length} />
+        <ActivityFeed entries={activity} />
       </div>
 
-      <section className="mt-7 grid grid-cols-1 gap-3 px-4 sm:grid-cols-2 sm:gap-4 sm:px-6">
-        <EntryCard
-          href="/deals/deal_anthropic_2026q1_expansion"
-          hardNavigation
-          title="Run a live agent review"
-          description="Watch the Pricing Agent reason through Anthropic&rsquo;s $1.5M strategic expansion — guardrails, margin math, and 2&ndash;3 alternative deal structures stream in field-by-field."
-          icon={<GeometricIcon shape="square" color="red" />}
-        />
-        <EntryCard
-          href="/pipeline"
-          title="Browse the full deal pipeline"
-          description="Five hero scenarios ready for review plus eight historical closed-won deals. Pick any row to open the deal as a slide-over."
-          icon={<GeometricIcon shape="triangle" color="blue" />}
-        />
-      </section>
-
+      {/* Workspaces & views — kept as a sparse footer table per plan. */}
       <SurfacesTable />
     </div>
   );
