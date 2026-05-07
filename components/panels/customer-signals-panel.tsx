@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpRight, Banknote, Briefcase, Rocket, Globe } from "lucide-react";
+import {
+  ArrowUpRight,
+  Banknote,
+  Briefcase,
+  Globe,
+  Lock,
+  Rocket,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type {
@@ -42,18 +49,22 @@ const KIND_META: Record<
   },
 };
 
+type SignalsTab = "exa" | "clay";
+
 export function CustomerSignalsPanel({
   result,
 }: {
   result: CustomerSignalsResult | null;
 }) {
+  const [tab, setTab] = useState<SignalsTab>("exa");
   const [expanded, setExpanded] = useState(false);
 
   if (result === null) {
     return (
       <section className="rounded-md border border-border bg-card">
         <PanelHeader />
-        <SkeletonRows />
+        <SignalsTabBar tab={tab} onTab={setTab} />
+        {tab === "exa" ? <SkeletonRows /> : <ClayPlaceholder />}
       </section>
     );
   }
@@ -69,11 +80,14 @@ export function CustomerSignalsPanel({
     <section className="rounded-md border border-border bg-card">
       <PanelHeader
         customerName={result.customer.name}
-        sourceLabel={sourceLabelFor(result.source)}
-        isSimulated={isSimulated}
+        sourceLabel={tab === "exa" ? sourceLabelFor(result.source) : undefined}
+        isSimulated={tab === "exa" && isSimulated}
       />
+      <SignalsTabBar tab={tab} onTab={setTab} />
 
-      {signals.length === 0 ? (
+      {tab === "clay" ? (
+        <ClayPlaceholder />
+      ) : signals.length === 0 ? (
         <div className="px-3.5 py-4 text-xs text-muted-foreground sm:px-4">
           {result.note ?? "No recent public signals found."}
         </div>
@@ -102,6 +116,98 @@ export function CustomerSignalsPanel({
         </>
       )}
     </section>
+  );
+}
+
+// Two-tab strip — Exa (active, real signals) and Clay (locked, phase-8
+// placeholder). Clay is selectable so the visitor can read the empty-
+// state copy; it never displays signal data because no integration is
+// wired today.
+function SignalsTabBar({
+  tab,
+  onTab,
+}: {
+  tab: SignalsTab;
+  onTab: (next: SignalsTab) => void;
+}) {
+  return (
+    <div className="flex gap-0 border-b border-border bg-surface-secondary text-[11px]">
+      <TabButton
+        active={tab === "exa"}
+        onClick={() => onTab("exa")}
+        accentColor="#3B82F6"
+      >
+        Exa
+      </TabButton>
+      <TabButton
+        active={tab === "clay"}
+        onClick={() => onTab("clay")}
+        accentColor="#3B82F6"
+        suffix={
+          <span className="ml-1.5 inline-flex items-center gap-1 text-[9.5px] uppercase tracking-wider text-[var(--brand)]/70">
+            <Lock className="h-2 w-2" strokeWidth={2.5} />
+            Phase 8
+          </span>
+        }
+      >
+        Clay
+      </TabButton>
+    </div>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  accentColor,
+  suffix,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  accentColor: string;
+  suffix?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "relative inline-flex items-center gap-1 px-3 py-1.5 transition",
+        active
+          ? "text-foreground"
+          : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      <span className="font-medium">{children}</span>
+      {suffix}
+      {active && (
+        <span
+          aria-hidden
+          className="absolute inset-x-2 -bottom-px h-[2px]"
+          style={{ backgroundColor: accentColor }}
+        />
+      )}
+    </button>
+  );
+}
+
+// Empty-state body for the Clay tab. Mirrors the dashboard's locked
+// KPI tile §3.2.2: dashed border, lock icon, italic phase-8 caption.
+function ClayPlaceholder() {
+  return (
+    <div className="flex flex-col items-start gap-2 px-3.5 py-4 sm:px-4">
+      <div className="inline-flex items-center gap-2 rounded-md border border-dashed border-[var(--brand)]/30 bg-[var(--brand)]/[0.02] px-2.5 py-2 text-[11px] text-[var(--brand)]/80">
+        <Lock className="h-3 w-3" strokeWidth={1.75} aria-hidden />
+        <span className="font-medium">Phase 8 · MCP integration</span>
+      </div>
+      <p className="text-[11.5px] leading-relaxed text-muted-foreground">
+        Clay&rsquo;s MCP connector will populate company size, funding,
+        tech stack, leadership changes, and intent signals here when
+        the integration ships.
+      </p>
+    </div>
   );
 }
 

@@ -114,10 +114,16 @@ interface SubstepPlan {
   id: string;
   defaultLabel: string;
   icon: LucideIcon;
+  // Reserved-slot marker: disabled substeps render as muted placeholders
+  // and never count toward the running/complete tally. Used today only
+  // for the Clay-MCP enrichment slot in the orchestrator timeline.
+  disabled?: boolean;
 }
 
 const ORCHESTRATOR_SUBSTEPS: SubstepPlan[] = [
   { id: "fetch_deal", defaultLabel: "Fetch deal record and customer", icon: Database },
+  // Reserved per docs/12-redesign-plan.md §3.4 + §4. Renders disabled.
+  { id: "clay_enrichment", defaultLabel: "Clay enrichment — not connected", icon: Sparkles, disabled: true },
   { id: "step2_fanout", defaultLabel: "Fan out: customer signals + similar deals", icon: GitBranch },
   { id: "step2_signals", defaultLabel: "Query Exa for recent customer signals", icon: Search },
   { id: "step2_similar", defaultLabel: "Run k-NN over deal embeddings (sqlite-vec)", icon: Network },
@@ -203,12 +209,31 @@ function initialSteps(): Record<ParentName, StepState> {
   return init;
 }
 
+export type StreamPhase = "idle" | "running" | "complete";
+
 export function ReasoningStream({
   dealId,
   live = false,
+  hidePanels = false,
+  onPanelData,
+  onPhaseChange,
 }: {
   dealId: string;
   live?: boolean;
+  // When true, the Mode-1 internal panels (similar deals + customer
+  // signals) don't render here. The parent (DealWorkspace) renders
+  // them in the left rail instead, sharing data via onPanelData.
+  hidePanels?: boolean;
+  // Fires whenever an SSE panel_data event arrives — the parent
+  // mirrors the data into its own state for left-rail rendering.
+  onPanelData?: (
+    panel: "similar_deals" | "customer_signals",
+    data: unknown,
+  ) => void;
+  // Fires "running" once any SSE event arrives, "complete" once the
+  // synthesis event lands. The parent uses this to switch from the
+  // workbench split to the verdict-first full-width Mode 2 layout.
+  onPhaseChange?: (phase: StreamPhase) => void;
 }) {
   const [steps, setSteps] = useState<Record<ParentName, StepState>>(
     initialSteps,
@@ -233,6 +258,13 @@ export function ReasoningStream({
     const es = new EventSource(url);
     esRef.current = es;
 
+    let phaseEmitted: StreamPhase = "idle";
+    const emitPhase = (p: StreamPhase) => {
+      if (phaseEmitted === p) return;
+      phaseEmitted = p;
+      onPhaseChange?.(p);
+    };
+
     es.onmessage = (msg) => {
       let ev: StreamEvent;
       try {
@@ -240,6 +272,9 @@ export function ReasoningStream({
       } catch {
         return;
       }
+
+      // First event of any kind flips the parent into "running."
+      emitPhase("running");
 
       switch (ev.type) {
         case "step_start": {
@@ -321,6 +356,9 @@ export function ReasoningStream({
           } else if (ev.panel === "customer_signals") {
             setCustomerSignals(ev.data as CustomerSignalsResult);
           }
+          // Mirror to parent so the left rail can render the panels
+          // without subscribing to its own SSE stream.
+          onPanelData?.(ev.panel, ev.data);
           break;
         }
         case "slack_post": {
@@ -330,6 +368,7 @@ export function ReasoningStream({
         case "synthesis": {
           setSynthesis({ summary: ev.summary, reviewId: ev.review_id });
           setDone(true);
+          emitPhase("complete");
           es.close();
           break;
         }
@@ -361,6 +400,9 @@ export function ReasoningStream({
       es.close();
       esRef.current = null;
     };
+    // onPanelData / onPhaseChange are stable callbacks from the parent;
+    // including them would re-open the SSE stream on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dealId, live]);
 
   // The agent-only timeline. In Mode 1 (running) this is the dominant
@@ -448,15 +490,13 @@ export function ReasoningStream({
     );
   }
 
-  // Mode 1 — running. Render the timeline plus any in-flight context panels.
+  // Mode 1 — running. Render the timeline; panels render here only when
+  // the parent isn't already showing them in a left rail (hidePanels=true).
   return (
     <div className="space-y-3">
       {agentTimeline}
 
-      {/* Phase 5 panels — surface as soon as Step 2 fan-out lands, well
-          before synthesis. In Mode 1 they sit below the timeline; Mode 2
-          repositions them into the three-up context row. */}
-      {(similarDeals || customerSignals) && (
+      {!hidePanels && (similarDeals || customerSignals) && (
         <div className="grid grid-cols-1 gap-3 pl-6 sm:pl-8 lg:grid-cols-2">
           <SimilarDealsPanel deals={similarDeals} />
           <CustomerSignalsPanel result={customerSignals} />
@@ -678,14 +718,17 @@ function SubstepList({
 }) {
   const [expanded, setExpanded] = useState(false);
 
-  const counts = useMemo(
-    () => ({
-      total: plan.length,
-      complete: plan.filter((p) => state.substeps[p.id]?.status === "complete")
-        .length,
-    }),
-    [plan, state.substeps],
-  );
+  // Disabled substeps (the reserved Clay slot) don't count toward the
+  // running tally — otherwise the rollup would forever read "8 of 9."
+  const counts = useMemo(() => {
+    const live = plan.filter((p) => p.disabled !== true);
+    return {
+      total: live.length,
+      complete: live.filter(
+        (p) => state.substeps[p.id]?.status === "complete",
+      ).length,
+    };
+  }, [plan, state.substeps]);
   const elapsedMs =
     state.completedAt && state.startedAt
       ? state.completedAt - state.startedAt
@@ -718,23 +761,41 @@ function SubstepList({
         <ul className="space-y-0 px-3.5 py-1.5 sm:px-4">
           {plan.map((p) => {
             const sub = state.substeps[p.id];
-            const status = sub?.status ?? "pending";
+            const isDisabled = p.disabled === true;
+            // Disabled substeps (e.g. the reserved Clay-enrichment slot)
+            // never receive SSE updates — render permanently as a muted
+            // "not connected" hint so the timeline shows the upcoming
+            // capability without pretending it's running.
+            const status = isDisabled
+              ? "pending"
+              : (sub?.status ?? "pending");
             const Icon = p.icon;
             return (
               <li
                 key={p.id}
                 className={cn(
                   "flex items-center gap-2 rounded px-1.5 py-0.5 text-[12px] leading-tight transition-colors",
-                  status === "running" &&
+                  isDisabled && "italic text-foreground/30",
+                  !isDisabled &&
+                    status === "running" &&
                     "bg-[var(--brand)]/[0.06] text-foreground",
-                  status === "complete" && "text-muted-foreground",
-                  status === "pending" && "text-foreground/35",
+                  !isDisabled &&
+                    status === "complete" &&
+                    "text-muted-foreground",
+                  !isDisabled &&
+                    status === "pending" &&
+                    "text-foreground/35",
                 )}
               >
                 <SubstepGlyph status={status} icon={Icon} />
                 <span className="min-w-0 flex-1 truncate">
                   {sub?.label ?? p.defaultLabel}
                 </span>
+                {isDisabled && (
+                  <span className="shrink-0 text-[9.5px] font-medium uppercase tracking-wider text-[var(--brand)]/60">
+                    Phase 8
+                  </span>
+                )}
               </li>
             );
           })}
