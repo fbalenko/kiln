@@ -131,9 +131,9 @@ After: a **deal-pipeline-health dashboard** with five regions, computed live fro
 │  Deal desk overview                            [Submit your own ▸]  │  ← page header
 ├─────────────────────────────────────────────────────────────────────┤
 │ ┌──────────┬──────────┬──────────┬──────────┬──────────┐            │
-│ │ In review│ ACV at   │ Needs    │ Avg cycle│ Clay-    │  ← KPI rail (5 tiles)
-│ │   12     │  risk    │ CFO ap.  │   3.2    │ enriched │
-│ │ 5 hero   │ $4.2M    │   3      │  biz d.  │  0 / 12  │
+│ │ In review│ ACV at   │ Needs    │ Avg cycle│ 🔒 Clay  │  ← KPI rail (5 tiles)
+│ │   12     │  risk    │ CFO ap.  │   3.2    │  enrich. │
+│ │ 5 hero   │ $4.2M    │   3      │  biz d.  │ phase 8  │  ← tile 5 = locked placeholder
 │ └──────────┴──────────┴──────────┴──────────┴──────────┘            │
 ├─────────────────────────────────────────────────────────────────────┤
 │ ┌────────────────────────────────┐ ┌──────────────────────────────┐ │
@@ -149,7 +149,34 @@ After: a **deal-pipeline-health dashboard** with five regions, computed live fro
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-**KPI tiles** (`<KpiRail>` — new component): each tile is `card.base` with eyebrow label, big-number mono value (24px tabular-nums), severity-colored sub-line. Severity comes from `lib/severity.ts` (e.g., "ACV at risk" uses `marginSeverity`-style thresholding by % of total ACV). On hover, the tile becomes a link to the matching pipeline filter (`/pipeline?stage=in_review`, `/pipeline?needs_approval=true`). Tile 5 is the **Clay-enriched counter** — disabled state today (`0 / 12`, muted), wired in the integration phase.
+**KPI tiles** (`<KpiRail>` — new component): each tile is `card.base` with eyebrow label, big-number mono value (24px tabular-nums), severity-colored sub-line. Severity comes from `lib/severity.ts` (e.g., "ACV at risk" uses `marginSeverity`-style thresholding by % of total ACV). Tiles 1–4 are interactive: clicking the tile navigates to the matching pipeline filter (`/pipeline?stage=in_review`, `/pipeline?needs_approval=true`). Tile 5 is a **locked placeholder** — see §3.2.1 below.
+
+#### 3.2.1 KPI computations
+
+Every tile must derive from real seeded data so the dashboard stays honest if the seed changes. No hardcoded numbers, no fabricated counts.
+
+| # | Tile | Big-number formula | Sub-line | Source |
+|---|---|---|---|---|
+| 1 | **In review** | `listDeals().filter(d => d.stage === "in_review").length` | `${count_hero} hero scenarios` where `count_hero = listDeals().filter(d => d.stage === "in_review" && d.is_scenario === 1).length` | `lib/db/queries.ts → listDeals()`. No new query needed. |
+| 2 | **ACV at risk** | `formatACV(sum)` over deals where the deal has a cached review *and* the cached output indicates risk: `redline.overall_redline_priority === "block"` OR `(approval.required_approvers?.length ?? 0) >= 4` | `${count} ${count === 1 ? "deal" : "deals"} flagged` | New helper `getCachedRiskSummary()` in `lib/db/queries.ts` that reads `db/seed/cached_outputs/<deal_id>-redline.json` and `<deal_id>-approval.json` for each deal in `listDeals()`. Filesystem read on the server, called once per dashboard render. If a deal has no cache, it is **excluded** from the sum (not assumed safe). |
+| 3 | **Needs CFO approval** | count of deals where `(approval.required_approvers ?? []).map(a => a.role).includes("CFO")` from the deal's cached approval output | `${count_hero_in_count} of ${count_hero_total} heroes` — show how many of the matched deals are hero scenarios so the visitor can spot which ones | Same `getCachedRiskSummary()` helper as Tile 2 (single filesystem read per dashboard render, cached for the duration of the request). |
+| 4 | **Avg cycle (estimate)** | `mean(approval.expected_cycle_time_business_days)` across deals with a cached approval output, formatted as `X.X` | `estimate · ${N} reviews` where `N` is the count of deals included. Tile gets an italic `estimate` prefix in the eyebrow label, not just the sub-line, so the caveat reads at a glance. If `N < 5`, the sub-line additionally renders a warn-severity dot. | Same helper. |
+| 5 | **Clay enrichment (locked)** | **No number.** Renders the lock-icon placeholder treatment defined in §3.2.2 below. | `Phase 8 · MCP integration` | None — purely visual placeholder until Clay ships. |
+
+The `getCachedRiskSummary()` helper is the only new server-side surface this dashboard needs. It walks `db/seed/cached_outputs/` once per render, parses the relevant JSON, and returns a typed summary object. `tsc` will catch every callsite if the cached schema changes.
+
+#### 3.2.2 Tile 5 — Clay locked placeholder treatment
+
+A "0 / 12" muted-counter on Tile 5 reads as a broken feature, not as a roadmap signal. Instead, Tile 5 renders as an explicit upcoming-work placeholder.
+
+- **Border:** `border-2 border-dashed border-[var(--brand)]/30` (instead of the solid `border border-border` of the other tiles).
+- **Background:** `bg-[var(--brand)]/[0.02]` — a barely-there blue tint.
+- **Big-number slot:** replaced with a 24×24 `Lock` icon (lucide-react) in `text-[var(--brand)]/60`.
+- **Eyebrow label:** `Clay enrichment` in the standard eyebrow style, but with the `text-[var(--brand)]` color override to signal it's a Kiln-specific upcoming feature.
+- **Sub-line:** `Phase 8 · MCP integration` — italicized, `text-[var(--brand)]/70`.
+- **Hover state:** the tile is non-interactive — `cursor-default`, no hover bg shift. A small tooltip on hover surfaces "Clay's MCP connector will populate company size, funding, tech stack, leadership changes, and intent signals here."
+
+This treatment makes the tile read as "deliberately reserved space for a phase-8 capability" rather than "feature that returned 0." It also matches the visual register Stripe Dashboard uses for beta-gated features (dashed border + lock + reserved label).
 
 **Quick-start cards** (`<HeroQuickStart>` — replaces the current 2 entry cards): a 2×2 grid of the five hero scenarios as compact cards (icon + 1-line tagline + ACV + difficulty badge). Card 5 spans a full row at the bottom: "Browse all 40 deals →". Hard-navigation to `/deals/<id>` per existing convention.
 
@@ -171,6 +198,20 @@ Current pipeline already has the right register. Three changes:
 - New: `Search ▢` — text input filtering by customer name + deal name. `Cmd-K` focus.
 
 Implementation: client component, in-memory filter/sort over the seeded list. No DB changes.
+
+**Filter-state shape** (URL-serializable for a future `?…` sync). Even though we ship in-memory state for v1 (per resolved open question 4), the state object is shaped as a flat record of primitives so eventual URL sync is a one-`useEffect` change, not a refactor:
+
+```ts
+// lib/pipeline/filter-state.ts
+type PipelineFilterState = {
+  view: "default" | "heroes" | "closed_won";   // → ?view=heroes
+  stages: Stage[];                              // → ?stage=in_review,renewal (CSV)
+  sort: "display_order" | "acv_desc" | "term_desc" | "last_activity_desc"; // → ?sort=acv_desc
+  search: string;                               // → ?q=anthropic
+};
+```
+
+The encoder/decoder pair (`encodeFilterState`, `decodeFilterState`) lives next to the type. The component reads/writes the state through these functions only — never via direct property access — so the eventual URL sync is just calling them inside a `useEffect` mirror loop.
 
 **B) Two new columns on desktop.**
 - `AE` — owner avatar (initials chip from `deal.owner_name`, colored via deterministic hash) + name truncated. Width 88px.
@@ -266,20 +307,22 @@ Specific changes vs. current Mode 2:
 Tablet (`md`–`lg`): the right rail moves below the tabs as a horizontal 3-card row (the current 3-up layout, but with equal heights via `align-items: stretch` + internal scroll).
 Mobile (`<md`): everything is single-column, rail cards stack below the tabs.
 
-### 3.6 Mode 1 → Mode 2 transition (framer-motion)
+### 3.6 Mode 1 → Mode 2 transition (framer-motion, scoped)
 
-Today: hard swap with a CSS fade. Loses spatial continuity — the timeline flickers out, verdict pops in.
+Today: hard swap with a CSS fade. Loses some continuity but is robust.
 
-After: a `LayoutGroup`-coordinated transition.
+After: four targeted motion treatments — no cross-component layout morphing, no `layoutId` dependency between Mode 1 and Mode 2 surfaces. The cost/risk of layout-shared morphs (correctness across React Strict Mode, mount/unmount races during the synthesis event, `useLayoutEffect` warnings) outweighs the visual gain for a transition the visitor sees once per session.
 
-- The Mode 1 right-column timeline shrinks to a single thin **summary strip** ("✓ 5 agents · 14.2s · 47 substeps") that slots in *above* the audit-log row in Mode 2. `motion.div layout` with `transition={{ duration: 0.45, ease: "easeOut" }}`.
-- The verdict bar fades up into its place from the top with a 12px translate, staggered against the synthesis line (60 ms delay).
-- The agent output cards from Mode 1 (the parallel grid showing pricing/ASC606/redline at the moment they completed) **morph into the tabbed surface** — `layoutId="agent-output-pricing"` etc., so Pricing's card visually slides into the Pricing tab content area rather than being unmounted and remounted.
-- The right-column right-rail panels (similar deals + customer signals) crossfade rather than animate position — they're already in the right column in both modes, so no movement needed.
+The four scoped motions:
 
-Constraint: respect `prefers-reduced-motion` — collapse the whole transition to a 200 ms opacity crossfade.
+1. **Verdict bar entrance.** `motion.section` with `initial={{ opacity: 0, y: 12 }}`, `animate={{ opacity: 1, y: 0 }}`, `transition={{ duration: 0.35, ease: "easeOut" }}`. Mounts when `<CompletedView>` first renders.
+2. **Synthesis line entrance.** Same shape as the verdict, with `transition={{ duration: 0.35, ease: "easeOut", delay: 0.06 }}` so it lands ~60 ms after the verdict bar — readable as "the verdict; then its rationale," not "two things appearing together."
+3. **Reasoning timeline collapse-to-summary.** The Mode 1 timeline collapses into the thin Mode-2 summary strip via a height transition on a `motion.div` wrapping the timeline node. The summary strip ("✓ 5 agents · 14.2s · 47 substeps") fades in above the audit-log row. `transition={{ duration: 0.4, ease: "easeOut" }}` for the height; the strip itself fades with `delay: 0.2` so the user sees the timeline shrink before the strip resolves.
+4. **Mode 1 → Mode 2 surface crossfade.** The 5 Mode 1 agent cards fade out (`opacity: 1 → 0`, `duration: 0.25`) while the Mode 2 tabbed surface fades in (`opacity: 0 → 1`, `duration: 0.25`, `delay: 0.05` — a slight overlap reads as continuous, not as a hard cut). No spatial morph between them. The tabbed surface mounts in its final position; the Mode 1 cards unmount once their fade completes.
 
-Implementation hooks: framer-motion's `LayoutGroup` wraps the `<DealDetail>` body; `<ReasoningStream>` and `<CompletedView>` participate by tagging their key elements with matched `layoutId`s. No agent-code or SSE changes.
+Reduced-motion fallback (unchanged): collapse the whole transition to a 200 ms opacity crossfade. All four motions short-circuit when `prefers-reduced-motion: reduce` is set.
+
+Implementation hooks: framer-motion's `motion.div` / `motion.section` / `AnimatePresence` only — no `LayoutGroup`, no `layoutId`. `<ReasoningStream>` exposes a `phase: "running" | "completing" | "complete"` state so `<CompletedView>` knows whether to render the entrance animations or skip them on a refresh-mid-Mode-2. No agent-code or SSE changes.
 
 ### 3.7 Artifacts panel (light pass)
 
@@ -348,14 +391,14 @@ Approximate total: 6–8 commits across one focused session. No commit lands wit
 
 ---
 
-## 7. Open questions for review
+## 7. Open questions — resolved
 
-Items the brief flagged as needing the skill's recommendation. The default below ships unless overridden.
+All five defaults from v1 of the plan were approved during review. They are now binding constraints for Phase 2 — captured here so the implementation phase doesn't reopen them.
 
-1. **Mode 2 layout choice** (brief offered "left rail + main + right rail" vs "packed top-down"). **Default proposed:** verdict bar full-width on top + 8/4 split below (tabs left, vertical context rail right). This is the hybrid; full 3-pane felt too JIRA-like for a deal-desk artifact.
-2. **Sidebar collapsed state** — plumbed but not shipped. Default: leave hover-toggle for a follow-up phase. Rationale: not a blocker for the operator-feel goal, and adds animation complexity.
-3. **Mock download counts on artifacts** — brief suggests adding them. **Default proposed:** skip. Real timestamps + real cache state are stronger; fabricated counts erode trust if the operator looks twice.
-4. **URL-state for pipeline filters** (`?stage=…`). **Default proposed:** skip for v1 — in-memory state only. Cheap to add later if the operator wants deep-linked filtered views.
-5. **Activity feed source** — derived from `reviews` + `slack_posts` tables. If a cold deploy returns no rows, the feed shows an empty state. Acceptable, or seed 5–10 fake recent rows? **Default proposed:** real-data-or-empty-state. Fewer ghosts in the demo.
+1. **Mode 2 layout choice.** ✅ Approved as proposed — verdict bar full-width on top + 8/4 split below (tabs left, vertical right rail). Full 3-pane left/main/right was rejected as too JIRA-like for a deal-desk artifact.
+2. **Sidebar collapsed state.** ✅ Approved as proposed — plumb the collapsed-state plumbing in §3.1, but ship the expanded-only variant. The hover-toggle and animation are out of scope for this redesign.
+3. **Mock download counts on artifacts.** ✅ Approved as proposed — skip. Real generated-at timestamps + real `cached`/`live` state badges (§3.7) are the legitimate signals.
+4. **URL-state for pipeline filters.** ✅ Approved as proposed — skip URL sync for v1, ship in-memory state only. **Additional constraint:** the filter-state object must be shaped as a flat record of URL-encodable primitives (per §3.4 implementation note), so the eventual URL sync is a single `useEffect` addition, not a refactor.
+5. **Activity feed source.** ✅ Approved as proposed — real-data-or-empty-state. Derive from `reviews` + `slack_posts` tables; if a cold deploy returns no rows, render the "Run your first review" empty state. No seeded ghost activity.
 
-If any of these defaults aren't right, flag during plan review and we adjust before Phase 2.
+Any new ambiguity that surfaces during Phase 2 implementation goes into a separate `/tmp/redesign-side-findings.md` for follow-up — it does not reopen these resolved questions.
