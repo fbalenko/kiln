@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 import type { DealWithCustomer } from "@/lib/db/queries";
 import { Button } from "@/components/ui/button";
 import { ReasoningStream, type StreamPhase } from "@/components/reasoning-stream";

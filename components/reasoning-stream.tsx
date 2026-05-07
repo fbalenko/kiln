@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   Activity,
   AlertCircle,
@@ -467,48 +468,80 @@ export function ReasoningStream({
       : null;
   const substepCount = countCompletedSubsteps(steps);
 
-  if (synthesis && finalOutputs) {
-    return (
-      <CompletedView
-        pricing={finalOutputs.pricing}
-        asc606={finalOutputs.asc606}
-        redline={finalOutputs.redline}
-        approval={finalOutputs.approval}
-        comms={finalOutputs.comms}
-        synthesis={synthesis}
-        similarDeals={similarDeals}
-        customerSignals={customerSignals}
-        slackPost={slackPost}
-        timeline={agentTimeline}
-        totalElapsedMs={elapsedMs}
-        substepCount={substepCount}
-        agentCount={5}
-        onSlackPostChange={(next) =>
-          setSlackPost({ phase: "settled", record: next })
-        }
-      />
-    );
-  }
-
-  // Mode 1 — running. Render the timeline; panels render here only when
-  // the parent isn't already showing them in a left rail (hidePanels=true).
+  // Plan §3.6 motion #4: opacity crossfade between Mode 1 cards and the
+  // Mode 2 tabbed surface. mode="wait" ensures the timeline fully
+  // unmounts before CompletedView fades in, avoiding double-mount races
+  // during the synthesis tick. prefers-reduced-motion collapses both
+  // sides to a 200ms opacity crossfade.
+  const isCompleted = !!(synthesis && finalOutputs);
   return (
-    <div className="space-y-3">
-      {agentTimeline}
+    <ModeCrossfade isCompleted={isCompleted}>
+      {isCompleted ? (
+        <CompletedView
+          pricing={finalOutputs.pricing}
+          asc606={finalOutputs.asc606}
+          redline={finalOutputs.redline}
+          approval={finalOutputs.approval}
+          comms={finalOutputs.comms}
+          synthesis={synthesis}
+          similarDeals={similarDeals}
+          customerSignals={customerSignals}
+          slackPost={slackPost}
+          timeline={agentTimeline}
+          totalElapsedMs={elapsedMs}
+          substepCount={substepCount}
+          agentCount={5}
+          onSlackPostChange={(next) =>
+            setSlackPost({ phase: "settled", record: next })
+          }
+        />
+      ) : (
+        <div className="space-y-3">
+          {agentTimeline}
 
-      {!hidePanels && (similarDeals || customerSignals) && (
-        <div className="grid grid-cols-1 gap-3 pl-6 sm:pl-8 lg:grid-cols-2">
-          <SimilarDealsPanel deals={similarDeals} />
-          <CustomerSignalsPanel result={customerSignals} />
+          {!hidePanels && (similarDeals || customerSignals) && (
+            <div className="grid grid-cols-1 gap-3 pl-6 sm:pl-8 lg:grid-cols-2">
+              <SimilarDealsPanel deals={similarDeals} />
+              <CustomerSignalsPanel result={customerSignals} />
+            </div>
+          )}
+
+          {done && !synthesis && (
+            <p className="pl-6 text-xs text-muted-foreground sm:pl-8">
+              Stream ended.
+            </p>
+          )}
         </div>
       )}
+    </ModeCrossfade>
+  );
+}
 
-      {done && !synthesis && (
-        <p className="pl-6 text-xs text-muted-foreground sm:pl-8">
-          Stream ended.
-        </p>
-      )}
-    </div>
+function ModeCrossfade({
+  isCompleted,
+  children,
+}: {
+  isCompleted: boolean;
+  children: React.ReactNode;
+}) {
+  const reduced = useReducedMotion();
+  const enterTransition = reduced
+    ? { duration: 0.2 }
+    : { duration: 0.25, delay: 0.05 };
+  const exitTransition = reduced ? { duration: 0.2 } : { duration: 0.25 };
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={isCompleted ? "complete" : "running"}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={isCompleted ? enterTransition : exitTransition}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
   );
 }
 

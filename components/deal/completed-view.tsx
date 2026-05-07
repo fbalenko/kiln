@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, useReducedMotion } from "framer-motion";
 import { VerdictCard } from "@/components/verdict-card";
 import { TimelineSummary } from "./timeline-summary";
 import { AgentOutputTabs } from "./agent-output-tabs";
@@ -72,23 +73,50 @@ export function CompletedView({
     marginPct: pricing.margin_pct_estimate,
   });
 
+  // Plan §3.6 motions, scoped: verdict fade-up + synthesis 60ms-staggered
+  // fade-up. prefers-reduced-motion collapses to a 200ms opacity crossfade.
+  const reduced = useReducedMotion();
+  const verdictMotion = reduced
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.2 } }
+    : {
+        initial: { opacity: 0, y: 12 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] as const },
+      };
+  const synthesisMotion = reduced
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.2, delay: 0.05 } }
+    : {
+        initial: { opacity: 0, y: 12 },
+        animate: { opacity: 1, y: 0 },
+        transition: {
+          duration: 0.35,
+          delay: 0.06,
+          ease: [0.16, 1, 0.3, 1] as const,
+        },
+      };
+
   return (
-    <div className="space-y-5 animate-in fade-in duration-300">
-      {/* 1. Verdict bar — dominant surface */}
+    <div className="space-y-5">
+      {/* 1. Verdict bar — dominant surface, fade-up entrance */}
       <div className="space-y-2">
-        <VerdictCard
-          pricing={pricing}
-          asc606={asc606}
-          redline={redline}
-          approval={approval}
-        />
-        {/* 2. Synthesis demoted to inline italic line */}
-        <p className="px-1 text-[12.5px] italic leading-relaxed text-foreground/85">
+        <motion.div {...verdictMotion}>
+          <VerdictCard
+            pricing={pricing}
+            asc606={asc606}
+            redline={redline}
+            approval={approval}
+          />
+        </motion.div>
+        {/* 2. Synthesis line — 60ms-staggered fade-up */}
+        <motion.p
+          {...synthesisMotion}
+          className="px-1 text-[12.5px] italic leading-relaxed text-foreground/85"
+        >
           <span className="font-mono not-italic font-semibold uppercase tracking-wider text-foreground">
             {recommendation}
           </span>{" "}
           — {synthesisLeadSentence}
-        </p>
+        </motion.p>
       </div>
 
       {/* 3. Tabs (8 cols) + vertical right rail (4 cols) */}
