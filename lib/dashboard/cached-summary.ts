@@ -8,6 +8,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type {
   ApprovalOutput,
+  PricingOutput,
   RedlineOutput,
 } from "@/lib/agents/schemas";
 
@@ -17,8 +18,18 @@ interface CachedReview {
   deal_id: string;
   outputs: {
     approval: ApprovalOutput;
+    pricing: PricingOutput;
     redline: RedlineOutput;
   };
+}
+
+// Per-deal severity preview surfaced on the pipeline at xl breakpoints.
+// Three glyphs: approval depth, margin %, redline priority. The pipeline
+// row component consumes this directly.
+export interface DealSeverityPreview {
+  approverCount: number;
+  marginPct: number;
+  redlinePriority: RedlineOutput["overall_redline_priority"];
 }
 
 export interface CachedRiskSummary {
@@ -44,6 +55,10 @@ export interface CachedRiskSummary {
   // Set of deal IDs that have a cached review file on disk. Useful for
   // future tiles or to highlight rows in the pipeline.
   reviewedDealIds: Set<string>;
+
+  // Per-deal severity preview, keyed by deal_id, for the pipeline glyph
+  // strip. Empty for deals without a cached review.
+  severityByDeal: Map<string, DealSeverityPreview>;
 }
 
 const EMPTY_SUMMARY: CachedRiskSummary = {
@@ -54,6 +69,7 @@ const EMPTY_SUMMARY: CachedRiskSummary = {
   avgCycleDays: 0,
   nReviews: 0,
   reviewedDealIds: new Set(),
+  severityByDeal: new Map(),
 };
 
 // Reads every *-review.json file once. The function intentionally takes
@@ -80,6 +96,7 @@ export function getCachedRiskSummary(
   let cycleSum = 0;
   let nReviews = 0;
   const reviewedDealIds = new Set<string>();
+  const severityByDeal = new Map<string, DealSeverityPreview>();
 
   for (const file of files) {
     let parsed: CachedReview;
@@ -97,6 +114,7 @@ export function getCachedRiskSummary(
     nReviews++;
 
     const approval = parsed.outputs?.approval;
+    const pricing = parsed.outputs?.pricing;
     const redline = parsed.outputs?.redline;
     if (!approval || !redline) continue;
 
@@ -116,6 +134,14 @@ export function getCachedRiskSummary(
       cfoApprovalCount++;
       if (heroIds.has(dealId)) cfoApprovalHeroCount++;
     }
+
+    if (pricing) {
+      severityByDeal.set(dealId, {
+        approverCount,
+        marginPct: pricing.margin_pct_estimate,
+        redlinePriority: redline.overall_redline_priority,
+      });
+    }
   }
 
   return {
@@ -126,5 +152,6 @@ export function getCachedRiskSummary(
     avgCycleDays: nReviews > 0 ? cycleSum / nReviews : 0,
     nReviews,
     reviewedDealIds,
+    severityByDeal,
   };
 }
