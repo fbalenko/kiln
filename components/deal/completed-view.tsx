@@ -1,6 +1,5 @@
 "use client";
 
-import { Check } from "lucide-react";
 import { VerdictCard } from "@/components/verdict-card";
 import { TimelineSummary } from "./timeline-summary";
 import { AgentOutputTabs } from "./agent-output-tabs";
@@ -9,6 +8,7 @@ import { AuditLogFooter } from "./audit-log-footer";
 import { ArtifactsPanel } from "@/components/artifacts-panel";
 import { SimilarDealsPanel } from "@/components/panels/similar-deals-panel";
 import { CustomerSignalsPanel } from "@/components/panels/customer-signals-panel";
+import { deriveRecommendation } from "@/lib/severity";
 import type {
   ApprovalOutput,
   Asc606Output,
@@ -21,9 +21,12 @@ import type { SimilarDealRecord } from "@/lib/tools/vector-search";
 import type { SlackPostUiState } from "@/components/slack-post-status";
 import type { SlackPostRecord } from "@/lib/tools/slack";
 
-// The Mode 2 layout — fires when the orchestrator emits its synthesis
-// event. Top-down: verdict → synthesis → collapsed timeline → tabs →
-// 3-up panels → artifacts → audit log footer.
+// Mode 2 — fires when the orchestrator emits its synthesis event.
+// Per docs/12-redesign-plan.md §3.5, the layout is verdict-first with
+// a vertical right-rail of context panels and an 8/4 split for the
+// agent tabs. The synthesis paragraph is demoted from a competing
+// blue-bordered card to a single inline italic line beneath the verdict
+// bar so the verdict stays unambiguously dominant.
 
 interface Props {
   pricing: PricingOutput;
@@ -35,7 +38,7 @@ interface Props {
   similarDeals: SimilarDealRecord[] | null;
   customerSignals: CustomerSignalsResult | null;
   slackPost: SlackPostUiState | null;
-  // Pre-rendered timeline for the collapsible "View reasoning trace" section.
+  // Pre-rendered Mode 1 timeline for the collapsible reasoning trace.
   timeline: React.ReactNode;
   totalElapsedMs: number | null;
   substepCount: number;
@@ -59,76 +62,128 @@ export function CompletedView({
   agentCount,
   onSlackPostChange,
 }: Props) {
+  // First sentence of the synthesis is the inline subtitle. The full
+  // multi-paragraph summary lives behind the audit-log expansion so
+  // the verdict bar stays unambiguously dominant.
+  const synthesisLeadSentence = firstSentenceOf(synthesis.summary);
+  const recommendation = deriveRecommendation({
+    redlinePriority: redline.overall_redline_priority,
+    approvalBlockers: approval.blockers_to_address_first?.length ?? 0,
+    marginPct: pricing.margin_pct_estimate,
+  });
+
   return (
-    <div className="space-y-7 sm:space-y-8 animate-in fade-in duration-300">
-      {/* 1. Verdict */}
-      <VerdictCard
-        pricing={pricing}
-        asc606={asc606}
-        redline={redline}
-        approval={approval}
-      />
-
-      {/* 2. Synthesis paragraph — promoted */}
-      <section className="rounded-md border-2 border-[var(--brand)]/40 bg-[var(--brand)]/[0.04] p-4 sm:p-5">
-        <div className="flex items-center gap-2">
-          <span
-            aria-hidden
-            className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-white"
-          >
-            <Check className="h-2.5 w-2.5" strokeWidth={3} />
-          </span>
-          <div className="text-[11px] font-medium uppercase tracking-wider text-[var(--brand)]">
-            Executive synthesis
-          </div>
-        </div>
-        <p className="mt-2 whitespace-pre-line text-[14.5px] leading-relaxed text-foreground">
-          {synthesis.summary}
-        </p>
-        <div className="mt-3 font-mono text-[10px] text-muted-foreground">
-          review {synthesis.reviewId}
-        </div>
-      </section>
-
-      {/* 3. Collapsed reasoning timeline */}
-      <TimelineSummary
-        totalElapsedMs={totalElapsedMs}
-        substepCount={substepCount}
-        agentCount={agentCount}
-      >
-        {timeline}
-      </TimelineSummary>
-
-      {/* 4. Tabbed agent outputs */}
-      <AgentOutputTabs
-        pricing={pricing}
-        asc606={asc606}
-        redline={redline}
-        approval={approval}
-        comms={comms}
-        slackPost={slackPost}
-        reviewId={synthesis.reviewId}
-        onSlackPostChange={onSlackPostChange}
-      />
-
-      {/* 5. Three-up context panels */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <SimilarDealsPanel deals={similarDeals} />
-        <CustomerSignalsPanel result={customerSignals} />
-        <SlackPostPanel
-          comms={comms}
-          state={slackPost}
-          reviewId={synthesis.reviewId}
-          onChange={onSlackPostChange}
+    <div className="space-y-5 animate-in fade-in duration-300">
+      {/* 1. Verdict bar — dominant surface */}
+      <div className="space-y-2">
+        <VerdictCard
+          pricing={pricing}
+          asc606={asc606}
+          redline={redline}
+          approval={approval}
         />
+        {/* 2. Synthesis demoted to inline italic line */}
+        <p className="px-1 text-[12.5px] italic leading-relaxed text-foreground/85">
+          <span className="font-mono not-italic font-semibold uppercase tracking-wider text-foreground">
+            {recommendation}
+          </span>{" "}
+          — {synthesisLeadSentence}
+        </p>
       </div>
 
-      {/* 6. Artifacts panel — same component, more breathing room
-          via the parent's vertical rhythm and the panel's own padding. */}
+      {/* 3. Tabs (8 cols) + vertical right rail (4 cols) */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <div className="lg:col-span-8">
+          <AgentOutputTabs
+            pricing={pricing}
+            asc606={asc606}
+            redline={redline}
+            approval={approval}
+            comms={comms}
+            slackPost={slackPost}
+            reviewId={synthesis.reviewId}
+            onSlackPostChange={onSlackPostChange}
+          />
+        </div>
+        <aside
+          aria-label="Context"
+          className="lg:col-span-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1"
+        >
+          <RailScroll>
+            <CustomerSignalsPanel result={customerSignals} />
+          </RailScroll>
+          <RailScroll>
+            <SimilarDealsPanel deals={similarDeals} />
+          </RailScroll>
+          <RailScroll>
+            <SlackPostPanel
+              comms={comms}
+              state={slackPost}
+              reviewId={synthesis.reviewId}
+              onChange={onSlackPostChange}
+            />
+          </RailScroll>
+        </aside>
+      </div>
+
+      {/* 4. Artifacts panel — full-width row */}
       <ArtifactsPanel reviewId={synthesis.reviewId} />
 
-      {/* 7. Audit log footer */}
-      <AuditLogFooter reviewId={synthesis.reviewId} />
+      {/* 5. Audit log + reasoning trace — paired collapsed footer */}
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <TimelineSummary
+          totalElapsedMs={totalElapsedMs}
+          substepCount={substepCount}
+          agentCount={agentCount}
+        >
+          {timeline}
+        </TimelineSummary>
+        <AuditLogFooter reviewId={synthesis.reviewId} />
+      </div>
+
+      {/* 6. Full synthesis (the rest after the lead sentence) tucked
+          below as the executive write-up — present but de-emphasized. */}
+      {synthesis.summary.length > synthesisLeadSentence.length && (
+        <details className="rounded-md border border-border bg-card text-[12px]">
+          <summary className="cursor-pointer list-none px-3 py-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground transition hover:text-foreground">
+            Read full synthesis
+          </summary>
+          <div className="border-t border-border px-3 py-2.5">
+            <p className="whitespace-pre-line leading-relaxed text-foreground/90">
+              {synthesis.summary}
+            </p>
+            <div className="mt-2 font-mono text-[10px] text-muted-foreground">
+              review {synthesis.reviewId}
+            </div>
+          </div>
+        </details>
+      )}
     </div>
   );
+}
+
+// Right-rail panel wrapper: caps internal height so a long signals
+// list doesn't pull the whole rail downward (the prior 3-up rendered
+// the panels in side-by-side columns and yanked sibling heights).
+function RailScroll({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="max-h-[360px] overflow-hidden">
+      <div className="max-h-[360px] overflow-y-auto">{children}</div>
+    </div>
+  );
+}
+
+// Quick-and-correct first-sentence extractor for the synthesis lead.
+// Grabs everything up to the first sentence terminator followed by a
+// space or newline, and falls back to the full summary if no
+// terminator is found within the first 240 chars.
+function firstSentenceOf(s: string): string {
+  const trimmed = s.trim();
+  // Match terminator + whitespace OR end of paragraph.
+  const m = /[.!?](?=\s|$)/.exec(trimmed);
+  if (!m) {
+    return trimmed.length > 240 ? `${trimmed.slice(0, 240)}…` : trimmed;
+  }
+  const end = m.index + 1;
+  return trimmed.slice(0, end);
 }
