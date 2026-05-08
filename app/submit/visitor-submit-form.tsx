@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -560,13 +559,24 @@ function DiscountSlider({
   value: number;
   onChange: (next: number) => void;
 }) {
-  // Visual cue: the band shifts color past 25% (typical CFO threshold).
-  // The Slider primitive expects a number[] for value when controlled.
+  // Native <input type="range"> rather than the shared shadcn Slider:
+  // the wrapper renders Slider.Thumb without an `index` prop, which
+  // breaks single-thumb mode (and falls back to a two-thumb [min,max]
+  // when given a number instead of an array). Native range gives us
+  // controlled value, touch support, and accessibility for free.
   const tone = useMemo(() => {
     if (value >= 30) return "text-red-600";
     if (value >= 20) return "text-amber-600";
     return "text-foreground";
   }, [value]);
+
+  const inputId = useId();
+  const pct = (value / 60) * 100;
+  // Two-stop gradient on the track: brand-blue up to the thumb, muted
+  // beyond. Stays in sync with the controlled `value`.
+  const trackStyle = {
+    background: `linear-gradient(to right, var(--brand) 0%, var(--brand) ${pct}%, hsl(var(--muted)) ${pct}%, hsl(var(--muted)) 100%)`,
+  };
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -586,14 +596,31 @@ function DiscountSlider({
           0% — 60%
         </span>
       </div>
-      <Slider
-        value={[value]}
+      <input
+        id={inputId}
+        type="range"
         min={0}
         max={60}
         step={1}
-        onValueChange={(v) => {
-          if (Array.isArray(v) && typeof v[0] === "number") onChange(v[0]);
-        }}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        aria-label="Discount percent"
+        aria-valuetext={`${value} percent`}
+        style={trackStyle}
+        className={cn(
+          "h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted touch-none",
+          // Webkit thumb
+          "[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4",
+          "[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-[var(--brand)]",
+          "[&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:cursor-grab",
+          "[&::-webkit-slider-thumb]:transition-transform active:[&::-webkit-slider-thumb]:scale-110",
+          // Firefox thumb
+          "[&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full",
+          "[&::-moz-range-thumb]:border [&::-moz-range-thumb]:border-[var(--brand)] [&::-moz-range-thumb]:bg-white",
+          "[&::-moz-range-thumb]:cursor-grab",
+          // Focus ring on the thumb
+          "focus-visible:outline-none [&::-webkit-slider-thumb]:focus-visible:ring-2 [&::-webkit-slider-thumb]:focus-visible:ring-[var(--brand)]/30",
+        )}
       />
     </div>
   );
