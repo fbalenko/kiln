@@ -17,6 +17,7 @@ import { generateCustomerEmail } from "@/lib/document-templates/customer-email";
 import { generateApprovalOnePager } from "@/lib/document-templates/approval-one-pager";
 import { generateOrderForm } from "@/lib/document-templates/order-form";
 import { generateRedlinedMsa } from "@/lib/document-templates/redlined-msa";
+import { generateFinancialModel } from "@/lib/document-templates/spreadsheet";
 import type {
   ArtifactBuffer,
   ArtifactInput,
@@ -47,6 +48,7 @@ const URL_TYPES = [
   "ae-email",
   "customer-email",
   "one-pager",
+  "financial-model",
 ] as const;
 type UrlArtifactType = (typeof URL_TYPES)[number];
 
@@ -101,6 +103,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
       break;
     case "one-pager":
       artifact = await generateApprovalOnePager(input);
+      break;
+    case "financial-model":
+      artifact = await generateFinancialModel(input);
       break;
   }
 

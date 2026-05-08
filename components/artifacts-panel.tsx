@@ -1,14 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, FileText, FileSpreadsheet, Mail, Send } from "lucide-react";
+import {
+  Download,
+  FileText,
+  FileSpreadsheet,
+  Mail,
+  Send,
+  Table as TableIcon,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AGENT_IDENTITY } from "@/lib/agent-identity";
 import { badgeStateBase, badgeStateClasses } from "@/lib/ui-tokens";
 
-// Five-button download grid for the deal-desk artifacts produced by the
-// Comms agent. Resolves the artifact via /api/artifacts/[reviewId]/[type]
+// Six-button download grid for the deal-desk artifacts produced by the
+// agents. Resolves the artifact via /api/artifacts/[reviewId]/[type]
 // — when no fresh review has run, the visitor's reviewId falls back to
 // the deal id and the API serves the cached scenario output.
 //
@@ -30,7 +37,8 @@ type UrlArtifactType =
   | "order-form"
   | "ae-email"
   | "customer-email"
-  | "one-pager";
+  | "one-pager"
+  | "financial-model";
 
 interface Tile {
   type: UrlArtifactType;
@@ -44,14 +52,18 @@ interface Tile {
   producer: ParentName;
 }
 
-// File-size estimates derived from the test harness output across all 5
+// File-size estimates derived from the test harness output across all
 // scenarios. These are display-only — the real size comes from the API.
+// Financial-model tagged Pricing Agent (the producing agent for all
+// three pricing-domain artifacts: one-pager, order form, financial
+// model) so the panel reads "deliverables grouped by agent" coherently.
 const TILES: Tile[] = [
-  { type: "one-pager",      label: "Approval one-pager", format: "PDF",  approxKb: 4,  icon: FileText,        producer: "Pricing Agent" },
-  { type: "order-form",     label: "Order form",         format: "PDF",  approxKb: 3,  icon: FileSpreadsheet, producer: "Pricing Agent" },
-  { type: "redlined-msa",   label: "Redlined MSA",       format: "DOCX", approxKb: 15, icon: FileText,        producer: "Redline Agent" },
-  { type: "ae-email",       label: "AE email",           format: "EML",  approxKb: 3,  icon: Mail,            producer: "Comms Agent" },
-  { type: "customer-email", label: "Customer email",     format: "EML",  approxKb: 3,  icon: Send,            producer: "Comms Agent" },
+  { type: "one-pager",       label: "Approval one-pager", format: "PDF",  approxKb: 4,  icon: FileText,        producer: "Pricing Agent" },
+  { type: "order-form",      label: "Order form",         format: "PDF",  approxKb: 3,  icon: FileSpreadsheet, producer: "Pricing Agent" },
+  { type: "financial-model", label: "Financial model",    format: "XLSX", approxKb: 30, icon: TableIcon,       producer: "Pricing Agent" },
+  { type: "redlined-msa",    label: "Redlined MSA",       format: "DOCX", approxKb: 15, icon: FileText,        producer: "Redline Agent" },
+  { type: "ae-email",        label: "AE email",           format: "EML",  approxKb: 3,  icon: Mail,            producer: "Comms Agent" },
+  { type: "customer-email",  label: "Customer email",     format: "EML",  approxKb: 3,  icon: Send,            producer: "Comms Agent" },
 ];
 
 interface ArtifactMeta {
@@ -109,7 +121,7 @@ export function ArtifactsPanel({
           </span>
         ) : null}
       </div>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         {TILES.map((tile) => (
           <DownloadTile
             key={tile.type}
