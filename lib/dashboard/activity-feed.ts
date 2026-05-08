@@ -2,6 +2,12 @@
 // row produces 1–2 events: the synthesis itself, plus the Slack post
 // when present. If deal_reviews is empty (cold deploy), the result is
 // empty — the page renders the "Run your first review" empty state.
+//
+// Privacy: visitor-submitted reviews (is_visitor_submitted = 1) are
+// excluded so Visitor A's submission can't appear on Visitor B's
+// homepage. Visitor reviews remain visible on the visitor's own
+// /deals/visitor-{id} page (cookie-protected) and in the orchestrator's
+// in-memory cache.
 
 import { getDb } from "@/lib/db/client";
 
@@ -48,6 +54,7 @@ export function getRecentActivity(limit = 8): ActivityEntry[] {
       FROM deal_reviews r
       JOIN deals d ON d.id = r.deal_id
       JOIN customers c ON c.id = d.customer_id
+      WHERE r.is_visitor_submitted = 0
       ORDER BY r.ran_at DESC
       LIMIT ?
       `,

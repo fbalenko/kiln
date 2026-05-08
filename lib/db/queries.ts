@@ -88,6 +88,15 @@ export type PricingGuardrail = {
   notes: string | null;
 };
 
+// Visitor-submitted deals carry the `visitor-` id prefix and live in the
+// same `deals` table as the seeded scenarios. listDeals() is the public
+// pipeline + dashboard lister, so visitor rows must be excluded — both
+// for privacy (Visitor A's deal would otherwise appear on Visitor B's
+// homepage) and demo coherence (the pipeline is meant to surface the
+// 40 seeded deals only). getDealById() stays unfiltered so a visitor
+// can still fetch their own deal via /deals/visitor-{id}.
+const EXCLUDE_VISITOR_DEALS = "d.id NOT LIKE 'visitor-%'";
+
 export function listDeals(): DealWithCustomer[] {
   const db = getDb();
   const rows = db
@@ -116,6 +125,7 @@ export function listDeals(): DealWithCustomer[] {
       FROM deals d
       JOIN customers c ON c.id = d.customer_id
       LEFT JOIN scenario_metadata s ON s.deal_id = d.id
+      WHERE ${EXCLUDE_VISITOR_DEALS}
       ORDER BY
         CASE WHEN d.is_scenario = 1 THEN 0 ELSE 1 END,
         s.display_order ASC,
