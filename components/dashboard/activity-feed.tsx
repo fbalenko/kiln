@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ExternalLink, MessageSquare, Sparkles } from "lucide-react";
 import type { ActivityEntry } from "@/lib/dashboard/activity-feed";
@@ -6,6 +8,13 @@ import type { ActivityEntry } from "@/lib/dashboard/activity-feed";
 // 28px-tall mono timestamp + agent dot + verb-phrase. If no reviews
 // have been persisted (cold deploy, cache replay only), the panel
 // renders an empty state with a "Run your first review" CTA.
+//
+// Marked "use client" because the Slack-link <a> nested inside the row
+// <Link> needs an onClick stopPropagation to avoid double-navigation
+// (open external Slack URL in a new tab AND push the current tab to
+// the deal page). Server components can't pass event handlers to
+// client components, so the whole component runs on the client. Inputs
+// are plain JSON (ActivityEntry[]) so the boundary is clean.
 
 export function ActivityFeed({
   entries,
