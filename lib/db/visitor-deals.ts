@@ -12,6 +12,7 @@ import {
   RedlineOutputSchema,
 } from "@/lib/agents/schemas";
 import type { OrchestratorCacheFile } from "@/lib/agents/orchestrator";
+import { clearVisitorReviewCache } from "@/lib/visitor-submit/store";
 
 // SQLite-side persistence for visitor-submitted deals. Lives in its own
 // module so the API route + the visitor-store cleanup hook can share
@@ -235,6 +236,14 @@ function deleteVisitorDealInner(dealId: string, customerId: string): void {
     db.prepare("DELETE FROM customers WHERE id = ?").run(customerId);
   });
   tx();
+
+  // Critical: drop the in-memory orchestrator cache for this dealId
+  // alongside the SQL rows. Without this, a re-submit within the same
+  // cookie window (which keeps the same `visitor-{sessionId}` dealId)
+  // would serve the prior run's cached pricing/agent outputs instead
+  // of running fresh on the new deal data. That was the root cause of
+  // the "submitted at 30%, page shows 15%" bug.
+  clearVisitorReviewCache(dealId);
 }
 
 // Returns the most recent deal_reviews row for a deal id, or null. Used

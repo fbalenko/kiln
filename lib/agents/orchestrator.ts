@@ -173,6 +173,14 @@ export async function runOrchestrator(
       cached =
         getVisitorReviewCache(dealId) ??
         rebuildOrchestratorCacheFromLatestReview(dealId);
+      // Defense-in-depth: even after the SQL/in-memory invalidation
+      // hooks, a bug elsewhere could re-prime the cache against the
+      // wrong deal version. Compare the cached pricing output's price
+      // anchors against the current SQL deal — any drift forces a
+      // fresh live run.
+      if (cached && !cacheMatchesCurrentDeal(cached, dealId)) {
+        cached = null;
+      }
       if (cached) {
         // Re-prime the in-memory cache so subsequent refreshes within
         // the same process skip the SQL rebuild.
@@ -669,6 +677,25 @@ const OutputsSchema = (() => {
     comms: CommsOutputSchema,
   };
 })();
+
+// Verify that a cached visitor review still describes the deal that's
+// in SQLite right now. The pricing output carries list_price and
+// proposed_price, both derived from the deal record at run time.
+// Any drift means the deal was re-submitted after the cache was built
+// — drop the cache so the orchestrator runs fresh.
+function cacheMatchesCurrentDeal(
+  cached: OrchestratorCacheFile,
+  dealId: string,
+): boolean {
+  const current = getDealById(dealId);
+  if (!current) return false;
+  const cachedPricing = cached.outputs.pricing;
+  return (
+    Math.round(cachedPricing.list_price) === Math.round(current.list_price) &&
+    Math.round(cachedPricing.proposed_price) ===
+      Math.round(current.proposed_price)
+  );
+}
 
 function readCacheFile(cachePath: string): OrchestratorCacheFile | null {
   try {
