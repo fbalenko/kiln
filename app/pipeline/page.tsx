@@ -33,14 +33,22 @@ export default function PipelinePage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl flex-1 px-0 pt-5 pb-10 sm:pt-6">
-      <div className="px-4 sm:px-6">
-        <h1 className="text-[15px] font-semibold tracking-tight text-foreground">
-          Deal pipeline
-        </h1>
-        <p className="mt-1 max-w-xl text-[12px] text-muted-foreground">
-          Active and closed deals in the demo workspace. Filter by stage,
-          search by name, or click any row to open the deal review.
-        </p>
+      <div className="flex items-end justify-between gap-3 px-4 sm:px-6">
+        <div className="min-w-0">
+          <h1 className="text-[15px] font-semibold tracking-tight text-foreground">
+            Deal pipeline
+          </h1>
+          <p className="mt-1 max-w-xl text-[12px] text-muted-foreground">
+            Active and closed deals in the demo workspace. Filter by stage,
+            search by name, or click any row to open the deal review.
+          </p>
+        </div>
+        <a
+          href="/submit"
+          className="hidden shrink-0 items-center gap-1.5 rounded-md bg-[var(--brand)] px-3 h-8 text-[12.5px] font-medium text-white transition hover:bg-[var(--brand)]/90 sm:inline-flex"
+        >
+          Submit a deal
+        </a>
       </div>
       <div className="mt-4">
         <PipelineWorkspace

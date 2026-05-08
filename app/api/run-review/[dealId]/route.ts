@@ -6,6 +6,9 @@ import { getDealById } from "@/lib/db/queries";
 import type { CustomerSignalsResult } from "@/lib/tools/exa-search";
 import type { SimilarDealRecord } from "@/lib/tools/vector-search";
 import type { SlackPostRecord } from "@/lib/tools/slack";
+import { recordSpendEvent } from "@/lib/observability/spend-tracker";
+
+const VISITOR_DEAL_PREFIX = "visitor-";
 
 // SSE endpoint for the full Phase 4 orchestrator pipeline.
 //
@@ -191,6 +194,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         // ---- Persist deal_review + audit_log ----
         const reviewId = `rev_${randomUUID()}`;
         const totalRuntimeMs = Date.now() - orchestratorStart;
+        const isVisitor = dealId.startsWith(VISITOR_DEAL_PREFIX);
         persistReview({
           reviewId,
           dealId,
@@ -204,7 +208,24 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
           customerSignals: result.customerSignals,
           similarDeals: result.similarDeals,
           slackPost: result.slackPost,
+          isVisitorSubmitted: isVisitor,
         });
+
+        // Spend tracking: only record live runs. Cache replays already
+        // accounted for the upstream cost; recording them again would
+        // double-count visitor + scenario runs.
+        if (!result.fromCache) {
+          recordSpendEvent({
+            source: isVisitor ? `visitor-${dealId}` : `scenario-${dealId}`,
+            deal_id: dealId,
+            review_id: reviewId,
+            total_usd: result.metadata.total_cost_usd,
+            total_input_tokens: result.metadata.total_input_tokens,
+            total_output_tokens: result.metadata.total_output_tokens,
+            duration_ms: result.metadata.duration_ms,
+            per_agent: result.metadata.per_agent,
+          });
+        }
 
         // ---- Synthesis card ----
         send({
@@ -335,6 +356,7 @@ interface PersistArgs {
   customerSignals: CustomerSignalsResult;
   similarDeals: SimilarDealRecord[];
   slackPost: SlackPostRecord;
+  isVisitorSubmitted: boolean;
 }
 
 function persistReview({
@@ -348,6 +370,7 @@ function persistReview({
   customerSignals,
   similarDeals,
   slackPost,
+  isVisitorSubmitted,
 }: PersistArgs) {
   const db = getDb();
 
@@ -367,7 +390,7 @@ function persistReview({
       @approval_output_json, @comms_output_json,
       @similar_deals_json, @customer_signals_json,
       @synthesis_summary, @total_runtime_ms, @total_tokens_used,
-      0,
+      @is_visitor_submitted,
       @slack_channel, @slack_thread_ts, @slack_posted_at, @slack_permalink,
       @slack_post_status, @slack_post_reason, @slack_post_error
     )
@@ -400,6 +423,7 @@ function persistReview({
       synthesis_summary: synthesis,
       total_runtime_ms: totalRuntimeMs,
       total_tokens_used: totalTokens || null,
+      is_visitor_submitted: isVisitorSubmitted ? 1 : 0,
       slack_channel: slackPost.channel,
       slack_thread_ts: slackPost.thread_ts,
       slack_posted_at: slackPost.posted_at,

@@ -67,6 +67,10 @@ export interface PostDealReviewArgs {
   approval: ApprovalOutput;
   comms: CommsOutput;
   appUrl: string; // public app base URL (e.g. http://localhost:3000)
+  // True when the deal originated from /submit. Surfaces a footer line
+  // on the Slack message so the channel can distinguish visitor-driven
+  // runs from seeded scenarios at a glance.
+  isVisitorSubmitted?: boolean;
 }
 
 export async function postDealReview(
@@ -247,6 +251,19 @@ export function buildDealReviewBlocks(
   const redlinePriority = capitalize(redline.overall_redline_priority);
   const approvalDepth = `${approval.approval_chain.length}-step (${approval.expected_cycle_time_business_days}bd)`;
 
+  const contextElements = [
+    {
+      type: "mrkdwn" as const,
+      text: `Open in Kiln → <${dealUrl}|view full review>  ·  approval workflow lives in the deal page`,
+    },
+  ];
+  if (args.isVisitorSubmitted) {
+    contextElements.push({
+      type: "mrkdwn" as const,
+      text: `:wave: Visitor-submitted deal · ${deal.customer.name}`,
+    });
+  }
+
   const blocks: KnownBlock[] = [
     {
       type: "header",
@@ -276,12 +293,7 @@ export function buildDealReviewBlocks(
     },
     {
       type: "context",
-      elements: [
-        {
-          type: "mrkdwn",
-          text: `Open in Kiln → <${dealUrl}|view full review>  ·  approval workflow lives in the deal page`,
-        },
-      ],
+      elements: contextElements,
     },
   ];
 

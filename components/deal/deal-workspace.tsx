@@ -29,12 +29,22 @@ import { cn } from "@/lib/utils";
 
 type RunMode = "idle" | "cached" | "live";
 
-export function DealWorkspace({ deal }: { deal: DealWithCustomer }) {
+export function DealWorkspace({
+  deal,
+  autoStart = false,
+}: {
+  deal: DealWithCustomer;
+  autoStart?: boolean;
+}) {
   const search = useSearchParams();
   const showDevTools =
     process.env.NODE_ENV !== "production" && search.get("dev") === "true";
 
-  const [mode, setMode] = useState<RunMode>("idle");
+  // Visitor-submitted deals enter live mode immediately ("cached" is
+  // the orchestrator's natural mode — for visitor IDs the in-memory
+  // cache is empty and the orchestrator falls through to a live run).
+  // Scenario deals stay idle until the visitor clicks Run review.
+  const [mode, setMode] = useState<RunMode>(autoStart ? "cached" : "idle");
   const running = mode !== "idle";
 
   const [phase, setPhase] = useState<StreamPhase>("idle");

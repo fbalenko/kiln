@@ -40,6 +40,18 @@ import {
   type PricingOutput,
   type RedlineOutput,
 } from "./schemas";
+import {
+  getVisitorReviewCache,
+  setVisitorReviewCache,
+} from "@/lib/visitor-submit/store";
+import { rebuildOrchestratorCacheFromLatestReview } from "@/lib/db/visitor-deals";
+
+// Visitor deals don't write a file-based cache — sweeping cleanup
+// would have to chase those files back out of the repo dir. Instead
+// they live in the in-memory visitor store and rebuild on cold start
+// (the SQL `deal_reviews` row hydrates the page directly when the
+// process restarts mid-session).
+const VISITOR_DEAL_PREFIX = "visitor-";
 
 // Orchestrator — coordinates the 5 sub-agents per the execution plan in
 // docs/03-agents.md §Orchestrator. Critically:
@@ -146,12 +158,29 @@ export async function runOrchestrator(
   dealId: string,
   opts: RunOrchestratorOptions = {},
 ): Promise<RunOrchestratorResult> {
+  const isVisitor = dealId.startsWith(VISITOR_DEAL_PREFIX);
   const cachePath = join(CACHE_DIR, `${dealId}-review.json`);
   const start = Date.now();
 
   // ---- Cache hit: paced replay of the unified substep tape ----
-  if (!opts.forceRefresh && existsSync(cachePath)) {
-    const cached = readCacheFile(cachePath);
+  // Visitor deals consult the in-memory store first; if absent (e.g.
+  // post cold-start), fall back to reconstructing the cache file from
+  // the latest deal_reviews row so a refresh never re-fires LLMs.
+  // Scenario deals consult the on-disk seed cache.
+  if (!opts.forceRefresh) {
+    let cached: OrchestratorCacheFile | null;
+    if (isVisitor) {
+      cached =
+        getVisitorReviewCache(dealId) ??
+        rebuildOrchestratorCacheFromLatestReview(dealId);
+      if (cached) {
+        // Re-prime the in-memory cache so subsequent refreshes within
+        // the same process skip the SQL rebuild.
+        setVisitorReviewCache(dealId, cached);
+      }
+    } else {
+      cached = existsSync(cachePath) ? readCacheFile(cachePath) : null;
+    }
     if (cached) {
       await replayTimings(cached.timings, opts.onSubstep, start);
       return {
@@ -394,6 +423,7 @@ export async function runOrchestrator(
       approval: approvalResult.output,
       comms: commsResult.output,
       appUrl,
+      isVisitorSubmitted: isVisitor,
     }),
   ]);
 
@@ -498,8 +528,12 @@ export async function runOrchestrator(
     timings: recordedTimings,
     metadata,
   };
-  mkdirSync(dirname(cachePath), { recursive: true });
-  writeFileSync(cachePath, JSON.stringify(cacheFile, null, 2));
+  if (isVisitor) {
+    setVisitorReviewCache(dealId, cacheFile);
+  } else {
+    mkdirSync(dirname(cachePath), { recursive: true });
+    writeFileSync(cachePath, JSON.stringify(cacheFile, null, 2));
+  }
 
   return {
     outputs,

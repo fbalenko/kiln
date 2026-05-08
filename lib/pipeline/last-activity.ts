@@ -5,7 +5,10 @@
 
 import { getDb } from "@/lib/db/client";
 
-export { formatRelative } from "./format-relative";
+// formatRelative lives in `./format-relative` — import it from there
+// directly. Re-exporting it here caused Turbopack to treat
+// last-activity.ts as reachable from any client component that wanted
+// the formatter, which dragged better-sqlite3 into the client bundle.
 
 export function getLastActivityByDeal(): Map<string, string> {
   const db = getDb();
@@ -25,6 +28,3 @@ export function getLastActivityByDeal(): Map<string, string> {
   }
   return out;
 }
-
-// formatRelative is exported above from ./format-relative so client
-// components can import it without dragging in better-sqlite3.

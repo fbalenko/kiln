@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, PlusCircle } from "lucide-react";
 import { listDeals } from "@/lib/db/queries";
 import { getCachedRiskSummary } from "@/lib/dashboard/cached-summary";
 import { getRecentActivity } from "@/lib/dashboard/activity-feed";
@@ -50,13 +50,22 @@ export default function DashboardPage() {
             any tile, scenario, or row to dig in.
           </p>
         </div>
-        <a
-          href="/pipeline"
-          className="hidden shrink-0 items-center gap-1.5 rounded-md border border-border bg-card px-3 h-8 text-[12.5px] font-medium text-foreground transition hover:bg-surface-hover sm:inline-flex"
-        >
-          Open pipeline
-          <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden />
-        </a>
+        <div className="hidden shrink-0 items-center gap-2 sm:flex">
+          <a
+            href="/pipeline"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 h-8 text-[12.5px] font-medium text-foreground transition hover:bg-surface-hover"
+          >
+            Open pipeline
+            <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden />
+          </a>
+          <a
+            href="/submit"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--brand)] px-3 h-8 text-[12.5px] font-medium text-white transition hover:bg-[var(--brand)]/90"
+          >
+            <PlusCircle className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
+            Submit a deal
+          </a>
+        </div>
       </header>
 
       <KpiRail

@@ -1,12 +1,12 @@
-import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, PlusCircle } from "lucide-react";
 import type { DealWithCustomer } from "@/lib/db/queries";
 import { DifficultyBadge } from "@/components/deal/difficulty-badge";
 import { formatACV } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-// Replaces the prior 2-card EntryCard grid. Renders the five hero
-// scenarios as compact tiles + a "Browse all 40 deals" footer card.
+// Replaces the prior 2-card EntryCard grid. Renders the four hero
+// scenarios as compact tiles + a fifth "Submit your own deal" tile +
+// a "Browse all 40 deals" footer.
 //
 // Hard navigation (<a href>) per the dashboard convention — direct hits
 // to /deals/<id> render the standalone full page rather than the slide-
@@ -32,7 +32,7 @@ export function HeroQuickStart({
           Quick start
         </h2>
         <span className="text-[10.5px] uppercase tracking-wider text-muted-foreground">
-          {heroes.length} scenarios
+          {heroes.length} scenarios · 1 you
         </span>
       </header>
       <ul className="grid grid-cols-1 divide-y divide-border sm:grid-cols-2 sm:divide-y-0 sm:divide-x">
@@ -46,6 +46,13 @@ export function HeroQuickStart({
             <HeroRow deal={deal} />
           </li>
         ))}
+        {/* Fifth tile — visitor entry point. Distinct visual register
+            (brand-tinted plus icon, italic helper) so it doesn't read
+            as a fifth seeded scenario. Slots in alongside the last
+            "other" hero so the 2×N grid stays even. */}
+        <li className={others.length % 2 === 0 ? "sm:col-span-2" : ""}>
+          <SubmitYourOwnRow />
+        </li>
       </ul>
       <a
         href="/pipeline"
@@ -95,6 +102,33 @@ function HeroRow({
       </div>
       <p className="line-clamp-2 text-[11.5px] leading-snug text-muted-foreground">
         {deal.scenario_meta?.hero_tagline ?? deal.name}
+      </p>
+    </a>
+  );
+}
+
+function SubmitYourOwnRow() {
+  return (
+    <a
+      href="/submit"
+      className="flex h-full flex-col gap-1.5 bg-[var(--brand)]/[0.03] px-3 py-2.5 transition hover:bg-[var(--brand)]/[0.07] sm:px-3.5 sm:py-3"
+    >
+      <div className="flex items-center gap-2">
+        <PlusCircle
+          className="h-3.5 w-3.5 text-[var(--brand)]"
+          strokeWidth={2}
+          aria-hidden
+        />
+        <span className="truncate text-[12.5px] font-medium text-foreground">
+          Submit your own deal
+        </span>
+        <span className="ml-auto rounded bg-[var(--brand)]/10 px-1.5 py-0.5 text-[9.5px] font-medium uppercase tracking-wider text-[var(--brand)]">
+          Live
+        </span>
+      </div>
+      <p className="line-clamp-2 text-[11.5px] leading-snug text-muted-foreground">
+        Drop in a real or invented deal — Kiln runs the same six-agent
+        review and posts to the demo Slack workspace.
       </p>
     </a>
   );

@@ -9,6 +9,7 @@ import {
   Home as HomeIcon,
   LayoutList,
   Menu,
+  PlusCircle,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: "/", label: "Home", icon: HomeIcon },
       { href: "/pipeline", label: "Pipeline", icon: LayoutList },
+      { href: "/submit", label: "Submit deal", icon: PlusCircle },
     ],
   },
   {

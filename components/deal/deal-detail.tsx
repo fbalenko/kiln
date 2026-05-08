@@ -9,13 +9,19 @@ import { DealWorkspace } from "./deal-workspace";
 // The Mode 1 workbench layout (deal context rail + reasoning timeline)
 // lives inside <DealWorkspace>. <DealHeader> + <DemoDataBanner> stay
 // outside so they remain sticky / above the fold.
+//
+// `autoStart` skips the "Run review" button and enters the live-stream
+// state on first paint. Used for visitor-submitted deals so the URL
+// the visitor lands on starts running the orchestrator immediately.
 
 export function DealDetail({
   deal,
   isVisitorSubmitted = false,
+  autoStart = false,
 }: {
   deal: DealWithCustomer;
   isVisitorSubmitted?: boolean;
+  autoStart?: boolean;
 }) {
   return (
     <>
@@ -24,7 +30,7 @@ export function DealDetail({
         customer={deal.customer}
         isVisitorSubmitted={isVisitorSubmitted}
       />
-      <DealWorkspace deal={deal} />
+      <DealWorkspace deal={deal} autoStart={autoStart} />
     </>
   );
 }
