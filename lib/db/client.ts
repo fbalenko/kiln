@@ -8,23 +8,47 @@ export type DB = Database.Database;
 
 const MIGRATIONS_DIR = path.resolve(process.cwd(), "db/migrations");
 
-// Resolve db/kiln.db. On Vercel the function's cwd isn't reliably
-// /var/task at runtime even when the file is included in the deploy
-// bundle, so try a list of candidate roots and keep the first one that
-// actually exists.
+// Resolve db/kiln.db. On Vercel:
+//   • The committed DB ships in /var/task/db/kiln.db (read-only fs).
+//   • The seed file's journal_mode is WAL — opening it read-only at
+//     /var/task throws SQLITE_CANTOPEN at the first .prepare() because
+//     SQLite tries to attach the missing -wal/-shm journals on a
+//     read-only filesystem.
+//   • Working around that means either keeping the committed DB in
+//     journal_mode=DELETE (requires releasing every dev-side write lock
+//     to convert in place) or copying the file into a writable scratch
+//     dir at boot. Vercel functions get an ephemeral /tmp (512 MB) that
+//     survives the warm invocation. 8.88 MB copies in ~tens of ms.
+//
+// Local dev keeps the committed db/kiln.db path — no copy.
 function resolveDbPath(): string {
   if (process.env.KILN_DB_PATH) return process.env.KILN_DB_PATH;
-  const candidates = [
-    path.resolve(process.cwd(), "db/kiln.db"),
-    "/var/task/db/kiln.db",
-    path.resolve("/", "var/task/db/kiln.db"),
-  ];
-  for (const c of candidates) {
-    if (fs.existsSync(c)) return c;
+
+  if (IS_VERCEL) {
+    const sources = [
+      path.resolve(process.cwd(), "db/kiln.db"),
+      "/var/task/db/kiln.db",
+    ];
+    const target = "/tmp/kiln.db";
+    if (!fs.existsSync(target)) {
+      for (const src of sources) {
+        if (fs.existsSync(src)) {
+          try {
+            fs.copyFileSync(src, target);
+            break;
+          } catch (err) {
+            console.warn(
+              `[kiln-db] copy ${src} → ${target} failed:`,
+              err instanceof Error ? err.message : err,
+            );
+          }
+        }
+      }
+    }
+    return target;
   }
-  // Fall through to the first candidate so the eventual error message
-  // points at the path we tried first (matches local dev behavior).
-  return candidates[0];
+
+  return path.resolve(process.cwd(), "db/kiln.db");
 }
 
 const DB_PATH = resolveDbPath();
@@ -37,15 +61,26 @@ const globalForDb = globalThis as unknown as {
 export function getDb(): DB {
   if (globalForDb.__kilnDb) return globalForDb.__kilnDb;
 
-  // Vercel's serverless filesystem is read-only at runtime, so the
-  // committed db/kiln.db must be opened readonly. WAL and migrations
-  // both require write access — skip both. The committed DB already
-  // has every migration applied at seed time.
-  const handle = IS_VERCEL
-    ? new Database(DB_PATH, { readonly: true, fileMustExist: true })
-    : new Database(DB_PATH);
+  // Vercel: the seed has been copied to /tmp (writable, ephemeral). We
+  // still want migrations off and journal mode flipped off WAL so a
+  // process restart doesn't leave stale -wal/-shm files in /tmp that
+  // confuse the next cold-start. The actual application code never
+  // writes to SQL on Vercel — visitor data lives in process memory —
+  // but better-sqlite3 still needs write capability to checkpoint.
+  const handle = new Database(DB_PATH, { fileMustExist: true });
 
-  if (!IS_VERCEL) {
+  if (IS_VERCEL) {
+    // Force the local /tmp copy out of WAL mode so subsequent reads
+    // don't try to open a missing journal.
+    try {
+      handle.pragma("journal_mode = DELETE");
+    } catch (err) {
+      console.warn(
+        "[kiln-db] journal_mode=DELETE pragma failed:",
+        err instanceof Error ? err.message : err,
+      );
+    }
+  } else {
     handle.pragma("journal_mode = WAL");
   }
   handle.pragma("foreign_keys = ON");
