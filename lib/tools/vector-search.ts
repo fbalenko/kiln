@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/db/client";
+import { getDb, isVectorSearchAvailable } from "@/lib/db/client";
 import { getVisitorDealRecord } from "@/lib/visitor-submit/store";
 
 const VISITOR_PREFIX = "visitor-";
@@ -54,6 +54,14 @@ export async function findSimilarDeals(
   k = 3,
 ): Promise<SimilarDealRecord[]> {
   const db = getDb();
+
+  // If sqlite-vec failed to load (e.g. the platform binary didn't make
+  // it into the Vercel function bundle), the `embedding MATCH ?` SQL
+  // throws. Bail early instead — the orchestrator handles an empty
+  // similar-deals panel gracefully.
+  if (!isVectorSearchAvailable()) {
+    return [];
+  }
 
   // Visitor deals on Vercel don't get a row in deal_embeddings (the
   // table is read-only there). The visitor store carries the freshly
