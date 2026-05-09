@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db/client";
+import { IS_VERCEL } from "@/lib/runtime";
+import { getReviewById } from "@/lib/db/in-memory-reviews";
 
 // GET /api/audit/[reviewId] — return the audit-log rows for a review,
 // ordered chronologically. Powers the audit-log expandable footer in
@@ -28,8 +30,30 @@ interface AuditRow {
 
 export async function GET(_req: NextRequest, { params }: Params) {
   const { reviewId } = await params;
-  const db = getDb();
 
+  // Vercel: audit rows live in process memory because the SQLite file
+  // is read-only.
+  if (IS_VERCEL) {
+    const bundle = getReviewById(reviewId);
+    if (!bundle) {
+      return NextResponse.json({ entries: [] }, { status: 200 });
+    }
+    const entries: AuditRow[] = bundle.audit
+      .slice()
+      .sort((a, b) => a.step_index - b.step_index)
+      .map((r) => ({
+        id: r.id,
+        step_index: r.step_index,
+        agent_name: r.agent_name,
+        step_label: r.step_label,
+        duration_ms: r.duration_ms,
+        tokens_used: r.tokens_used,
+        ran_at: r.ran_at,
+      }));
+    return NextResponse.json({ entries }, { status: 200 });
+  }
+
+  const db = getDb();
   const rows = db
     .prepare(
       `SELECT id, step_index, agent_name, step_label, duration_ms,

@@ -3,6 +3,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getDb } from "@/lib/db/client";
 import { getDealById } from "@/lib/db/queries";
+import { IS_VERCEL } from "@/lib/runtime";
+import { getReviewById } from "@/lib/db/in-memory-reviews";
 import {
   ApprovalOutputSchema,
   Asc606OutputSchema,
@@ -169,6 +171,35 @@ function resolveInput(reviewId: string): ArtifactInput | null {
 function loadFromDb(
   reviewId: string,
 ): Omit<ArtifactInput, "reviewId" | "appUrl" | "generatedAt"> | null {
+  // Vercel: deal_reviews is empty (writes were redirected to memory).
+  // Pull the bundle from the in-memory store; deal hydrates the same
+  // way (visitor → in-memory store, hero → SQL).
+  if (IS_VERCEL) {
+    const bundle = getReviewById(reviewId);
+    if (!bundle) return null;
+    const deal = getDealById(bundle.review.deal_id);
+    if (!deal) return null;
+    return {
+      deal,
+      pricing: PricingOutputSchema.parse(
+        JSON.parse(bundle.review.pricing_output_json),
+      ),
+      asc606: Asc606OutputSchema.parse(
+        JSON.parse(bundle.review.asc606_output_json),
+      ),
+      redline: RedlineOutputSchema.parse(
+        JSON.parse(bundle.review.redline_output_json),
+      ),
+      approval: ApprovalOutputSchema.parse(
+        JSON.parse(bundle.review.approval_output_json),
+      ),
+      comms: CommsOutputSchema.parse(
+        JSON.parse(bundle.review.comms_output_json),
+      ),
+      synthesis: bundle.review.synthesis_summary,
+    };
+  }
+
   const db = getDb();
   const row = db
     .prepare(

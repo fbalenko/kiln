@@ -12,7 +12,17 @@ import {
   RedlineOutputSchema,
 } from "@/lib/agents/schemas";
 import type { OrchestratorCacheFile } from "@/lib/agents/orchestrator";
-import { clearVisitorReviewCache } from "@/lib/visitor-submit/store";
+import {
+  clearVisitorDealRecord,
+  clearVisitorReviewCache,
+  setVisitorDealRecord,
+} from "@/lib/visitor-submit/store";
+import {
+  clearReviewsForDealInMemory,
+  getLatestReviewIdForDealInMemory,
+} from "./in-memory-reviews";
+import { IS_VERCEL } from "@/lib/runtime";
+import type { DealWithCustomer } from "./queries";
 
 // SQLite-side persistence for visitor-submitted deals. Lives in its own
 // module so the API route + the visitor-store cleanup hook can share
@@ -40,11 +50,10 @@ export async function insertVisitorDeal(
 ): Promise<InsertVisitorDealResult> {
   const dealId = `visitor-${sessionId}`;
   const customerId = `visitor-cust-${sessionId}`;
-  const db = getDb();
 
   // If this session already has an in-flight deal (re-submit during the
   // same cookie window), drop everything tied to the old deal so the
-  // FK chain stays clean.
+  // FK chain stays clean. Works for both SQL and in-memory paths.
   deleteVisitorDealInner(dealId, customerId);
 
   const domain =
@@ -72,6 +81,78 @@ export async function insertVisitorDeal(
       ? JSON.stringify(input.non_standard_clauses)
       : null;
 
+  // Vercel branch: nothing writes to SQLite. Build the in-memory deal
+  // record directly, embed inline, and the orchestrator + UI read from
+  // the visitor store the same way they would from SQL locally.
+  if (IS_VERCEL) {
+    const dealName = synthesizeDealName(input);
+    const deal: DealWithCustomer = {
+      id: dealId,
+      customer_id: customerId,
+      name: dealName,
+      deal_type: input.deal_type,
+      stage: "review",
+      acv,
+      tcv,
+      term_months: term,
+      ramp_schedule_json: null,
+      list_price: listPrice,
+      proposed_price: proposedPrice,
+      discount_pct: input.discount_pct,
+      discount_reason: input.discount_reason ?? null,
+      payment_terms: "net_30",
+      payment_terms_notes: null,
+      pricing_model: input.pricing_model,
+      usage_commit_units: null,
+      overage_rate: null,
+      non_standard_clauses: clausesJson,
+      ae_owner: "Visitor",
+      ae_manager: "Visitor",
+      competitive_context: input.competitive_context ?? null,
+      customer_request: input.customer_request,
+      created_at: new Date().toISOString(),
+      close_date: null,
+      is_scenario: 0,
+      customer: {
+        id: customerId,
+        name: input.customer_name,
+        domain,
+        segment,
+        employee_count: employeeCount,
+        industry,
+        hq_country: hqCountry,
+        funding_stage: null,
+        arr_estimate: null,
+        health_score: null,
+        is_real: isReal,
+        simulated_signals: null,
+        created_at: new Date().toISOString(),
+      },
+      scenario_meta: null,
+    };
+
+    let embedding: Buffer | null = null;
+    try {
+      embedding = await buildVisitorEmbeddingBuffer({
+        dealId,
+        customerName: input.customer_name,
+        segment,
+        industry,
+        employeeCount,
+        input,
+      });
+    } catch (err) {
+      console.warn(
+        `[visitor-deals] (vercel) embedding failed for ${dealId}:`,
+        err instanceof Error ? err.message : err,
+      );
+    }
+
+    setVisitorDealRecord(dealId, { deal, embedding });
+    return { dealId, customerId };
+  }
+
+  const db = getDb();
   const insertCustomer = db.prepare(`
     INSERT INTO customers (
       id, name, domain, segment, employee_count, industry, hq_country,
@@ -168,13 +249,29 @@ async function embedVisitorDeal(
   dealId: string,
   args: EmbedVisitorDealArgs,
 ): Promise<void> {
-  if (!process.env.OPENAI_API_KEY) {
-    // Without OpenAI, vector k-NN simply returns [] for this deal —
-    // a degraded but coherent demo path.
-    return;
-  }
+  const buf = await buildVisitorEmbeddingBuffer({ dealId, ...args });
+  if (!buf) return;
+  const db = getDb();
+  db.transaction(() => {
+    db.prepare("DELETE FROM deal_embeddings WHERE deal_id = ?").run(dealId);
+    db.prepare(
+      "INSERT INTO deal_embeddings (deal_id, embedding) VALUES (?, ?)",
+    ).run(dealId, buf);
+  })();
+}
+
+// Generate the visitor deal's embedding without persisting it. Used by
+// both the SQL path (which then INSERTs the buffer) and the Vercel
+// in-memory path (which stashes it on the visitor deal record).
+// Returns null when OpenAI isn't configured — the orchestrator's
+// vector-search path already handles a missing embedding by returning
+// [] from findSimilarDeals.
+async function buildVisitorEmbeddingBuffer(
+  args: EmbedVisitorDealArgs & { dealId: string },
+): Promise<Buffer | null> {
+  if (!process.env.OPENAI_API_KEY) return null;
   const text = buildEmbeddingText({
-    id: dealId,
+    id: args.dealId,
     customer_id: "",
     customer_name: args.customerName,
     segment: args.segment,
@@ -205,14 +302,7 @@ async function embedVisitorDeal(
       `Unexpected embedding shape (got ${vec?.length ?? "null"}).`,
     );
   }
-  const buf = Buffer.from(new Float32Array(vec).buffer);
-  const db = getDb();
-  db.transaction(() => {
-    db.prepare("DELETE FROM deal_embeddings WHERE deal_id = ?").run(dealId);
-    db.prepare(
-      "INSERT INTO deal_embeddings (deal_id, embedding) VALUES (?, ?)",
-    ).run(dealId, buf);
-  })();
+  return Buffer.from(new Float32Array(vec).buffer);
 }
 
 // Cascading delete used by both re-submit and the periodic visitor-
@@ -223,6 +313,22 @@ export function deleteVisitorDeal(dealId: string, customerId: string): void {
 }
 
 function deleteVisitorDealInner(dealId: string, customerId: string): void {
+  // Critical: drop the in-memory orchestrator cache for this dealId
+  // alongside any persisted rows. Without this, a re-submit within the
+  // same cookie window (which keeps the same `visitor-{sessionId}` deal
+  // id) would serve the prior run's cached pricing/agent outputs
+  // instead of running fresh on the new deal data. That was the root
+  // cause of the "submitted at 30%, page shows 15%" bug.
+  clearVisitorReviewCache(dealId);
+
+  if (IS_VERCEL) {
+    // No SQL writes possible on Vercel — drop in-memory state and exit.
+    clearVisitorDealRecord(dealId);
+    clearReviewsForDealInMemory(dealId);
+    void customerId;
+    return;
+  }
+
   const db = getDb();
   const tx = db.transaction(() => {
     // audit_log → deal_reviews → deal_embeddings → deals → customers.
@@ -236,20 +342,15 @@ function deleteVisitorDealInner(dealId: string, customerId: string): void {
     db.prepare("DELETE FROM customers WHERE id = ?").run(customerId);
   });
   tx();
-
-  // Critical: drop the in-memory orchestrator cache for this dealId
-  // alongside the SQL rows. Without this, a re-submit within the same
-  // cookie window (which keeps the same `visitor-{sessionId}` dealId)
-  // would serve the prior run's cached pricing/agent outputs instead
-  // of running fresh on the new deal data. That was the root cause of
-  // the "submitted at 30%, page shows 15%" bug.
-  clearVisitorReviewCache(dealId);
 }
 
 // Returns the most recent deal_reviews row for a deal id, or null. Used
 // by the visitor deal page to decide between "auto-fire orchestrator"
 // (no row yet) and "hydrate from existing review" (refresh after a run).
 export function getLatestReviewIdForDeal(dealId: string): string | null {
+  if (IS_VERCEL) {
+    return getLatestReviewIdForDealInMemory(dealId);
+  }
   const db = getDb();
   const row = db
     .prepare(
@@ -271,6 +372,11 @@ export function getLatestReviewIdForDeal(dealId: string): string | null {
 export function rebuildOrchestratorCacheFromLatestReview(
   dealId: string,
 ): OrchestratorCacheFile | null {
+  // Vercel: SQL is read-only and visitor reviews aren't persisted there
+  // anyway. The in-memory orchestrator cache (setVisitorReviewCache) is
+  // the only source of truth, so a miss returns null and the deal page
+  // renders the expired-state fallback.
+  if (IS_VERCEL) return null;
   const db = getDb();
   const row = db
     .prepare(

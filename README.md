@@ -58,6 +58,7 @@ Honesty matters more than overclaiming. Here is exactly what is real and what is
 | Generated artifacts (`.docx`, `.pdf`, `.xlsx`, `.eml`) | Real files; the `.xlsx` has live cross-tab formulas that recalc in Excel/Numbers/Sheets | Content is per-deal, agent-generated |
 | LLM calls | Real Anthropic API calls on visitor submissions | Cached output replay on hero scenarios |
 | ASC 606 reasoning | Real schedule arithmetic in the workbook | Not auditor-reviewed; a working model, not financial advice |
+| Visitor submissions | Live LLM calls; render in your session | Session-scoped — held in process memory on Vercel. If you come back later your specific deal review may have expired and need re-submission. Hero scenarios are always available. |
 
 The in-app banners match this disclosure exactly.
 

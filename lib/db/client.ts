@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import * as sqliteVec from "sqlite-vec";
 import fs from "node:fs";
 import path from "node:path";
+import { IS_VERCEL } from "@/lib/runtime";
 
 export type DB = Database.Database;
 
@@ -14,12 +15,23 @@ const globalForDb = globalThis as unknown as { __kilnDb?: DB };
 export function getDb(): DB {
   if (globalForDb.__kilnDb) return globalForDb.__kilnDb;
 
-  const handle = new Database(DB_PATH);
-  handle.pragma("journal_mode = WAL");
+  // Vercel's serverless filesystem is read-only at runtime, so the
+  // committed db/kiln.db must be opened readonly. WAL and migrations
+  // both require write access — skip both. The committed DB already
+  // has every migration applied at seed time.
+  const handle = IS_VERCEL
+    ? new Database(DB_PATH, { readonly: true, fileMustExist: true })
+    : new Database(DB_PATH);
+
+  if (!IS_VERCEL) {
+    handle.pragma("journal_mode = WAL");
+  }
   handle.pragma("foreign_keys = ON");
   sqliteVec.load(handle);
 
-  runMigrations(handle);
+  if (!IS_VERCEL) {
+    runMigrations(handle);
+  }
 
   globalForDb.__kilnDb = handle;
   return handle;

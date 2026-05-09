@@ -7,6 +7,8 @@ import type { CustomerSignalsResult } from "@/lib/tools/exa-search";
 import type { SimilarDealRecord } from "@/lib/tools/vector-search";
 import type { SlackPostRecord } from "@/lib/tools/slack";
 import { recordSpendEvent } from "@/lib/observability/spend-tracker";
+import { IS_VERCEL } from "@/lib/runtime";
+import { persistReviewInMemory } from "@/lib/db/in-memory-reviews";
 
 const VISITOR_DEAL_PREFIX = "visitor-";
 
@@ -359,19 +361,40 @@ interface PersistArgs {
   isVisitorSubmitted: boolean;
 }
 
-function persistReview({
-  reviewId,
-  dealId,
-  outputs,
-  synthesis,
-  totalRuntimeMs,
-  totalTokens,
-  fromCache,
-  customerSignals,
-  similarDeals,
-  slackPost,
-  isVisitorSubmitted,
-}: PersistArgs) {
+function persistReview(args: PersistArgs) {
+  // Vercel: SQLite is read-only. Stash the review payload + audit rows
+  // in process memory so the audit + artifact endpoints can still
+  // resolve them within this function instance's lifetime.
+  if (IS_VERCEL) {
+    persistReviewInMemory({
+      reviewId: args.reviewId,
+      dealId: args.dealId,
+      isVisitorSubmitted: args.isVisitorSubmitted,
+      fromCache: args.fromCache,
+      outputs: args.outputs,
+      synthesis: args.synthesis,
+      similarDeals: args.similarDeals,
+      customerSignals: args.customerSignals,
+      slackPost: args.slackPost,
+      totalRuntimeMs: args.totalRuntimeMs,
+      totalTokens: args.totalTokens,
+    });
+    return;
+  }
+
+  const {
+    reviewId,
+    dealId,
+    outputs,
+    synthesis,
+    totalRuntimeMs,
+    totalTokens,
+    fromCache,
+    customerSignals,
+    similarDeals,
+    slackPost,
+    isVisitorSubmitted,
+  } = args;
   const db = getDb();
 
   const insertReview = db.prepare(`

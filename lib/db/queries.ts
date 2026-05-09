@@ -1,4 +1,5 @@
 import { getDb } from "./client";
+import { getVisitorDealRecord } from "@/lib/visitor-submit/store";
 
 export type Customer = {
   id: string;
@@ -137,7 +138,17 @@ export function listDeals(): DealWithCustomer[] {
   return rows.map(reshapeDealRow);
 }
 
+const VISITOR_PREFIX = "visitor-";
+
 export function getDealById(id: string): DealWithCustomer | null {
+  // Visitor deals on Vercel live in process memory because the SQLite
+  // file is mounted read-only there. Locally the in-memory store is
+  // empty for the SQL-backed path, so the lookup falls through.
+  if (id.startsWith(VISITOR_PREFIX)) {
+    const inMemory = getVisitorDealRecord(id);
+    if (inMemory) return inMemory.deal;
+  }
+
   const db = getDb();
   const row = db
     .prepare(

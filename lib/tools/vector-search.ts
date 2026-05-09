@@ -1,4 +1,7 @@
 import { getDb } from "@/lib/db/client";
+import { getVisitorDealRecord } from "@/lib/visitor-submit/store";
+
+const VISITOR_PREFIX = "visitor-";
 
 // k-NN lookup over `deal_embeddings` (sqlite-vec virtual table). The seed
 // step embeds all 40 deals on first run; this module just reads.
@@ -52,11 +55,22 @@ export async function findSimilarDeals(
 ): Promise<SimilarDealRecord[]> {
   const db = getDb();
 
-  const sourceRow = db
-    .prepare("SELECT embedding FROM deal_embeddings WHERE deal_id = ?")
-    .get(sourceDealId) as { embedding: Buffer } | undefined;
+  // Visitor deals on Vercel don't get a row in deal_embeddings (the
+  // table is read-only there). The visitor store carries the freshly
+  // generated embedding instead; fall back to SQL for hero scenarios.
+  let sourceEmbedding: Buffer | null = null;
+  if (sourceDealId.startsWith(VISITOR_PREFIX)) {
+    const record = getVisitorDealRecord(sourceDealId);
+    sourceEmbedding = record?.embedding ?? null;
+  }
+  if (!sourceEmbedding) {
+    const sourceRow = db
+      .prepare("SELECT embedding FROM deal_embeddings WHERE deal_id = ?")
+      .get(sourceDealId) as { embedding: Buffer } | undefined;
+    sourceEmbedding = sourceRow?.embedding ?? null;
+  }
 
-  if (!sourceRow) {
+  if (!sourceEmbedding) {
     return [];
   }
 
@@ -75,7 +89,7 @@ export async function findSimilarDeals(
       ORDER BY distance ASC
       `,
     )
-    .all(sourceRow.embedding, limit) as KnnRow[];
+    .all(sourceEmbedding, limit) as KnnRow[];
 
   const filtered = knnRows
     .filter((r) => r.deal_id !== sourceDealId)

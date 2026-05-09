@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getDb } from "@/lib/db/client";
+import { IS_VERCEL } from "@/lib/runtime";
+import { getReviewById } from "@/lib/db/in-memory-reviews";
 
 // Lightweight metadata for the artifacts panel — generated-at timestamp
 // and source (cached scenario tape vs live run). Lets each download
@@ -47,6 +49,10 @@ export async function GET(
 }
 
 function lookupReviewTimestamp(reviewId: string): string | null {
+  if (IS_VERCEL) {
+    const bundle = getReviewById(reviewId);
+    return bundle?.review.ran_at ?? null;
+  }
   const db = getDb();
   const row = db
     .prepare(`SELECT ran_at FROM deal_reviews WHERE id = ?`)

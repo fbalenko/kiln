@@ -1,4 +1,5 @@
 import type { OrchestratorCacheFile } from "@/lib/agents/orchestrator";
+import type { DealWithCustomer } from "@/lib/db/queries";
 
 // In-memory visitor session store. Process-local; rebuilt on cold start.
 //
@@ -29,9 +30,19 @@ interface VisitorSession {
   createdAt: number;
 }
 
+// Vercel runtime: the SQLite file is read-only, so the visitor's full
+// deal/customer/embedding has nowhere to live but in-process memory.
+// This record carries everything getDealById + findSimilarDeals need.
+export interface VisitorDealRecord {
+  deal: DealWithCustomer;
+  embedding: Buffer | null;
+  createdAt: number;
+}
+
 const globalForStore = globalThis as unknown as {
   __kilnVisitorSessions?: Map<string, VisitorSession>;
   __kilnVisitorReviewCache?: Map<string, OrchestratorCacheFile>;
+  __kilnVisitorDealRecords?: Map<string, VisitorDealRecord>;
   __kilnVisitorSweepStarted?: boolean;
   __kilnVisitorSweepCb?: ((dealId: string, customerId: string) => void) | null;
 };
@@ -48,6 +59,32 @@ function reviewCache(): Map<string, OrchestratorCacheFile> {
     globalForStore.__kilnVisitorReviewCache = new Map();
   }
   return globalForStore.__kilnVisitorReviewCache;
+}
+
+function dealRecords(): Map<string, VisitorDealRecord> {
+  if (!globalForStore.__kilnVisitorDealRecords) {
+    globalForStore.__kilnVisitorDealRecords = new Map();
+  }
+  return globalForStore.__kilnVisitorDealRecords;
+}
+
+export function setVisitorDealRecord(
+  dealId: string,
+  record: { deal: DealWithCustomer; embedding: Buffer | null },
+): void {
+  dealRecords().set(dealId, {
+    deal: record.deal,
+    embedding: record.embedding,
+    createdAt: Date.now(),
+  });
+}
+
+export function getVisitorDealRecord(dealId: string): VisitorDealRecord | null {
+  return dealRecords().get(dealId) ?? null;
+}
+
+export function clearVisitorDealRecord(dealId: string): void {
+  dealRecords().delete(dealId);
 }
 
 export function setVisitorSession(s: {
@@ -111,6 +148,7 @@ function sweep(): void {
       expired.push(v);
       sessions().delete(k);
       reviewCache().delete(v.dealId);
+      dealRecords().delete(v.dealId);
     }
   }
   const cb = globalForStore.__kilnVisitorSweepCb;

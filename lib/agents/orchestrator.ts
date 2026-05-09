@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { IS_VERCEL } from "@/lib/runtime";
 import { getApprovalMatrix, getDealById } from "@/lib/db/queries";
 import type { DealWithCustomer } from "@/lib/db/queries";
 import { runPricingAgent } from "./pricing-agent";
@@ -538,7 +539,11 @@ export async function runOrchestrator(
   };
   if (isVisitor) {
     setVisitorReviewCache(dealId, cacheFile);
-  } else {
+  } else if (!IS_VERCEL) {
+    // Vercel's filesystem is read-only at runtime — skip the cache
+    // write. The committed seed cache files are the source of truth
+    // for hero scenarios there; force-refresh produces a one-shot
+    // result without persistence.
     mkdirSync(dirname(cachePath), { recursive: true });
     writeFileSync(cachePath, JSON.stringify(cacheFile, null, 2));
   }

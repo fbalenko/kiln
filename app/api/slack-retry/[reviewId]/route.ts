@@ -14,6 +14,8 @@ import {
   PricingOutputSchema,
   RedlineOutputSchema,
 } from "@/lib/agents/schemas";
+import { IS_VERCEL } from "@/lib/runtime";
+import { getReviewById } from "@/lib/db/in-memory-reviews";
 
 // POST /api/slack-retry/[reviewId] — retry a failed Slack post.
 //
@@ -34,19 +36,9 @@ interface Params {
 
 export async function POST(_req: NextRequest, { params }: Params) {
   const { reviewId } = await params;
-  const db = getDb();
 
-  const row = db
-    .prepare(
-      `SELECT
-         deal_id,
-         pricing_output_json, asc606_output_json, redline_output_json,
-         approval_output_json, comms_output_json,
-         slack_post_status
-       FROM deal_reviews
-       WHERE id = ?`,
-    )
-    .get(reviewId) as
+  // Vercel: read the row from process memory; SQL is read-only there.
+  let row:
     | {
         deal_id: string;
         pricing_output_json: string;
@@ -57,6 +49,34 @@ export async function POST(_req: NextRequest, { params }: Params) {
         slack_post_status: string | null;
       }
     | undefined;
+
+  if (IS_VERCEL) {
+    const bundle = getReviewById(reviewId);
+    if (bundle) {
+      row = {
+        deal_id: bundle.review.deal_id,
+        pricing_output_json: bundle.review.pricing_output_json,
+        asc606_output_json: bundle.review.asc606_output_json,
+        redline_output_json: bundle.review.redline_output_json,
+        approval_output_json: bundle.review.approval_output_json,
+        comms_output_json: bundle.review.comms_output_json,
+        slack_post_status: bundle.review.slack_post_status,
+      };
+    }
+  } else {
+    const db = getDb();
+    row = db
+      .prepare(
+        `SELECT
+           deal_id,
+           pricing_output_json, asc606_output_json, redline_output_json,
+           approval_output_json, comms_output_json,
+           slack_post_status
+         FROM deal_reviews
+         WHERE id = ?`,
+      )
+      .get(reviewId) as typeof row;
+  }
 
   if (!row) {
     return NextResponse.json({ error: "review_not_found" }, { status: 404 });
@@ -96,26 +116,42 @@ export async function POST(_req: NextRequest, { params }: Params) {
   const record: SlackPostRecord =
     result.status === "success" ? successToRecord(result) : failureToRecord(result);
 
-  db.prepare(
-    `UPDATE deal_reviews
-       SET slack_channel       = @channel,
-           slack_thread_ts     = @thread_ts,
-           slack_posted_at     = @posted_at,
-           slack_permalink     = @permalink,
-           slack_post_status   = @status,
-           slack_post_reason   = @reason,
-           slack_post_error    = @error
-     WHERE id = @id`,
-  ).run({
-    id: reviewId,
-    channel: record.channel,
-    thread_ts: record.thread_ts,
-    posted_at: record.posted_at,
-    permalink: record.permalink,
-    status: record.status,
-    reason: record.reason,
-    error: record.error,
-  });
+  if (IS_VERCEL) {
+    // Mutate the in-memory row in place; the artifact + audit endpoints
+    // read from the same bundle. No SQL UPDATE possible on Vercel.
+    const bundle = getReviewById(reviewId);
+    if (bundle) {
+      bundle.review.slack_channel = record.channel;
+      bundle.review.slack_thread_ts = record.thread_ts;
+      bundle.review.slack_posted_at = record.posted_at;
+      bundle.review.slack_permalink = record.permalink;
+      bundle.review.slack_post_status = record.status;
+      bundle.review.slack_post_reason = record.reason;
+      bundle.review.slack_post_error = record.error;
+    }
+  } else {
+    const db = getDb();
+    db.prepare(
+      `UPDATE deal_reviews
+         SET slack_channel       = @channel,
+             slack_thread_ts     = @thread_ts,
+             slack_posted_at     = @posted_at,
+             slack_permalink     = @permalink,
+             slack_post_status   = @status,
+             slack_post_reason   = @reason,
+             slack_post_error    = @error
+       WHERE id = @id`,
+    ).run({
+      id: reviewId,
+      channel: record.channel,
+      thread_ts: record.thread_ts,
+      posted_at: record.posted_at,
+      permalink: record.permalink,
+      status: record.status,
+      reason: record.reason,
+      error: record.error,
+    });
+  }
 
   return NextResponse.json(record, { status: record.status === "success" ? 200 : 502 });
 }
