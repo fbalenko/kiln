@@ -14,7 +14,36 @@ const nextConfig: NextConfig = {
   // Native sqlite bindings can't be bundled by Turbopack/webpack. pdfkit is
   // also externalized — its .afm font metric files are read from disk via
   // fs.readFileSync at runtime and do not survive the webpack bundle.
-  serverExternalPackages: ["better-sqlite3", "sqlite-vec", "pdfkit"],
+  //
+  // sqlite-vec resolves its platform-specific binary at runtime via
+  // `import.meta.resolve("sqlite-vec-linux-x64/vec0.so")`. The bundler can't
+  // statically discover that lookup, so the binary package itself has to be
+  // listed here AND its node_modules path force-traced into the function
+  // archive (see outputFileTracingIncludes below).
+  serverExternalPackages: [
+    "better-sqlite3",
+    "sqlite-vec",
+    "sqlite-vec-linux-x64",
+    "pdfkit",
+  ],
+  outputFileTracingIncludes: {
+    "/api/**/*": [
+      "./node_modules/sqlite-vec/**/*",
+      "./node_modules/sqlite-vec-linux-x64/**/*",
+    ],
+    "/deals/**/*": [
+      "./node_modules/sqlite-vec/**/*",
+      "./node_modules/sqlite-vec-linux-x64/**/*",
+    ],
+    "/pipeline": [
+      "./node_modules/sqlite-vec/**/*",
+      "./node_modules/sqlite-vec-linux-x64/**/*",
+    ],
+    "/": [
+      "./node_modules/sqlite-vec/**/*",
+      "./node_modules/sqlite-vec-linux-x64/**/*",
+    ],
+  },
 };
 
 export default nextConfig;
