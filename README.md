@@ -120,7 +120,7 @@ Kiln was designed with Clay integration as the natural next step. The orchestrat
 
 The integration was **scoped but not shipped** in this build. Clay's MCP server is presently consumable by Claude Desktop and ChatGPT clients but not by arbitrary Node MCP clients due to constraints in the OAuth handshake. The dashboard already reserves a locked Clay KPI tile for when the integration is live.
 
-When that gap closes (or a fallback HTTP path is wired), the Clay arm would unlock the JD-aligned features that make this artifact a more complete proxy for the actual role: live account enrichment at review time, intent-signal-based deal triage, and Clay-native operationalization of the entire workflow per the `/if-clay-built-this` appendix.
+The full architecture, three fallback paths (waiting on MCP Authorization OAuth 2.1, fixture-based snapshots via Claude Desktop, or direct HTTP API), and the JD-aligned features the integration unlocks — account-aware pricing, buyer-committee mapping, intent-triggered approval fast-tracking, and live dashboard signals — are documented in [docs/13-clay-integration-plan.md](docs/13-clay-integration-plan.md).
 
 ---
 
