@@ -32,7 +32,7 @@ The five hero scenarios serve cached agent outputs for fast, deterministic playb
 
 ## How it works
 
-For a full walkthrough — architecture diagrams, agent contracts, worked example timeline — see the in-app `/how-it-works` page _(pending Phase 9b)_.
+For a full walkthrough — architecture diagrams, agent contracts, worked example timeline — see the in-app `/how-it-works` page (source: [`app/how-it-works/page.tsx`](app/how-it-works/page.tsx)).
 
 The short version:
 

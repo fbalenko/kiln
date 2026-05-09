@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  BookOpen,
   ExternalLink,
   Hash,
   Home as HomeIcon,
@@ -35,6 +36,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: "/", label: "Home", icon: HomeIcon },
       { href: "/pipeline", label: "Pipeline", icon: LayoutList },
       { href: "/submit", label: "Submit deal", icon: PlusCircle },
+      { href: "/how-it-works", label: "How it works", icon: BookOpen },
     ],
   },
   {
