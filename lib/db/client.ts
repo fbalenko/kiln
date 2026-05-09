@@ -6,9 +6,28 @@ import { IS_VERCEL } from "@/lib/runtime";
 
 export type DB = Database.Database;
 
-const DB_PATH =
-  process.env.KILN_DB_PATH ?? path.resolve(process.cwd(), "db/kiln.db");
 const MIGRATIONS_DIR = path.resolve(process.cwd(), "db/migrations");
+
+// Resolve db/kiln.db. On Vercel the function's cwd isn't reliably
+// /var/task at runtime even when the file is included in the deploy
+// bundle, so try a list of candidate roots and keep the first one that
+// actually exists.
+function resolveDbPath(): string {
+  if (process.env.KILN_DB_PATH) return process.env.KILN_DB_PATH;
+  const candidates = [
+    path.resolve(process.cwd(), "db/kiln.db"),
+    "/var/task/db/kiln.db",
+    path.resolve("/", "var/task/db/kiln.db"),
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  // Fall through to the first candidate so the eventual error message
+  // points at the path we tried first (matches local dev behavior).
+  return candidates[0];
+}
+
+const DB_PATH = resolveDbPath();
 
 const globalForDb = globalThis as unknown as {
   __kilnDb?: DB;

@@ -28,18 +28,22 @@ const nextConfig: NextConfig = {
   ],
   outputFileTracingIncludes: {
     "/api/**/*": [
+      "./db/**/*",
       "./node_modules/sqlite-vec/**/*",
       "./node_modules/sqlite-vec-linux-x64/**/*",
     ],
     "/deals/**/*": [
+      "./db/**/*",
       "./node_modules/sqlite-vec/**/*",
       "./node_modules/sqlite-vec-linux-x64/**/*",
     ],
     "/pipeline": [
+      "./db/**/*",
       "./node_modules/sqlite-vec/**/*",
       "./node_modules/sqlite-vec-linux-x64/**/*",
     ],
     "/": [
+      "./db/**/*",
       "./node_modules/sqlite-vec/**/*",
       "./node_modules/sqlite-vec-linux-x64/**/*",
     ],
